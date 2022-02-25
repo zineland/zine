@@ -1,0 +1,8 @@
+[package]
+name = "zine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tera = "1.15.0"
+time = "0.3.7"
