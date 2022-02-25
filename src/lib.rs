@@ -7,19 +7,20 @@ pub struct ZineSite {
     description: Option<String>,
 }
 pub struct Season {
-    id: u32,
+    slug: String,
     number: u32,
-    summary: String,
+    title: String,
+    summary: Option<String>,
     articles: Vec<Article>,
 }
 
 pub struct Article {
-    season_id: u32,
     slug: String,
     title: String,
     author: Option<String>,
     content: String,
     pub_date: Date,
+    publish: bool,
 }
 
 pub struct Page {

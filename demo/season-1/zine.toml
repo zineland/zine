@@ -1,0 +1,14 @@
+
+[article.first]
+file = "first.md"
+title = "First article"
+author = "Folyd"
+pub_date = "2022-02-25"
+publish = true
+
+[article.second]
+file = "second.md"
+title = "Second article"
+author = "Folyd"
+pub_date = "2022-03-25"
+publish = false
