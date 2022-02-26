@@ -1,7 +1,10 @@
 use serde::Deserialize;
 
+mod build;
 mod parser;
+mod render;
 
+pub use build::Builder;
 pub use parser::Parser;
 
 #[derive(Debug, Deserialize)]
@@ -37,8 +40,10 @@ pub struct Season {
 
 #[derive(Debug, Deserialize)]
 pub struct Article {
-    pub slug: String,
     pub file: String,
+    // The slug after this artcile rendered.
+    // Default to file name if no slug specified.
+    pub slug: Option<String>,
     pub title: String,
     pub author: Option<String>,
     #[serde(default)]
@@ -54,4 +59,13 @@ pub struct Page {
     pub slug: String,
     pub name: String,
     pub content: String,
+}
+
+impl Article {
+    pub fn slug(&self) -> String {
+        self.slug
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| self.file.replace(".md", ""))
+    }
 }
