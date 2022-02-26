@@ -1,12 +1,14 @@
 
-[article.first]
+[[article]]
+slug = "first"
 file = "first.md"
 title = "First article"
 author = "Folyd"
 pub_date = "2022-03-25"
 publish = true
 
-[article.second]
+[[article]]
+slug = "second"
 file = "second.md"
 title = "Second article"
 author = "Folyd"

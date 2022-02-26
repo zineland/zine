@@ -4,13 +4,15 @@ name = "Demo"
 title = "Demo Zine Site"
 description = "Demonstration of Zine."
 
-[season.1]
+[[season]]
+slug = "1"
 number = 1
 title = "Season #1"
 summary = "Summary of Season #1"
 path = "season-1"
 
-[season.2]
+[[season]]
+slug = "2"
 number = 2
 title = "Season #2"
 summary = "Summary of Season #2"

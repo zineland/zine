@@ -4,5 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 tera = "1.15.0"
 time = "0.3.7"
+toml = "0.5.8"
