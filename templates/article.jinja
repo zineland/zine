@@ -1,3 +1,7 @@
 {% extends "index.jinja" %}
 
 
+
+{% block content %}
+    {{ content | safe }}
+{% endblock content %}

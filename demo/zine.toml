@@ -5,14 +5,14 @@ title = "Demo Zine Site"
 description = "Demonstration of Zine."
 
 [[season]]
-slug = "1"
+slug = "cloud"
 number = 1
 title = "Season #1"
 summary = "Summary of Season #1"
 path = "season-1"
 
 [[season]]
-slug = "2"
+slug = "dev"
 number = 2
 title = "Season #2"
 summary = "Summary of Season #2"

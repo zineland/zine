@@ -34,7 +34,8 @@ impl Render for Season {
 impl Render for Article {
     fn render(&mut self, tera: &mut Tera, path: &Path) -> Result<()> {
         let mut buf = vec![];
-        let context = Context::new();
+        let mut context = Context::new();
+        context.insert("content", &self.html);
         tera.render_to("article.jinja", &context, &mut buf)?;
         let dir = path.join(&self.slug());
         if !dir.exists() {

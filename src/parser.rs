@@ -1,7 +1,7 @@
-use std::{fs, path::PathBuf};
-
 use anyhow::Result;
+use pulldown_cmark::{html, Options, Parser as MarkdownParser};
 use serde::Deserialize;
+use std::{fs, path::PathBuf};
 
 use crate::{Article, Zine};
 
@@ -39,8 +39,11 @@ impl Parser {
         let dir = self.path.join(season_path);
         let content = fs::read_to_string(&dir.join(ZINE_FILE))?;
         let mut season_file = toml::from_str::<SeasonFile>(&content).unwrap();
+
         for article in &mut season_file.articles {
-            article.markdown = fs::read_to_string(&dir.join(&article.file))?;
+            let markdown = fs::read_to_string(&dir.join(&article.file))?;
+            let markdown_parser = MarkdownParser::new_ext(&markdown, Options::all());
+            html::push_html(&mut article.html, markdown_parser);
         }
         Ok(season_file.articles)
     }
