@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 mod build;
 mod parser;
@@ -18,7 +18,7 @@ pub struct Zine {
     pub pages: Vec<Page>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Site {
     pub name: String,
     pub logo: Option<String>,
@@ -26,7 +26,7 @@ pub struct Site {
     pub description: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Season {
     pub slug: String,
     pub number: u32,
@@ -38,7 +38,7 @@ pub struct Season {
     pub articles: Vec<Article>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Article {
     pub file: String,
     // The slug after this artcile rendered.
@@ -47,6 +47,7 @@ pub struct Article {
     pub title: String,
     pub author: Option<String>,
     #[serde(default)]
+    #[serde(skip_serializing)]
     pub html: String,
     // TODO: deserialize to OffsetDateTime
     pub pub_date: String,
@@ -54,7 +55,7 @@ pub struct Article {
     pub publish: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Page {
     pub slug: String,
     pub name: String,

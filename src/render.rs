@@ -10,13 +10,12 @@ use tera::{Context, Tera};
 use crate::{Article, Season};
 
 pub trait Render {
-    fn render(&mut self, tera: &mut Tera, path: &Path) -> Result<()>;
+    fn render(&mut self, tera: &mut Tera, context: Context, path: &Path) -> Result<()>;
 }
 
 impl Render for Season {
-    fn render(&mut self, tera: &mut Tera, path: &Path) -> Result<()> {
+    fn render(&mut self, tera: &mut Tera, context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
-        let context = Context::new();
         tera.render_to("season.jinja", &context, &mut buf)?;
         let dir = path.join(&self.slug);
         if !dir.exists() {
@@ -25,16 +24,15 @@ impl Render for Season {
         File::create(dir.join("index.html"))?.write_all(&buf)?;
 
         for artcile in &mut self.articles {
-            artcile.render(tera, &dir)?;
+            artcile.render(tera, context.clone(), &dir)?;
         }
         Ok(())
     }
 }
 
 impl Render for Article {
-    fn render(&mut self, tera: &mut Tera, path: &Path) -> Result<()> {
+    fn render(&mut self, tera: &mut Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
-        let mut context = Context::new();
         context.insert("content", &self.html);
         tera.render_to("article.jinja", &context, &mut buf)?;
         let dir = path.join(&self.slug());

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::{fs, path::PathBuf};
-use tera::Tera;
+use tera::{Context, Tera};
 
 use crate::{render::Render, Zine};
 
@@ -23,8 +23,10 @@ impl Builder {
 
     /// Build the zine website from [`Zine`] config.
     pub fn build(&mut self, mut zine: Zine) -> Result<()> {
+        let mut context = Context::new();
+        context.insert("site", &zine.site);
         for season in &mut zine.seasons {
-            season.render(&mut self.tera, &self.target_dir)?;
+            season.render(&mut self.tera, context.clone(), &self.target_dir)?;
         }
         Ok(())
     }
