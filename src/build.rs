@@ -1,5 +1,9 @@
 use anyhow::Result;
-use std::{fs, path::PathBuf};
+use std::{
+    fs::{self, File},
+    io::Write,
+    path::PathBuf,
+};
 use tera::{Context, Tera};
 
 use crate::{render::Render, Zine};
@@ -28,6 +32,12 @@ impl Builder {
         for season in &mut zine.seasons {
             season.render(&mut self.tera, context.clone(), &self.target_dir)?;
         }
+
+        // Render home page.
+        context.insert("seasons", &zine.seasons);
+        let mut buf = vec![];
+        self.tera.render_to("index.jinja", &context, &mut buf)?;
+        File::create(self.target_dir.join("index.html"))?.write_all(&buf)?;
         Ok(())
     }
 }

@@ -1,31 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.jinja" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>{{ site.title }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    {% block favicon %}
-    <link rel="icon" type="image/png" href="/favicon.ico">
-    {% endblock favicon %}
-</head>
-
-<body>
-    {% block header %}
-
-    {% endblock header %}
-
-    <main>
-        {% block content %}
-        {% endblock content %}
-
-    </main>
-
-    {% block footer %}
-    <footer>
-    </footer>
-    {% endblock footer %}
-</body>
-
-</html>
-
+{% block content %}
+    {% for season in seasons %}
+        <div>
+            <h2><a href="{{ season.slug }}">{{ season.title }}</a></h2>
+            <p>{{ season.summary }}</p>
+        </div>
+    {% endfor %}
+{% endblock content %}

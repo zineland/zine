@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ site.title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% block favicon %}
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    {% endblock favicon %}
+</head>
+
+<body>
+    {% block header %}
+
+    {% endblock header %}
+
+    <main>
+        {% block content %}
+        {% endblock content %}
+
+    </main>
+
+    {% block footer %}
+    <footer>
+    </footer>
+    {% endblock footer %}
+</body>
+
+</html>
+
