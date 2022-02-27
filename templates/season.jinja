@@ -1,1 +1,14 @@
 {% extends "base.jinja" %}
+
+{% block content %}
+    <h1>{{ season.title }}</h1>
+    <p>{{ season.summary }}</p>
+
+    <ul>
+        {% for article in season.articles %}
+            <li>
+                <a href="{{ season.slug }}/{{ article.slug }}">{{ article.title }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock content %}

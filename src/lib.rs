@@ -33,7 +33,7 @@ pub struct Season {
     pub title: String,
     pub summary: Option<String>,
     pub path: String,
-    #[serde(rename = "article")]
+    #[serde(rename(deserialize = "article"))]
     #[serde(default)]
     pub articles: Vec<Article>,
 }

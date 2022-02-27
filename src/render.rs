@@ -14,8 +14,9 @@ pub trait Render {
 }
 
 impl Render for Season {
-    fn render(&mut self, tera: &mut Tera, context: Context, path: &Path) -> Result<()> {
+    fn render(&mut self, tera: &mut Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
+        context.insert("season", &self);
         tera.render_to("season.jinja", &context, &mut buf)?;
         let dir = path.join(&self.slug);
         if !dir.exists() {
