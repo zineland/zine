@@ -6,7 +6,7 @@ fn main() -> Result<()> {
     let zine = Parser::new("demo");
     let site = zine.parse()?;
     println!("{:?}", site);
-    let mut builder = Builder::new("dist")?;
+    let builder = Builder::new("dist")?;
     builder.build(site)?;
     Ok(())
 }

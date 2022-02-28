@@ -10,11 +10,11 @@ use tera::{Context, Tera};
 use crate::{Article, Season};
 
 pub trait Render {
-    fn render(&mut self, tera: &mut Tera, context: Context, path: &Path) -> Result<()>;
+    fn render(&mut self, tera: &Tera, context: Context, path: &Path) -> Result<()>;
 }
 
 impl Render for Season {
-    fn render(&mut self, tera: &mut Tera, mut context: Context, path: &Path) -> Result<()> {
+    fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("season", &self);
         tera.render_to("season.jinja", &context, &mut buf)?;
@@ -32,7 +32,7 @@ impl Render for Season {
 }
 
 impl Render for Article {
-    fn render(&mut self, tera: &mut Tera, mut context: Context, path: &Path) -> Result<()> {
+    fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("content", &self.html);
         tera.render_to("article.jinja", &context, &mut buf)?;

@@ -26,11 +26,11 @@ impl Builder {
     }
 
     /// Build the zine website from [`Zine`] config.
-    pub fn build(&mut self, mut zine: Zine) -> Result<()> {
+    pub fn build(&self, mut zine: Zine) -> Result<()> {
         let mut context = Context::new();
         context.insert("site", &zine.site);
         for season in &mut zine.seasons {
-            season.render(&mut self.tera, context.clone(), &self.target_dir)?;
+            season.render(&self.tera, context.clone(), &self.target_dir)?;
         }
 
         // Render home page.
