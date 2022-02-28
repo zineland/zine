@@ -7,18 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     {% block favicon %}
     <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="stylesheet" href="zine.css">
     {% endblock favicon %}
 </head>
 
-<body>
-    {% block header %}
+<body class="h-full bg-slate-100">
+    <div class="bg-blue-600	text-white text-center z-0">
+        <header class="p-8 md:p-10">
+            <div class="text-4xl">{{ site.name }}</div>
+        </header>
+        {% block hero %}
+        {% endblock hero %}
+        <div class="w-full h-20 md:h-28 lg:h-36 xl:h-44 2xl:h-48"></div>
+    </div>
 
-    {% endblock header %}
-
-    <main>
+    <main class="-translate-y-14 
+                 md:-translate-y-20 lg:md:-translate-y-28 xl:md:-translate-y-36 2xl:md:-translate-y-44
+                 mx-auto md:max-w-screen-md	xl:max-w-screen-lg">
         {% block content %}
         {% endblock content %}
-
     </main>
 
     {% block footer %}
