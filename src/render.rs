@@ -10,11 +10,11 @@ use tera::{Context, Tera};
 use crate::{Article, Page, Season};
 
 pub trait Render {
-    fn render(&mut self, tera: &Tera, context: Context, path: &Path) -> Result<()>;
+    fn render(&self, tera: &Tera, context: Context, path: &Path) -> Result<()>;
 }
 
 impl Render for Season {
-    fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
+    fn render(&self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("season", &self);
         tera.render_to("season.jinja", &context, &mut buf)?;
@@ -24,7 +24,7 @@ impl Render for Season {
         }
         File::create(dir.join("index.html"))?.write_all(&buf)?;
 
-        for artcile in &mut self.articles {
+        for artcile in &self.articles {
             artcile.render(tera, context.clone(), &dir)?;
         }
         Ok(())
@@ -32,7 +32,7 @@ impl Render for Season {
 }
 
 impl Render for Article {
-    fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
+    fn render(&self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("content", &self.html);
         tera.render_to("article.jinja", &context, &mut buf)?;
@@ -46,7 +46,7 @@ impl Render for Article {
 }
 
 impl Render for Page {
-    fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
+    fn render(&self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("content", &self.html);
         tera.render_to("article.jinja", &context, &mut buf)?;
