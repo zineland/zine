@@ -15,6 +15,12 @@
     <div class="bg-blue-600	text-white text-center z-0">
         <header class="p-8 md:p-10">
             <div class="text-4xl"><a href="/">{{ site.name }}</a></div>
+
+            <ul>
+                {% for menu in site.menus %}
+                    <li class="inline-block mt-6 mx-5 text-base hover:underline"><a href="{{ menu.url }}">{{ menu.name }}</a></li>
+                {% endfor %}
+            </ul>
         </header>
         {% block hero %}
         {% endblock hero %}

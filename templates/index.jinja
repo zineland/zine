@@ -3,7 +3,7 @@
 {% block content %}
     {% for season in seasons %}
         <div class="p-4 md:p-8 mx-4 my-6 bg-white 
-                    rounded shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+                    shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
             <h2><a href="{{ season.slug }}">{{ season.title }}</a></h2>
             <p>{{ season.summary }}</p>
         </div>

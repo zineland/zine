@@ -26,6 +26,15 @@ pub struct Site {
     pub logo: Option<String>,
     pub title: String,
     pub description: Option<String>,
+    #[serde(rename(deserialize = "menu"))]
+    #[serde(default)]
+    pub menus: Vec<Menu>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Menu {
+    pub name: String,
+    pub url: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -76,9 +85,6 @@ impl Article {
 
 impl Page {
     pub fn slug(&self) -> String {
-        self.file_path
-            .to_str()
-            .unwrap()
-            .replace(".md", "")
+        self.file_path.to_str().unwrap().replace(".md", "")
     }
 }
