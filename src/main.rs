@@ -1,4 +1,4 @@
-use std::{env, sync::mpsc, time::Duration};
+use std::{env, fs, sync::mpsc, time::Duration};
 
 use anyhow::Result;
 
@@ -27,9 +27,9 @@ fn main() -> Result<()> {
 }
 
 fn build() -> Result<()> {
-    let zine = Parser::new("demo");
-    let site = zine.parse()?;
+    let site = Parser::new("demo").parse()?;
     println!("{:?}", site);
-    let builder = Builder::new("dist")?;
-    builder.build(site)
+    Builder::new("dist")?.build(site)?;
+    fs::copy("target/zine.css", "dist/zine.css").expect("File target/zine.css doesn't exists");
+    Ok(())
 }
