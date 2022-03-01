@@ -49,7 +49,7 @@ impl Render for Page {
     fn render(&self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("content", &self.html);
-        tera.render_to("article.jinja", &context, &mut buf)?;
+        tera.render_to("page.jinja", &context, &mut buf)?;
         let dir = path.join(&self.slug());
         if !dir.exists() {
             fs::create_dir_all(&dir)?;
