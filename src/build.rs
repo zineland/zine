@@ -16,9 +16,7 @@ pub struct Builder {
 impl Builder {
     pub fn new(target_dir: &str) -> Result<Self> {
         let target_dir = PathBuf::from(target_dir);
-        if target_dir.exists() {
-            fs::remove_dir_all(&target_dir)?;
-        } else {
+        if !target_dir.exists() {
             fs::create_dir_all(&target_dir)?;
         }
         let tera = Tera::new("templates/*.jinja")?;

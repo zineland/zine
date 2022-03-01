@@ -6,6 +6,8 @@ use notify::Watcher;
 use zine::{Builder, Parser};
 
 fn main() -> Result<()> {
+    build()?;
+
     if matches!(env::args().nth(1).as_deref(), Some("-w" | "--watch")) {
         println!("Watching...");
 
@@ -19,8 +21,6 @@ fn main() -> Result<()> {
                 Err(err) => println!("watch error: {:?}", &err),
             }
         }
-    } else {
-        build()?;
     }
 
     Ok(())
