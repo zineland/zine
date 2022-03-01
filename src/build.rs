@@ -27,8 +27,14 @@ impl Builder {
     pub fn build(&self, mut zine: Zine) -> Result<()> {
         let mut context = Context::new();
         context.insert("site", &zine.site);
+        // Render season pages.
         for season in &mut zine.seasons {
             season.render(&self.tera, context.clone(), &self.target_dir)?;
+        }
+
+        // Render normal pages.
+        for page in &mut zine.pages {
+            page.render(&self.tera, context.clone(), &self.target_dir.join("page"))?;
         }
 
         // Render home page.

@@ -7,7 +7,7 @@ use std::{
 use anyhow::Result;
 use tera::{Context, Tera};
 
-use crate::{Article, Season};
+use crate::{Article, Page, Season};
 
 pub trait Render {
     fn render(&mut self, tera: &Tera, context: Context, path: &Path) -> Result<()>;
@@ -32,6 +32,20 @@ impl Render for Season {
 }
 
 impl Render for Article {
+    fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
+        let mut buf = vec![];
+        context.insert("content", &self.html);
+        tera.render_to("article.jinja", &context, &mut buf)?;
+        let dir = path.join(&self.slug());
+        if !dir.exists() {
+            fs::create_dir_all(&dir)?;
+        }
+        File::create(dir.join("index.html"))?.write_all(&buf)?;
+        Ok(())
+    }
+}
+
+impl Render for Page {
     fn render(&mut self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
         context.insert("content", &self.html);

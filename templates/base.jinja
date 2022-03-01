@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     {% block favicon %}
     <link rel="icon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="zine.css">
+    <link rel="stylesheet" href="/zine.css">
     {% endblock favicon %}
 </head>
 
 <body class="h-full bg-slate-100">
     <div class="bg-blue-600	text-white text-center z-0">
         <header class="p-8 md:p-10">
-            <div class="text-4xl">{{ site.name }}</div>
+            <div class="text-4xl"><a href="/">{{ site.name }}</a></div>
         </header>
         {% block hero %}
         {% endblock hero %}

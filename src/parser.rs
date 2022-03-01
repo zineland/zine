@@ -2,8 +2,9 @@ use anyhow::Result;
 use pulldown_cmark::{html, Options, Parser as MarkdownParser};
 use serde::Deserialize;
 use std::{fs, path::PathBuf};
+use walkdir::WalkDir;
 
-use crate::{Article, Zine};
+use crate::{Article, Page, Zine};
 
 static ZINE_FILE: &str = "zine.toml";
 
@@ -32,6 +33,7 @@ impl Parser {
         for season in &mut site.seasons {
             season.articles = self.parse_articles(&season.path)?;
         }
+        site.pages = self.parse_pages()?;
         Ok(site)
     }
 
@@ -46,5 +48,25 @@ impl Parser {
             html::push_html(&mut article.html, markdown_parser);
         }
         Ok(season_file.articles)
+    }
+
+    fn parse_pages(&self) -> Result<Vec<Page>> {
+        let mut pages = vec![];
+        let page_dir = self.path.join("pages");
+        for entry in WalkDir::new(&page_dir) {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file() {
+                let markdown = fs::read_to_string(path)?;
+                let markdown_parser = MarkdownParser::new_ext(&markdown, Options::all());
+                let mut html = String::new();
+                html::push_html(&mut html, markdown_parser);
+                pages.push(Page {
+                    html,
+                    file_path: path.strip_prefix(&page_dir)?.to_owned(),
+                });
+            }
+        }
+        Ok(pages)
     }
 }

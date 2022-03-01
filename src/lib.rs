@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 mod build;
@@ -57,9 +59,10 @@ pub struct Article {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Page {
-    pub slug: String,
-    pub name: String,
-    pub content: String,
+    // pub file_name: String,
+    pub html: String,
+    // Relative path of page file.
+    pub file_path: PathBuf,
 }
 
 impl Article {
@@ -68,5 +71,14 @@ impl Article {
             .as_ref()
             .cloned()
             .unwrap_or_else(|| self.file.replace(".md", ""))
+    }
+}
+
+impl Page {
+    pub fn slug(&self) -> String {
+        self.file_path
+            .to_str()
+            .unwrap()
+            .replace(".md", "")
     }
 }
