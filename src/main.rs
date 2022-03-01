@@ -1,4 +1,4 @@
-use std::{env, fs, sync::mpsc, time::Duration};
+use std::{env, fs, path::PathBuf, sync::mpsc, time::Duration};
 
 use anyhow::Result;
 
@@ -31,5 +31,21 @@ fn build() -> Result<()> {
     println!("{:?}", site);
     Builder::new("dist")?.build(site)?;
     fs::copy("target/zine.css", "dist/zine.css").expect("File target/zine.css doesn't exists");
+    copy_static_assets("demo", "dist")?;
+    Ok(())
+}
+
+fn copy_static_assets(source: &str, dist: &str) -> Result<()> {
+    let dist = PathBuf::from(dist);
+    for entry in walkdir::WalkDir::new(&format!("{}/static", source)) {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            fs::create_dir_all(dist.join(path.strip_prefix(source)?))?;
+        } else if path.is_file() {
+            let to = dist.join(path.strip_prefix(source)?);
+            fs::copy(path, to)?;
+        }
+    }
     Ok(())
 }
