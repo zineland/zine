@@ -43,6 +43,7 @@ pub struct Season {
     pub number: u32,
     pub title: String,
     pub summary: Option<String>,
+    pub cover: Option<String>,
     pub path: String,
     #[serde(rename(deserialize = "article"))]
     #[serde(default)]
@@ -57,6 +58,7 @@ pub struct Article {
     pub slug: Option<String>,
     pub title: String,
     pub author: Option<String>,
+    pub cover: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing)]
     pub html: String,

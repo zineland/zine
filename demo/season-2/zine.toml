@@ -4,6 +4,7 @@ slug = "first"
 file = "first.md"
 title = "First article"
 author = "Folyd"
+cover = "/static/duck.png"
 pub_date = "2022-03-25"
 publish = true
 
@@ -12,5 +13,6 @@ slug = "second"
 file = "second.md"
 title = "Second article"
 author = "Folyd"
+cover = "/static/duck.png"
 pub_date = "2022-04-25"
 publish = false
