@@ -1,7 +1,18 @@
 {% extends "base.jinja" %}
 
-
-
 {% block content %}
-    {{ content | safe }}
+<div class="p-4 md:p-8 mx-4 my-6 bg-white 
+            shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+    <div class="relative">
+        <a class="font-bold hover:underline" href="/{{ season.slug }}">{{ season.title }}</a><span> / 第 {{ number }} 期</span>
+    </div>
+    <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
+    <div class="prose mx-auto">
+        <h1 class="text-center">{{ article.title }}</h1>
+        <div class="text-right text-sm text-gray-400">发布于 {{ article.pub_date }}</div>
+    </div>
+    <article class="prose mx-auto mt-10">
+        {{ article.html | safe }}
+    </article>
+</div>
 {% endblock content %}

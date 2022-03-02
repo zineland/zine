@@ -60,7 +60,6 @@ pub struct Article {
     pub author: Option<String>,
     pub cover: Option<String>,
     #[serde(default)]
-    #[serde(skip_serializing)]
     pub html: String,
     // TODO: deserialize to OffsetDateTime
     pub pub_date: String,

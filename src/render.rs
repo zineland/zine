@@ -24,8 +24,10 @@ impl Render for Season {
         }
         File::create(dir.join("index.html"))?.write_all(&buf)?;
 
-        for artcile in &self.articles {
-            artcile.render(tera, context.clone(), &dir)?;
+        for (index, artcile) in self.articles.iter().enumerate() {
+            let mut context = context.clone();
+            context.insert("number", &(index + 1));
+            artcile.render(tera, context, &dir)?;
         }
         Ok(())
     }
@@ -34,7 +36,7 @@ impl Render for Season {
 impl Render for Article {
     fn render(&self, tera: &Tera, mut context: Context, path: &Path) -> Result<()> {
         let mut buf = vec![];
-        context.insert("content", &self.html);
+        context.insert("article", &self);
         tera.render_to("article.jinja", &context, &mut buf)?;
         let dir = path.join(&self.slug());
         if !dir.exists() {
