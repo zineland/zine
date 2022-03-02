@@ -38,7 +38,9 @@ impl Builder {
         }
 
         // Render home page.
-        context.insert("seasons", &zine.seasons);
+        let mut seasons = zine.seasons;
+        seasons.sort_unstable_by_key(|s| s.number);
+        context.insert("seasons", &seasons);
         let mut buf = vec![];
         self.tera.render_to("index.jinja", &context, &mut buf)?;
         File::create(self.target_dir.join("index.html"))?.write_all(&buf)?;

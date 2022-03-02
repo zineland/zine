@@ -1,7 +1,7 @@
 {% extends "base.jinja" %}
 
 {% block content %}
-    {% for season in seasons %}
+    {% for season in seasons | reverse %}
         <div class="p-4 md:p-8 mx-4 my-6 bg-white flex flex-col
                     shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
             <div class="flex flex-col sm:flex-row">
