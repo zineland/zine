@@ -2,10 +2,20 @@
 
 {% block content %}
     {% for season in seasons %}
-        <div class="p-4 md:p-8 mx-4 my-6 bg-white 
+        <div class="p-4 md:p-8 mx-4 my-6 bg-white flex flex-col
                     shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-            <h2><a href="{{ season.slug }}">{{ season.title }}</a></h2>
-            <p>{{ season.summary }}</p>
+            <div class="flex flex-col sm:flex-row">
+                <img class="sm:w-96 h-60" src="/static/duck.png" alt="{{ season.title }}">
+                <div class="mt-4 sm:mt-0 sm:pl-6">
+                    <div class="text-3xl font-bold my-4 hover:underline"><a href="{{ season.slug }}">{{ season.title }}</a></div>
+                    <p>{{ season.summary }}</p>
+                </div>
+            </div
+            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for article in season.articles %}
+                <div class=""><a class="hover:underline" href="{{ season.slug }}/{{ article.slug }}">{{ article.title }}</a></div>
+                {% endfor %}
+            </div>
         </div>
     {% endfor %}
 {% endblock content %}
