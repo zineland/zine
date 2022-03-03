@@ -5,16 +5,12 @@
         <div class="p-4 md:p-8 mx-4 my-6 bg-white flex flex-col
                     shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
             <div class="flex flex-col sm:flex-row">
-                <img class="sm:w-96 h-60" src="/static/duck.png" alt="{{ season.title }}">
+                <img class="sm:w-96 h-60 object-cover" src="{{ season.cover }}" alt="{{ season.title }}">
                 <div class="mt-4 sm:mt-0 sm:pl-6">
                     <div class="text-3xl font-bold my-4 hover:underline"><a href="{{ season.slug }}">{{ season.title }}</a></div>
                     <p>{{ season.summary }}</p>
+                    <div class="text-gray-500 mt-4">已更新 {{ season.articles | length }} 期 / 共 10 期</div>
                 </div>
-            </div
-            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {% for article in season.articles %}
-                <div class=""><a class="hover:underline" href="{{ season.slug }}/{{ article.slug }}">{{ article.title }}</a></div>
-                {% endfor %}
             </div>
         </div>
     {% endfor %}

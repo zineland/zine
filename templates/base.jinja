@@ -21,7 +21,7 @@
 
 <body class="h-full bg-secondary">
     {% if theme.background_image %}
-    <div class="bg-primary text-primary-text font-bold text-center z-0 bg-no-repeat" style="background-image: url('{{ theme.background_image }}')">
+    <div class="bg-primary text-primary-text font-bold text-center z-0" style="background-image: url('{{ theme.background_image }}')">
     {% else %}
     <div class="bg-primary text-primary-text font-bold text-center z-0">
     {% endif %}
@@ -36,11 +36,11 @@
         </header>
         {% block hero %}
         {% endblock hero %}
-        <div class="w-full h-20 md:h-28 lg:h-36 xl:h-44 2xl:h-48"></div>
+        <div class="w-full h-32 md:h-36 lg:h-44 xl:h-48 2xl:h-56"></div>
     </div>
 
-    <main class="-translate-y-14 
-                 md:-translate-y-20 lg:md:-translate-y-28 xl:md:-translate-y-36 2xl:md:-translate-y-44
+    <main class="-translate-y-32 
+                 md:-translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56
                  mx-auto md:max-w-screen-md	xl:max-w-screen-lg">
             {% block content %}
             {% endblock content %}
