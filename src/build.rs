@@ -26,6 +26,7 @@ impl Builder {
     /// Build the zine website from [`Zine`] config.
     pub fn build(&self, zine: Zine) -> Result<()> {
         let mut context = Context::new();
+        context.insert("theme", &zine.theme);
         context.insert("site", &zine.site);
         // Render season pages.
         for season in &zine.seasons {

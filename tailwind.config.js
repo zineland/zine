@@ -8,11 +8,15 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        primary: 'var(--primary-color)',
+        secondary: 'var(--secondary-color)',
+      },
       typography: {
         DEFAULT: {
           css: {
             a: {
-              color: 'var(--primary-color)',
+              color: 'var(--primary-link-color)',
               textDecoration: 'none',
               fontWeight: '400',
             },

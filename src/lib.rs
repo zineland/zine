@@ -13,6 +13,8 @@ pub use parser::Parser;
 pub struct Zine {
     pub site: Site,
     #[serde(default)]
+    pub theme: Option<Theme>,
+    #[serde(default)]
     #[serde(rename = "season")]
     pub seasons: Vec<Season>,
     #[serde(rename = "page")]
@@ -29,6 +31,44 @@ pub struct Site {
     #[serde(rename(deserialize = "menu"))]
     #[serde(default)]
     pub menus: Vec<Menu>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all(deserialize = "kebab-case"))]
+pub struct Theme {
+    // The primary color.
+    #[serde(default = "Theme::default_primary_color")]
+    pub primary_color: String,
+    #[serde(default = "Theme::default_text_color")]
+    pub primary_text_color: String,
+    #[serde(default = "Theme::default_link_color")]
+    pub primary_link_color: String,
+    // The background color.
+    #[serde(default = "Theme::default_secondary_color")]
+    pub secondary_color: String,
+}
+
+impl Theme {
+    pub const DEFAULT_PRIMARY_COLOR: &'static str = "#2563eb";
+    pub const DEFAULT_TEXT_COLOR: &'static str = "#ffffff";
+    pub const DEFAULT_LINK_COLOR: &'static str = "#2563eb";
+    pub const DEFAULT_SECONDARY_COLOR: &'static str = "#eff3f7";
+
+    fn default_primary_color() -> String {
+        Self::DEFAULT_PRIMARY_COLOR.to_string()
+    }
+
+    fn default_text_color() -> String {
+        Self::DEFAULT_TEXT_COLOR.to_string()
+    }
+
+    fn default_link_color() -> String {
+        Self::DEFAULT_LINK_COLOR.to_string()
+    }
+
+    fn default_secondary_color() -> String {
+        Self::DEFAULT_SECONDARY_COLOR.to_string()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -50,7 +90,7 @@ pub struct Season {
     pub articles: Vec<Article>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Article {
     pub file: String,
     // The slug after this artcile rendered.
@@ -65,6 +105,20 @@ pub struct Article {
     pub pub_date: String,
     #[serde(default)]
     pub publish: bool,
+}
+
+impl std::fmt::Debug for Article {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Article")
+            .field("file", &self.file)
+            .field("slug", &self.slug)
+            .field("title", &self.title)
+            .field("author", &self.author)
+            .field("cover", &self.cover)
+            .field("pub_date", &self.pub_date)
+            .field("publish", &self.publish)
+            .finish()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
