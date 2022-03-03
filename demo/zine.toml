@@ -4,8 +4,8 @@ name = "Demo"
 title = "Demo Zine Site"
 description = "Demonstration of Zine."
 menu = [
-    { name = "About", url = "/page/about" },
-    { name = "Github", url = "https://github.com" },
+  { name = "About", url = "/page/about" },
+  { name = "Github", url = "https://github.com" },
 ]
 
 [[season]]

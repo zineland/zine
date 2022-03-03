@@ -9,9 +9,9 @@ pub_date = "2022-02-25"
 publish = true
 
 [[article]]
-slug = "mirantis"
-file = "mirantis.md"
-title = "收购 Docker 企业业务的 Mirantis 是什么来路？"
+slug = "second"
+file = "second.md"
+title = "Second article"
 author = "Folyd"
 cover = "/static/duck.png"
 pub_date = "2022-03-25"
