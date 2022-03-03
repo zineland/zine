@@ -46,6 +46,9 @@ pub struct Theme {
     // The background color.
     #[serde(default = "Theme::default_secondary_color")]
     pub secondary_color: String,
+    // The background image url.
+    #[serde(default)]
+    pub background_image: Option<String>,
 }
 
 impl Theme {

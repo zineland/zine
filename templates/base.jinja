@@ -20,9 +20,13 @@
 </head>
 
 <body class="h-full bg-secondary">
-    <div class="bg-primary	text-white text-center z-0">
+    {% if theme.background_image %}
+    <div class="bg-primary text-primary-text font-bold text-center z-0 bg-no-repeat" style="background-image: url('{{ theme.background_image }}')">
+    {% else %}
+    <div class="bg-primary text-primary-text font-bold text-center z-0">
+    {% endif %}
         <header class="p-8 md:p-10">
-            <div class="text-4xl"><a href="/">{{ site.name }}</a></div>
+            <div class="text-4xl lg:text-5xl"><a href="/">{{ site.name }}</a></div>
 
             <ul>
                 {% for menu in site.menus %}
