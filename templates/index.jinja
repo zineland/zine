@@ -13,5 +13,24 @@
                 </div>
             </div>
         </div>
+        <ul class="mx-4 mt-8 grid grid-cols-1 lg:grid-cols-2 gap-0">
+            {% for article in season.articles %}
+                <div class="my-6">
+                    <a href="/{{ season.slug }}/{{ article.slug }}">
+                        {% if loop.index % 2 == 0 %}
+                            {% set margin = "lg:mr-0" %}
+                        {% else %}
+                            {% set margin = "lg:ml-0" %}
+                        {% endif %}
+                        <div class="relative {{ margin }} mx-auto drop-shadow-xl sm:min-w-md sm:max-w-md">
+                            <img class="z-0 w-full max-h-52 md:max-h-56 object-cover" src="{{ article.cover }}" alt="{{ article.title }}"/>
+                            <div class="absolute w-full bottom-0 p-3 z-10 text-lg text-white bg-black/50">
+                                {{ article.title }}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </ul>
     {% endfor %}
 {% endblock content %}
