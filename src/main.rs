@@ -1,8 +1,10 @@
-use std::{fs, path::PathBuf, sync::mpsc, time::Duration};
+use std::{fs, net::SocketAddr, path::PathBuf, sync::mpsc, time::Duration};
 
 use anyhow::Result;
 use clap::StructOpt;
 use notify::Watcher;
+use tokio::{runtime::Runtime, task};
+use tower_http::services::ServeDir;
 use zine::{Builder, Parser};
 
 #[derive(Debug, clap::Parser)]
@@ -23,10 +25,18 @@ enum Commands {
         /// The destination directory. Default dest dir is `build`.
         dest: Option<String>,
         /// Enable watching.
-        #[clap(short = 'w', long = "watch")]
+        #[clap(short, long)]
         watch: bool,
     },
-    Serve,
+    /// Serve the zine site.
+    #[clap(arg_required_else_help = true)]
+    Serve {
+        /// The source directory of zine site.
+        source: String,
+        /// The listen port.
+        #[clap(short, default_value_t = 3000)]
+        port: u16,
+    },
 }
 
 fn main() -> Result<()> {
@@ -37,25 +47,46 @@ fn main() -> Result<()> {
             watch,
         } => {
             let dest = dest.unwrap_or_else(|| "build".into());
-            build(&source, &dest)?;
-
-            if watch {
-                println!("Watching...");
-                let (tx, rx) = mpsc::channel();
-                let mut watcher = notify::watcher(tx, Duration::from_secs(1))?;
-                watcher.watch("templates", notify::RecursiveMode::Recursive)?;
-
-                loop {
-                    match rx.recv() {
-                        Ok(_) => build(&source, &dest)?,
-                        Err(err) => println!("watch error: {:?}", &err),
-                    }
-                }
-            }
+            watch_build(&source, &dest, watch)?;
         }
-        Commands::Serve => {}
+        Commands::Serve { source, port } => {
+            let rt = Runtime::new()?;
+            rt.block_on(async {
+                let tmp_dir = "/tmp/zine_build";
+                task::spawn_blocking(move || {
+                    watch_build(&source, tmp_dir, true).unwrap();
+                });
+
+                let addr = SocketAddr::from(([127, 0, 0, 1], port));
+                let service = ServeDir::new(tmp_dir);
+                println!("listening on http://{}", addr.to_string());
+                hyper::Server::bind(&addr)
+                    .serve(tower::make::Shared::new(service))
+                    .await
+                    .expect("server error");
+            });
+        }
     }
 
+    Ok(())
+}
+
+fn watch_build(source: &str, dest: &str, watch: bool) -> Result<()> {
+    build(source, dest)?;
+
+    if watch {
+        println!("Watching...");
+        let (tx, rx) = mpsc::channel();
+        let mut watcher = notify::watcher(tx, Duration::from_secs(1))?;
+        watcher.watch("templates", notify::RecursiveMode::Recursive)?;
+
+        loop {
+            match rx.recv() {
+                Ok(_) => build(source, dest)?,
+                Err(err) => println!("watch error: {:?}", &err),
+            }
+        }
+    }
     Ok(())
 }
 
