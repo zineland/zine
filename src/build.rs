@@ -19,7 +19,8 @@ impl Builder {
         if !target_dir.exists() {
             fs::create_dir_all(&target_dir)?;
         }
-        let tera = Tera::new("templates/*.jinja")?;
+        let mut tera = Tera::new("templates/*.jinja")?;
+        tera.register_function("editor_choice", editor_choice_fn);
         Ok(Builder { target_dir, tera })
     }
 
@@ -46,5 +47,24 @@ impl Builder {
         self.tera.render_to("index.jinja", &context, &mut buf)?;
         File::create(self.target_dir.join("index.html"))?.write_all(&buf)?;
         Ok(())
+    }
+}
+
+// A tera function to filter editor choice articles.
+fn editor_choice_fn(
+    map: &std::collections::HashMap<String, serde_json::Value>,
+) -> tera::Result<serde_json::Value> {
+    if let Some(serde_json::Value::Array(articles)) = map.get("articles") {
+        Ok(serde_json::Value::Array(
+            articles
+                .iter()
+                .filter(|article| {
+                    article.get("editor_choice") == Some(&serde_json::Value::Bool(true))
+                })
+                .cloned()
+                .collect(),
+        ))
+    } else {
+        Ok(serde_json::Value::Array(vec![]))
     }
 }
