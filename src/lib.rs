@@ -12,8 +12,7 @@ pub use parser::Parser;
 #[derive(Debug, Deserialize)]
 pub struct Zine {
     pub site: Site,
-    #[serde(default)]
-    pub theme: Option<Theme>,
+    pub theme: Theme,
     #[serde(default)]
     #[serde(rename = "season")]
     pub seasons: Vec<Season>,
@@ -49,6 +48,8 @@ pub struct Theme {
     // The background image url.
     #[serde(default)]
     pub background_image: Option<String>,
+    // The custom footer template path, will be parsed to html.
+    pub footer_template: Option<String>,
 }
 
 impl Theme {

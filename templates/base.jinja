@@ -47,7 +47,11 @@
     </main>
 
     {% block footer %}
-        {% include "footer.jinja" %}
+        {% if theme.footer_template %}
+            {{ theme.footer_template }}
+        {% else %}
+            {% include "footer.jinja" %}
+        {% endif %}
     {% endblock footer %}
 </body>
 

@@ -30,6 +30,12 @@ impl Parser {
     pub fn parse(&self) -> Result<Zine> {
         let content = fs::read_to_string(&self.path.join(ZINE_FILE))?;
         let mut site = toml::from_str::<Zine>(&content)?;
+        if let Some(footer_template) = site.theme.footer_template {
+            // Read footer tempolate from path to html.
+            site.theme.footer_template =
+                Some(fs::read_to_string(&self.path.join(&footer_template))?);
+        }
+
         for season in &mut site.seasons {
             season.articles = self.parse_articles(&season.path)?;
         }
