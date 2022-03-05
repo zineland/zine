@@ -14,7 +14,7 @@
             </div>
         </div>
         <ul class="mx-4 mt-8 grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {% for article in editor_choice(articles = season.articles) %}
+            {% for article in featured(articles = season.articles) %}
                 <div class="my-6">
                     <a href="/{{ season.slug }}/{{ article.slug }}">
                         {% if loop.index % 2 == 0 %}

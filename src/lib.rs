@@ -107,11 +107,10 @@ pub struct Article {
     pub html: String,
     // TODO: deserialize to OffsetDateTime
     pub pub_date: String,
-    // Wheter the article is an editor's choice article.
-    // Editor's choice article will display in home page 
-    // following the season tile.
+    // Wheter the article is an featured article.
+    // Featured article will display in home page.
     #[serde(default)]
-    pub editor_choice: bool,
+    pub featured: bool,
     #[serde(default)]
     pub publish: bool,
 }

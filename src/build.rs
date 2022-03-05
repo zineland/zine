@@ -20,7 +20,7 @@ impl Builder {
             fs::create_dir_all(&target_dir)?;
         }
         let mut tera = Tera::new("templates/*.jinja")?;
-        tera.register_function("editor_choice", editor_choice_fn);
+        tera.register_function("featured", featured_fn);
         Ok(Builder { target_dir, tera })
     }
 
@@ -50,8 +50,8 @@ impl Builder {
     }
 }
 
-// A tera function to filter editor choice articles.
-fn editor_choice_fn(
+// A tera function to filter featured articles.
+fn featured_fn(
     map: &std::collections::HashMap<String, serde_json::Value>,
 ) -> tera::Result<serde_json::Value> {
     if let Some(serde_json::Value::Array(articles)) = map.get("articles") {
@@ -59,7 +59,7 @@ fn editor_choice_fn(
             articles
                 .iter()
                 .filter(|article| {
-                    article.get("editor_choice") == Some(&serde_json::Value::Bool(true))
+                    article.get("featured") == Some(&serde_json::Value::Bool(true))
                 })
                 .cloned()
                 .collect(),
