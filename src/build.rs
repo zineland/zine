@@ -21,6 +21,7 @@ impl Builder {
         }
         let mut tera = Tera::new("templates/*.jinja")?;
         tera.register_function("featured", featured_fn);
+        tera.register_function("pick_non_featured_article", pick_non_featured_article_fn);
         Ok(Builder { target_dir, tera })
     }
 
@@ -58,13 +59,27 @@ fn featured_fn(
         Ok(serde_json::Value::Array(
             articles
                 .iter()
-                .filter(|article| {
-                    article.get("featured") == Some(&serde_json::Value::Bool(true))
-                })
+                .filter(|article| article.get("featured") == Some(&serde_json::Value::Bool(true)))
                 .cloned()
                 .collect(),
         ))
     } else {
         Ok(serde_json::Value::Array(vec![]))
     }
+}
+
+// A tera function to pick a non featured article.
+fn pick_non_featured_article_fn(
+    map: &std::collections::HashMap<String, serde_json::Value>,
+) -> tera::Result<serde_json::Value> {
+    if let Some(serde_json::Value::Array(articles)) = map.get("articles") {
+        if let Some(article) = articles
+            .iter()
+            .find(|article| article.get("featured") == Some(&serde_json::Value::Bool(false)))
+            .cloned()
+        {
+            return Ok(article);
+        }
+    }
+    Ok(serde_json::Value::Null)
 }
