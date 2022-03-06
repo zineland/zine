@@ -3,8 +3,13 @@
 {% block content %}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white 
             shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-    <div class="relative">
-        <a class="font-bold hover:underline" href="/{{ season.slug }}">{{ season.title }}</a><span> / 第 {{ number }} 期</span>
+    <div class="relative mx-2">
+        <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block
+                                transition hover:scale-110 duration-500"
+                        href="/{{ season.slug }}">
+            <div class="relative text-primary-text px-4">{{ season.title }}</div>
+        </a>
+        <span class="ml-2 text-gray-700"> / 第 {{ number }} 期</span>
     </div>
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="prose mx-auto">
