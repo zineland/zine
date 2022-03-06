@@ -9,7 +9,7 @@ use zine::{Builder, Parser};
 
 #[derive(Debug, clap::Parser)]
 #[clap(name = "zine")]
-#[clap(about = "An simple and opinionated tool to build your own magazine.", long_about = None)]
+#[clap(about = "A simple and opinionated tool to build your own magazine.", long_about = None)]
 struct Cli {
     #[clap(subcommand)]
     command: Commands,

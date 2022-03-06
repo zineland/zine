@@ -1,6 +1,6 @@
 # zine
 
-Zine - an simple and opinionated tool to build your own magazine.
+Zine - a simple and opinionated tool to build your own magazine.
 
 ## TODO
 
@@ -11,3 +11,5 @@ Zine - an simple and opinionated tool to build your own magazine.
 [] Support render OGP meta
 
 [] Support RSS Feed
+
+[] Generate word cloud for season
