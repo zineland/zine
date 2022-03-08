@@ -41,7 +41,9 @@ module.exports = {
     },
     plugins: [
         // A plugin to pretty markdown content.
-        require('@tailwindcss/typography'),
+        require('@tailwindcss/typography')({
+            target: 'legacy', // disables :where() selectors
+        }),
         // A plugin to truncate text to a fixed number of lines.
         require('@tailwindcss/line-clamp'),
     ],
