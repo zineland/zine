@@ -1,7 +1,7 @@
 use anyhow::Result;
 use pulldown_cmark::{html, Options, Parser as MarkdownParser};
 use serde::Deserialize;
-use std::{fs, path::PathBuf};
+use std::{fs, path::{PathBuf, Path}};
 use walkdir::WalkDir;
 
 use crate::{Article, Page, Zine};
@@ -21,7 +21,7 @@ struct SeasonFile {
 }
 
 impl Parser {
-    pub fn new(path: &str) -> Self {
+    pub fn new(path: &Path) -> Self {
         Parser {
             path: PathBuf::from(path),
         }

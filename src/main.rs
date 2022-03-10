@@ -1,4 +1,10 @@
-use std::{fs, net::SocketAddr, path::PathBuf, sync::mpsc, time::Duration};
+use std::{
+    env, fs,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+    sync::mpsc,
+    time::Duration,
+};
 
 use anyhow::Result;
 use clap::StructOpt;
@@ -52,13 +58,13 @@ fn main() -> Result<()> {
         Commands::Serve { source, port } => {
             let rt = Runtime::new()?;
             rt.block_on(async {
-                let tmp_dir = "/tmp/zine_build";
+                let tmp_dir = env::temp_dir();
+                let addr = SocketAddr::from(([127, 0, 0, 1], port));
+                let service = ServeDir::new(&tmp_dir);
                 task::spawn_blocking(move || {
-                    watch_build(&source, tmp_dir, true).unwrap();
+                    watch_build(Path::new(&source), tmp_dir.as_path(), true).unwrap();
                 });
 
-                let addr = SocketAddr::from(([127, 0, 0, 1], port));
-                let service = ServeDir::new(tmp_dir);
                 println!("listening on http://{}", addr.to_string());
                 hyper::Server::bind(&addr)
                     .serve(tower::make::Shared::new(service))
@@ -71,8 +77,8 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn watch_build(source: &str, dest: &str, watch: bool) -> Result<()> {
-    build(source, dest)?;
+fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
+    build(&source, &dest)?;
 
     if watch {
         println!("Watching...");
@@ -82,7 +88,7 @@ fn watch_build(source: &str, dest: &str, watch: bool) -> Result<()> {
 
         loop {
             match rx.recv() {
-                Ok(_) => build(source, dest)?,
+                Ok(_) => build(&source, &dest)?,
                 Err(err) => println!("watch error: {:?}", &err),
             }
         }
@@ -90,25 +96,28 @@ fn watch_build(source: &str, dest: &str, watch: bool) -> Result<()> {
     Ok(())
 }
 
-fn build(source: &str, dest: &str) -> Result<()> {
+fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
+    let source = source.as_ref();
+    let dest = dest.as_ref();
     let site = Parser::new(source).parse()?;
     println!("{:?}", site);
     Builder::new(dest)?.build(site)?;
-    fs::copy("target/zine.css", format!("{}/zine.css", dest))
+    fs::copy("target/zine.css", format!("{}/zine.css", dest.display()))
         .expect("File target/zine.css doesn't exists");
     copy_static_assets(source, dest)?;
     Ok(())
 }
 
-fn copy_static_assets(source: &str, dest: &str) -> Result<()> {
-    let dist = PathBuf::from(dest);
-    for entry in walkdir::WalkDir::new(&format!("{}/static", source)) {
+fn copy_static_assets<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
+    let source = source.as_ref();
+    let dest = PathBuf::from(dest.as_ref());
+    for entry in walkdir::WalkDir::new(&format!("{}/static", source.display())) {
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            fs::create_dir_all(dist.join(path.strip_prefix(source)?))?;
+            fs::create_dir_all(dest.join(path.strip_prefix(source)?))?;
         } else if path.is_file() {
-            let to = dist.join(path.strip_prefix(source)?);
+            let to = dest.join(path.strip_prefix(source)?);
             fs::copy(path, to)?;
         }
     }

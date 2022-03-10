@@ -2,7 +2,7 @@ use anyhow::Result;
 use std::{
     fs::{self, File},
     io::Write,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 use tera::{Context, Tera};
 
@@ -14,7 +14,7 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new(target_dir: &str) -> Result<Self> {
+    pub fn new(target_dir: &Path) -> Result<Self> {
         let target_dir = PathBuf::from(target_dir);
         if !target_dir.exists() {
             fs::create_dir_all(&target_dir)?;
