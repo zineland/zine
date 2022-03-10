@@ -1,4 +1,5 @@
 {% extends "base.jinja" %}
+{% import "macros.jinja" as macros %}
 
 {% block content %}
     {% for season in seasons | reverse %}
@@ -13,21 +14,7 @@
             </div>
             <div class="flex flex-wrap flex-col sm:flex-row sm:justify-between items-center">
                 {% for article in featured(articles = season.articles) %}
-                <div class="mt-8 sm:max-w-md w-full transition ease-in-out hover:scale-105 duration-500 border border-gray-200">
-                    <a href="/{{ season.slug }}/{{ article.slug }}">
-                        <div class="relative mx-auto group">
-                            <div class="absolute w-full h-full bg-black opacity-0 group-hover:opacity-50 transition duration-500"></div>
-                            <div class="absolute w-full bottom-0 p-3 text-xl text-white"
-                                 style="color: #eee; text-shadow: 1px 1px 2px #000">
-                                {{ article.title }}
-                                <div class="text-base text-white">
-                                    {{ article.pub_date }}
-                                </div>
-                            </div>
-                            <img class="z-0 w-full max-h-52 md:max-h-56 object-cover" src="{{ article.cover }}" alt="{{ article.title }}"/>
-                        </div>
-                    </a>
-                </div>
+                    {{ macros::article_card(season = season, article = article) }}
                 {% endfor %}
                 <div class="mt-8 flex flex-col justify-between w-full mx-auto sm:max-w-md">
                     <a href="{{ season.slug }}" class="p-3 px-12 mx-auto my-8 bg-primary text-primary-text text-sm font-bold rounded transition hover:scale-110 duration-500">
