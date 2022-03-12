@@ -2,12 +2,12 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-mod build;
-mod parser;
-mod render;
+mod entity;
+mod zine;
 
-pub use build::Builder;
-pub use parser::Parser;
+pub use zine::ZineEngine;
+
+pub static ZINE_FILE: &str = "zine.toml";
 
 #[derive(Debug, Deserialize)]
 pub struct Zine {

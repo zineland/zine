@@ -11,7 +11,7 @@ use clap::StructOpt;
 use notify::Watcher;
 use tokio::{runtime::Runtime, task};
 use tower_http::services::ServeDir;
-use zine::{Builder, Parser};
+use zine::ZineEngine;
 
 #[derive(Debug, clap::Parser)]
 #[clap(name = "zine")]
@@ -99,9 +99,7 @@ fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
 fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     let source = source.as_ref();
     let dest = dest.as_ref();
-    let site = Parser::new(source).parse()?;
-    println!("{:?}", site);
-    Builder::new(dest)?.build(site)?;
+    ZineEngine::new(source, dest)?.bootstrap()?;
     fs::copy("target/zine.css", format!("{}/zine.css", dest.display()))
         .expect("File target/zine.css doesn't exists");
     copy_static_assets(source, dest)?;
