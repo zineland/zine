@@ -8,7 +8,7 @@ use anyhow::Result;
 use once_cell::sync::Lazy;
 use tera::{Context, Tera};
 
-use crate::{entity::Entity, Zine, ZINE_FILE};
+use crate::entity::{Entity, Zine};
 
 static TEMPLATE_DIR: &str = "templates/*.jinja";
 
@@ -56,7 +56,7 @@ impl ZineEngine {
     }
 
     pub fn bootstrap(&self) -> Result<()> {
-        let content = fs::read_to_string(&self.source.join(ZINE_FILE))?;
+        let content = fs::read_to_string(&self.source.join(crate::ZINE_FILE))?;
         let mut zine = toml::from_str::<Zine>(&content)?;
 
         zine.parse(&self.source)?;
