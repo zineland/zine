@@ -10,7 +10,7 @@ use tera::{Context, Tera};
 
 use crate::{entity::Entity, Zine, ZINE_FILE};
 
-static TEMPLATE_DIR: &'static str = "templates/*.jinja";
+static TEMPLATE_DIR: &str = "templates/*.jinja";
 
 static TERA: Lazy<Tera> = Lazy::new(|| {
     let mut tera = Tera::new(TEMPLATE_DIR).expect("Invalid template dir.");
@@ -24,24 +24,14 @@ pub struct ZineEngine {
     dest: PathBuf,
 }
 
-#[derive(Debug, Clone)]
-pub struct Render {
-    context: Context,
-}
+#[derive(Debug, Clone, Copy)]
+pub struct Render;
 
 impl Render {
-    pub fn new(context: Context) -> Self {
-        Render { context }
-    }
-
-    pub fn insert<T: serde::Serialize + ?Sized, S: Into<String>>(&mut self, key: S, val: &T) {
-        self.context.insert(key, val);
-    }
-
-    pub fn render(&self, template: &str, dest_path: impl AsRef<Path>) -> Result<()> {
+    pub fn render(template: &str, context: &Context, dest_path: impl AsRef<Path>) -> Result<()> {
         let mut buf = vec![];
         let dest = dest_path.as_ref().join("index.html");
-        TERA.render_to(template, &self.context, &mut buf)?;
+        TERA.render_to(template, context, &mut buf)?;
         if let Some(parent_dir) = dest.parent() {
             if !parent_dir.exists() {
                 fs::create_dir_all(&parent_dir)?;
@@ -68,13 +58,9 @@ impl ZineEngine {
     pub fn bootstrap(&self) -> Result<()> {
         let content = fs::read_to_string(&self.source.join(ZINE_FILE))?;
         let mut zine = toml::from_str::<Zine>(&content)?;
-        let mut context = Context::new();
-        context.insert("theme", &zine.theme);
-        context.insert("site", &zine.site);
 
-        let render = Render::new(context);
         zine.parse(&self.source)?;
-        zine.render(render, &self.dest)?;
+        zine.render(Context::new(), &self.dest)?;
         println!("Zine engine: {:?}", zine);
         Ok(())
     }

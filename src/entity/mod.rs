@@ -2,6 +2,8 @@ use anyhow::Result;
 use pulldown_cmark::{html, Options, Parser as MarkdownParser};
 use serde::Deserialize;
 use std::{fs, path::Path};
+use tera::Context;
+use walkdir::WalkDir;
 
 use crate::{zine::Render, Article, Page, Season, Theme, Zine, ZINE_FILE};
 
@@ -10,7 +12,7 @@ pub trait Entity {
         Ok(())
     }
 
-    fn render(&self, _render: Render, _dest: &Path) -> Result<()> {
+    fn render(&self, _context: Context, _dest: &Path) -> Result<()> {
         Ok(())
     }
 }
@@ -23,7 +25,7 @@ impl<T: Entity> Entity for Vec<T> {
         Ok(())
     }
 
-    fn render(&self, render: Render, dest: &Path) -> Result<()> {
+    fn render(&self, render: Context, dest: &Path) -> Result<()> {
         for item in self {
             item.render(render.clone(), dest)?;
         }
@@ -34,20 +36,42 @@ impl<T: Entity> Entity for Vec<T> {
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         self.theme.parse(source)?;
-        self.seasons.parse(source)?;
-        self.pages.parse(source)?;
 
+        self.seasons.parse(source)?;
         // Sort all seasons by number.
         self.seasons.sort_unstable_by_key(|s| s.number);
+
+        // Parse pages
+        let page_dir = source.join("pages");
+        for entry in WalkDir::new(&page_dir) {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file() {
+                let markdown = fs::read_to_string(path)?;
+                let markdown_parser = MarkdownParser::new_ext(&markdown, Options::all());
+                let mut html = String::new();
+                html::push_html(&mut html, markdown_parser);
+                self.pages.push(Page {
+                    html,
+                    file_path: path.strip_prefix(&page_dir)?.to_owned(),
+                });
+            }
+        }
         Ok(())
     }
 
-    fn render(&self, mut render: Render, dest: &Path) -> Result<()> {
-        // Render home page.
-        render.insert("seasons", &self.seasons);
-        render.render("index.jinja", dest)?;
+    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert("theme", &self.theme);
+        context.insert("site", &self.site);
+        // Render all seasons pages.
+        self.seasons.render(context.clone(), dest)?;
 
-        self.seasons.render(render.clone(), dest)?;
+        // Render other pages.
+        self.pages.render(context.clone(), &dest.join("page"))?;
+
+        // Render home page.
+        context.insert("seasons", &self.seasons);
+        Render::render("index.jinja", &context, dest)?;
         Ok(())
     }
 }
@@ -80,9 +104,9 @@ impl Entity for Season {
         Ok(())
     }
 
-    fn render(&self, mut render: Render, dest: &Path) -> Result<()> {
-        render.insert("season", &self);
-        render.render("season.jinja", dest.join(&self.slug))?;
+    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert("season", &self);
+        Render::render("season.jinja", &context, dest.join(&self.slug))?;
         Ok(())
     }
 }
@@ -94,6 +118,18 @@ impl Entity for Article {
         html::push_html(&mut self.html, markdown_parser);
         Ok(())
     }
+
+    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert("article", &self);
+        Render::render("article.jinja", &context, dest)?;
+        Ok(())
+    }
 }
 
-impl Entity for Page {}
+impl Entity for Page {
+    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert("content", &self.html);
+        Render::render("page.jinja", &context, dest.join(self.slug()))?;
+        Ok(())
+    }
+}
