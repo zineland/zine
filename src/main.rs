@@ -99,7 +99,7 @@ fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
 fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     let source = source.as_ref();
     let dest = dest.as_ref();
-    ZineEngine::new(source, dest)?.bootstrap()?;
+    ZineEngine::new(source, dest)?.build()?;
     fs::copy("target/zine.css", format!("{}/zine.css", dest.display()))
         .expect("File target/zine.css doesn't exists");
     copy_static_assets(source, dest)?;

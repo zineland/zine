@@ -6,17 +6,18 @@ use std::{
 
 use anyhow::Result;
 use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use tera::{Context, Tera};
 
 use crate::entity::{Entity, Zine};
 
 static TEMPLATE_DIR: &str = "templates/*.jinja";
 
-static TERA: Lazy<Tera> = Lazy::new(|| {
+static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| {
     let mut tera = Tera::new(TEMPLATE_DIR).expect("Invalid template dir.");
     tera.register_function("featured", featured_fn);
     tera.register_function("markdown_to_html", markdown_to_html_fn);
-    tera
+    RwLock::new(tera)
 });
 
 #[derive(Debug)]
@@ -32,12 +33,13 @@ impl Render {
     pub fn render(template: &str, context: &Context, dest_path: impl AsRef<Path>) -> Result<()> {
         let mut buf = vec![];
         let dest = dest_path.as_ref().join("index.html");
-        TERA.render_to(template, context, &mut buf)?;
         if let Some(parent_dir) = dest.parent() {
             if !parent_dir.exists() {
                 fs::create_dir_all(&parent_dir)?;
             }
         }
+
+        TERA.read().render_to(template, context, &mut buf)?;
         File::create(dest)?.write_all(&buf)?;
         Ok(())
     }
@@ -56,7 +58,12 @@ impl ZineEngine {
         })
     }
 
-    pub fn bootstrap(&self) -> Result<()> {
+    pub fn build(&self) -> Result<()> {
+        {
+            // Full realod tera to load templates dynamically.
+            TERA.write().full_reload()?;
+        }
+
         let content = fs::read_to_string(&self.source.join(crate::ZINE_FILE))?;
         let mut zine = toml::from_str::<Zine>(&content)?;
 
