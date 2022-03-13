@@ -17,6 +17,9 @@ use site::Site;
 
 use self::{page::Page, season::Season, theme::Theme};
 
+/// The root zine entity config.
+/// 
+/// It parsed from the root directory's `zine.toml`.
 #[derive(Debug, Deserialize)]
 pub struct Zine {
     pub site: Site,
@@ -29,6 +32,13 @@ pub struct Zine {
     pub pages: Vec<Page>,
 }
 
+/// A trait represents the entity of zine config file.
+/// 
+/// A zine entity contains two stage:
+/// - **parse**, the stage the entity to parse its attribute, such as parse markdown to html.
+/// - **render**, the stage to render the entity to html file.
+/// 
+/// [`Entity`] have default empty implementations for both methods.
 #[allow(unused_variables)]
 pub trait Entity {
     fn parse(&mut self, source: &Path) -> Result<()> {

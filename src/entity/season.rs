@@ -8,6 +8,8 @@ use crate::Render;
 
 use super::{article::Article, Entity};
 
+/// The season entity config.
+/// It parsed from season directory's `zine.toml`.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Season {
     pub slug: String,
