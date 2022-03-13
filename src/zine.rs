@@ -15,6 +15,7 @@ static TEMPLATE_DIR: &str = "templates/*.jinja";
 static TERA: Lazy<Tera> = Lazy::new(|| {
     let mut tera = Tera::new(TEMPLATE_DIR).expect("Invalid template dir.");
     tera.register_function("featured", featured_fn);
+    tera.register_function("markdown_to_html", markdown_to_html_fn);
     tera
 });
 
@@ -78,6 +79,21 @@ fn featured_fn(
                 .cloned()
                 .collect(),
         ))
+    } else {
+        Ok(serde_json::Value::Array(vec![]))
+    }
+}
+
+// A tera function to convert markdown into html.
+fn markdown_to_html_fn(
+    map: &std::collections::HashMap<String, serde_json::Value>,
+) -> tera::Result<serde_json::Value> {
+    if let Some(serde_json::Value::String(markdown)) = map.get("markdown") {
+        let mut html = String::new();
+        let markdown_parser =
+            pulldown_cmark::Parser::new_ext(markdown, pulldown_cmark::Options::all());
+        pulldown_cmark::html::push_html(&mut html, markdown_parser);
+        Ok(serde_json::Value::String(html))
     } else {
         Ok(serde_json::Value::Array(vec![]))
     }

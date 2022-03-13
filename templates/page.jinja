@@ -5,7 +5,7 @@
 <div class="p-4 md:p-8 mx-4 my-6 bg-white 
                     shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <article class="prose mx-auto">
-        {{ content | safe }}
+        {{ markdown_to_html(markdown = markdown) | safe }}
     </article>
 </div>
 {% endblock content %}

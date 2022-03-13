@@ -10,8 +10,8 @@ use super::Entity;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Page {
-    // pub file_name: String,
-    pub html: String,
+    // The page's markdown content.
+    pub markdown: String,
     // Relative path of page file.
     pub file_path: PathBuf,
 }
@@ -24,7 +24,7 @@ impl Page {
 
 impl Entity for Page {
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        context.insert("content", &self.html);
+        context.insert("markdown", &self.markdown);
         Render::render("page.jinja", &context, dest.join(self.slug()))?;
         Ok(())
     }

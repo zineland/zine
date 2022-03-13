@@ -1,7 +1,7 @@
 {% extends "base.jinja" %}
 
 {% block content %}
-<div class="p-4 md:p-8 mx-4 my-6 bg-white 
+<div class="p-4 pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white 
             shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="relative mx-2">
         <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block
@@ -17,7 +17,7 @@
         <div class="text-right text-sm text-gray-400">发布于 {{ article.pub_date }}</div>
     </div>
     <article class="prose mx-auto mt-10">
-        {{ article.html | safe }}
+        {{ markdown_to_html(markdown = article.markdown) | safe }}
     </article>
 </div>
 {% endblock content %}

@@ -2,7 +2,6 @@ use std::{fs, path::Path};
 
 use anyhow::Result;
 use once_cell::sync::Lazy;
-use pulldown_cmark::{html, Options, Parser};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tera::Context;
@@ -20,8 +19,9 @@ pub struct Article {
     pub title: String,
     pub author: Option<String>,
     pub cover: Option<String>,
+    // The article's markdown content.
     #[serde(default)]
-    pub html: String,
+    pub markdown: String,
     // TODO: deserialize to OffsetDateTime
     pub pub_date: String,
     // The optional end matter of the article.
@@ -60,10 +60,9 @@ impl Article {
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
         let markdown = fs::read_to_string(&source.join(&self.file))?;
-        let (article, end_matter) = split_article_content(&markdown)?;
-        let markdown_parser = Parser::new_ext(article, Options::all());
-        html::push_html(&mut self.html, markdown_parser);
+        let (content, end_matter) = split_article_content(&markdown)?;
 
+        self.markdown = content.to_owned();
         self.end_matter = end_matter;
         Ok(())
     }

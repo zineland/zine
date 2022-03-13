@@ -1,5 +1,4 @@
 use anyhow::Result;
-use pulldown_cmark::{html, Options, Parser as MarkdownParser};
 use serde::Deserialize;
 use std::{fs, path::Path};
 use tera::Context;
@@ -53,6 +52,22 @@ pub trait Entity {
     }
 }
 
+impl<T: Entity> Entity for Option<T> {
+    fn parse(&mut self, source: &Path) -> Result<()> {
+        if let Some(entity) = self {
+            entity.parse(source)?;
+        }
+        Ok(())
+    }
+
+    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+        if let Some(entity) = self {
+            entity.render(context, dest)?;
+        }
+        Ok(())
+    }
+}
+
 impl<T: Entity> Entity for Vec<T> {
     fn parse(&mut self, source: &Path) -> Result<()> {
         for item in self {
@@ -84,11 +99,8 @@ impl Entity for Zine {
             let path = entry.path();
             if path.is_file() {
                 let markdown = fs::read_to_string(path)?;
-                let markdown_parser = MarkdownParser::new_ext(&markdown, Options::all());
-                let mut html = String::new();
-                html::push_html(&mut html, markdown_parser);
                 self.pages.push(Page {
-                    html,
+                    markdown,
                     file_path: path.strip_prefix(&page_dir)?.to_owned(),
                 });
             }
