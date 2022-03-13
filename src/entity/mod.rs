@@ -6,10 +6,13 @@ use tera::Context;
 use walkdir::WalkDir;
 
 mod article;
+mod end_matter;
 mod page;
 mod season;
 mod site;
 mod theme;
+
+pub(super) use end_matter::EndMatter;
 
 use crate::Render;
 
@@ -18,7 +21,7 @@ use site::Site;
 use self::{page::Page, season::Season, theme::Theme};
 
 /// The root zine entity config.
-/// 
+///
 /// It parsed from the root directory's `zine.toml`.
 #[derive(Debug, Deserialize)]
 pub struct Zine {
@@ -33,11 +36,11 @@ pub struct Zine {
 }
 
 /// A trait represents the entity of zine config file.
-/// 
+///
 /// A zine entity contains two stage:
 /// - **parse**, the stage the entity to parse its attribute, such as parse markdown to html.
 /// - **render**, the stage to render the entity to html file.
-/// 
+///
 /// [`Entity`] have default empty implementations for both methods.
 #[allow(unused_variables)]
 pub trait Entity {

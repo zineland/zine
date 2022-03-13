@@ -1,8 +1,8 @@
 mod entity;
 mod zine;
 
-pub use entity::Entity;
-pub use zine::Render;
-pub use zine::ZineEngine;
+pub use self::entity::Entity;
+pub use self::zine::Render;
+pub use self::zine::ZineEngine;
 
 pub(crate) static ZINE_FILE: &str = "zine.toml";
