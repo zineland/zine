@@ -22,7 +22,7 @@ use self::{page::Page, season::Season, theme::Theme};
 /// The root zine entity config.
 ///
 /// It parsed from the root directory's `zine.toml`.
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Zine {
     pub site: Site,
     pub theme: Theme,
@@ -32,6 +32,16 @@ pub struct Zine {
     #[serde(rename = "page")]
     #[serde(default)]
     pub pages: Vec<Page>,
+}
+
+impl std::fmt::Debug for Zine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Zine")
+            .field("site", &self.site)
+            .field("theme", &self.theme)
+            .field("seasons", &self.seasons)
+            .finish()
+    }
 }
 
 /// A trait represents the entity of zine config file.

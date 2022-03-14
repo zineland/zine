@@ -10,7 +10,7 @@ use super::{article::Article, Entity};
 
 /// The season entity config.
 /// It parsed from season directory's `zine.toml`.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Season {
     pub slug: String,
     pub number: u32,
@@ -21,6 +21,19 @@ pub struct Season {
     #[serde(rename(deserialize = "article"))]
     #[serde(default)]
     pub articles: Vec<Article>,
+}
+
+impl std::fmt::Debug for Season {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Season")
+            .field("slug", &self.slug)
+            .field("number", &self.number)
+            .field("title", &self.title)
+            .field("summary", &self.summary)
+            .field("cover", &self.cover)
+            .field("articles", &self.articles)
+            .finish()
+    }
 }
 
 impl Entity for Season {

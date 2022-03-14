@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::Entity;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "kebab-case"))]
 pub struct Theme {
     // The primary color.
@@ -23,6 +23,19 @@ pub struct Theme {
     pub background_image: Option<String>,
     // The custom footer template path, will be parsed to html.
     pub footer_template: Option<String>,
+}
+
+impl std::fmt::Debug for Theme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Theme")
+            .field("primary_color", &self.primary_color)
+            .field("primary_text_color", &self.primary_text_color)
+            .field("primary_link_color", &self.primary_link_color)
+            .field("secondary_color", &self.secondary_color)
+            .field("background_image", &self.background_image)
+            .field("footer_template", &self.footer_template.is_some())
+            .finish()
+    }
 }
 
 impl Theme {
