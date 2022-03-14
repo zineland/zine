@@ -16,7 +16,7 @@
         <h1 class="text-center">{{ article.title }}</h1>
         <div class="text-right text-sm text-gray-400">发布于 {{ article.pub_date }}</div>
     </div>
-    <article class="prose mx-auto mt-10">
+    <article class="prose mx-auto my-12">
         {{ markdown_to_html(markdown = article.markdown) | safe }}
 
         {% if end_matter %}
