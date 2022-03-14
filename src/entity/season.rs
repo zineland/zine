@@ -52,7 +52,7 @@ impl Entity for Season {
             article.render(context.clone(), &season_dir.join(article.slug()))?;
         }
 
-        Render::render("season.jinja", &context, dest)?;
+        Render::render("season.jinja", &context, season_dir)?;
         Ok(())
     }
 }

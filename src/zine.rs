@@ -59,6 +59,7 @@ impl ZineEngine {
     }
 
     pub fn build(&self) -> Result<()> {
+        #[cfg(debug_assertions)]
         {
             // Full realod tera to load templates dynamically.
             TERA.write().full_reload()?;
