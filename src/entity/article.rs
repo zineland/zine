@@ -69,6 +69,7 @@ impl Entity for Article {
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("article", &self);
+        context.insert("end_matter", &self.end_matter);
         Render::render("article.jinja", &context, dest)?;
         Ok(())
     }
@@ -165,7 +166,7 @@ mod tests {
         assert_eq!(1, end_matter.comments.len());
         let comment = end_matter.comments.iter().next().unwrap();
         assert_eq!("Alice", comment.author);
-        assert_eq!(None, comment.link);
+        assert_eq!(None, comment.bio);
         assert_eq!("Hi", comment.content);
     }
 
@@ -174,7 +175,7 @@ mod tests {
     +++
     [[comment]]
     author = "Alice"
-    link = "https://github.com"
+    bio = "Developer"
     content = "Hi"
     +++
     "#; "Single comment in end matter")]
@@ -184,7 +185,7 @@ mod tests {
         assert_eq!(1, end_matter.comments.len());
         let comment = end_matter.comments.iter().next().unwrap();
         assert_eq!("Alice", comment.author);
-        assert_eq!(Some("https://github.com".into()), comment.link);
+        assert_eq!(Some("Developer".into()), comment.bio);
         assert_eq!("Hi", comment.content);
     }
 
@@ -197,7 +198,7 @@ mod tests {
 
     [[comment]]
     author = "Bob"
-    link = "https://github.com"
+    bio = "Rustacean"
     content = "Hey"
     +++
     "#; "Multipe comments in end matter")]
@@ -209,12 +210,12 @@ mod tests {
 
         let comment = iter.next().unwrap();
         assert_eq!("Alice", comment.author);
-        assert_eq!(None, comment.link);
+        assert_eq!(None, comment.bio);
         assert_eq!("Hi", comment.content);
 
         let comment = iter.next().unwrap();
         assert_eq!("Bob", comment.author);
-        assert_eq!(Some("https://github.com".into()), comment.link);
+        assert_eq!(Some("Rustacean".into()), comment.bio);
         assert_eq!("Hey", comment.content);
     }
 }

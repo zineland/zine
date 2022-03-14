@@ -2,6 +2,8 @@
 // Or install node version of tailwindcss.
 //
 // tailwindcss -o target/zine.css --watch --minify
+const colors = require('tailwindcss/colors');
+
 module.exports = {
     content: [
         './templates/**/*.jinja',
@@ -36,6 +38,18 @@ module.exports = {
                         },
                     },
                 },
+                // Customize the essential prose-slate colors.
+                // Mainly for article comments UI.
+                slate: {
+                    css: {
+                        '--tw-prose-body': colors.slate[500],
+                        '--tw-prose-headings': colors.slate[600],
+                        '--tw-prose-lead': colors.slate[400],
+                        '--tw-prose-links': colors.slate[500],
+                        '--tw-prose-bold': colors.slate[600],
+                        '--tw-prose-quotes': colors.slate[400],
+                    }
+                }
             },
         },
     },

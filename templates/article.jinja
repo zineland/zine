@@ -18,6 +18,31 @@
     </div>
     <article class="prose mx-auto mt-10">
         {{ markdown_to_html(markdown = article.markdown) | safe }}
+
+        {% if end_matter %}
+        <div class="not-prose">
+            {% for comment in end_matter.comments %}
+            <div class="relative my-6 p-8 bg-[#f8fafc]">
+                <div class="mb-4">
+                    <div class="text-lg font-bold">{{ comment.author }}</div>
+                    {% if comment.bio %}
+                    <div class="text-sm text-slate-400">{{ markdown_to_html(markdown = comment.bio) | safe }}</div>
+                    {% endif %}
+                </div>
+                <div class="prose prose-slate">
+                    {{ markdown_to_html(markdown = comment.content) | safe }}
+                </div>
+                <svg class="absolute top-8 right-8 w-10 h-10" t="1647239309441" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <defs><style type="text/css"></style></defs>
+                    <path d="M788.288069 458.634582c-3.442402 99.842962-20.061918 175.8521-49.92097 228.090858-29.827329 52.204989-76.305897 91.499947-139.435703 117.915573l75.743078 120.500445c104.442724-47.073108 180.749644-116.493178 228.948389-208.292953 36.744879-68.857251 55.085596-180.185802 55.085596-333.957001L958.70846 98.858542 626.473683 98.858542l0 359.77604L788.288069 458.634582zM254.647189 458.634582c-3.442402 99.842962-20.061918 175.8521-49.92097 228.089835-29.827329 52.206012-76.305897 91.50097-139.435703 117.916597l75.743078 120.500445C245.476319 878.06835 321.782216 808.647257 369.981984 716.848505c36.744879-68.857251 55.085596-180.185802 55.085596-333.957001L425.06758 98.858542 92.832803 98.858542l0 359.77604L254.647189 458.634582z"
+                        fill="#eee">
+                    </path>
+                </svg>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </article>
+
 </div>
 {% endblock content %}
