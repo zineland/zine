@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Site {
+    /// The absolute url of this site.
+    pub url: String,
     pub name: String,
     pub logo: Option<String>,
     pub title: String,

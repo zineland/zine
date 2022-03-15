@@ -4,7 +4,7 @@ use std::{fs, path::Path};
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{Entity, Render};
+use crate::{feed::FeedEntry, Entity, Render};
 
 use super::{Page, Season, Site, Theme};
 
@@ -30,6 +30,34 @@ impl std::fmt::Debug for Zine {
             .field("theme", &self.theme)
             .field("seasons", &self.seasons)
             .finish()
+    }
+}
+
+impl Zine {
+    /// Get latest `limit` number of articles in all seasons.
+    /// Sort by date in descending order.
+    pub fn latest_feed_entries(&self, limit: usize) -> Vec<FeedEntry> {
+        let mut entries = self
+            .seasons
+            .iter()
+            .flat_map(|season| {
+                season
+                    .articles
+                    .iter()
+                    .map(|article| FeedEntry {
+                        title: &article.title,
+                        url: format!("{}/{}/{}", self.site.url, season.slug, article.slug()),
+                        content: &article.markdown,
+                        author: &article.author,
+                        date: &article.pub_date,
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        // Sort by date in descending order.
+        entries.sort_unstable_by(|a, b| b.date.cmp(a.date));
+        entries.into_iter().take(limit).collect()
     }
 }
 

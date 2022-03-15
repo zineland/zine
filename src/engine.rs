@@ -30,9 +30,9 @@ pub struct ZineEngine {
 pub struct Render;
 
 impl Render {
-    pub fn render(template: &str, context: &Context, dest_path: impl AsRef<Path>) -> Result<()> {
+    pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Result<()> {
         let mut buf = vec![];
-        let dest = dest_path.as_ref().join("index.html");
+        let dest = dest.as_ref().join("index.html");
         if let Some(parent_dir) = dest.parent() {
             if !parent_dir.exists() {
                 fs::create_dir_all(&parent_dir)?;
@@ -40,6 +40,16 @@ impl Render {
         }
 
         TERA.read().render_to(template, context, &mut buf)?;
+        File::create(dest)?.write_all(&buf)?;
+        Ok(())
+    }
+
+    // Render Atom feed
+    fn render_atom_feed(context: Context, dest: impl AsRef<Path>) -> Result<()> {
+        let mut buf = vec![];
+        let dest = dest.as_ref().join("feed.xml");
+
+        TERA.read().render_to("feed.jinja", &context, &mut buf)?;
         File::create(dest)?.write_all(&buf)?;
         Ok(())
     }
@@ -71,6 +81,11 @@ impl ZineEngine {
         zine.parse(&self.source)?;
         zine.render(Context::new(), &self.dest)?;
         println!("Zine engine: {:?}", zine);
+
+        let mut feed_context = Context::new();
+        feed_context.insert("site", &zine.site);
+        feed_context.insert("entries", &zine.latest_feed_entries(20));
+        Render::render_atom_feed(feed_context, &self.dest)?;
         Ok(())
     }
 }
