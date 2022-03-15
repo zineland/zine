@@ -1,10 +1,4 @@
-use std::{
-    env, fs,
-    net::SocketAddr,
-    path::{Path, PathBuf},
-    sync::mpsc,
-    time::Duration,
-};
+use std::{env, fs, net::SocketAddr, path::Path, sync::mpsc, time::Duration};
 
 use anyhow::Result;
 use clap::StructOpt;
@@ -103,23 +97,22 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     ZineEngine::new(source, dest)?.build()?;
     fs::copy("target/zine.css", format!("{}/zine.css", dest.display()))
         .expect("File target/zine.css doesn't exists");
-    copy_static_assets(source, dest)?;
+    copy_dir(&source.join("static"), dest)?;
+    copy_dir(Path::new("./js"), dest)?;
     Ok(())
 }
 
-fn copy_static_assets<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
-    let source = source.as_ref();
-    let dest = PathBuf::from(dest.as_ref());
-    for entry in walkdir::WalkDir::new(&format!("{}/static", source.display())) {
+fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
+    let source_parent = source.parent().expect("Can not copy the root dir");
+    for entry in walkdir::WalkDir::new(source) {
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {
-            fs::create_dir_all(dest.join(path.strip_prefix(source)?))?;
+            fs::create_dir_all(dest.join(path.strip_prefix(source_parent)?))?;
         } else if path.is_file() {
-            let to = dest.join(path.strip_prefix(source)?);
+            let to = dest.join(path.strip_prefix(source_parent)?);
             fs::copy(path, to)?;
         }
     }
-    fs::copy("src/zine.js", dest.join("zine.js"))?;
     Ok(())
 }

@@ -125,7 +125,7 @@ impl Entity for Zine {
         self.seasons.render(context.clone(), dest)?;
 
         // Render other pages.
-        self.pages.render(context.clone(), &dest)?;
+        self.pages.render(context.clone(), dest)?;
 
         // Render home page.
         context.insert("seasons", &self.seasons);
