@@ -5,6 +5,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tera::Context;
+use time::Date;
 
 use crate::Render;
 
@@ -22,8 +23,9 @@ pub struct Article {
     // The article's markdown content.
     #[serde(default)]
     pub markdown: String,
-    // TODO: deserialize to OffsetDateTime
-    pub pub_date: String,
+    // The publish date. Format like YYYY-MM-dd.
+    #[serde(with = "serde_date")]
+    pub pub_date: Date,
     // The optional end matter of the article.
     pub end_matter: Option<EndMatter>,
     // Wheter the article is an featured article.
@@ -101,6 +103,45 @@ fn split_article_content(markdown: &str) -> Result<(&str, Option<EndMatter>)> {
     }
 
     Ok((markdown, None))
+}
+
+mod serde_date {
+    use serde::{de, Serialize, Serializer};
+    use time::{format_description, Date};
+
+    pub(super) fn serialize<S: Serializer>(date: &Date, serializer: S) -> Result<S::Ok, S::Error> {
+        let format = format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
+        date.format(&format)
+            .expect("Serialize date error")
+            .serialize(serializer)
+    }
+
+    pub(super) fn deserialize<'de, D>(d: D) -> Result<Date, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        d.deserialize_any(DateVisitor)
+    }
+
+    struct DateVisitor;
+
+    impl<'de> de::Visitor<'de> for DateVisitor {
+        type Value = Date;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a date value like YYYY-MM-dd")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            let format =
+                format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
+            Ok(Date::parse(v, &format)
+                .unwrap_or_else(|_| panic!("The date value {} is invalid", &v)))
+        }
+    }
 }
 
 #[cfg(test)]

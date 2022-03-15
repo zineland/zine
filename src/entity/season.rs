@@ -49,6 +49,9 @@ impl Entity for Season {
         let content = fs::read_to_string(&dir.join(crate::ZINE_FILE))?;
         let season_file = toml::from_str::<SeasonFile>(&content)?;
         self.articles = season_file.articles;
+        // Sort all articles by pub_date.
+        self.articles
+            .sort_unstable_by_key(|article| article.pub_date);
 
         self.articles.parse(&dir)?;
         Ok(())
