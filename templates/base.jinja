@@ -18,22 +18,28 @@
       }
 
       .url-preview {
-          border: #dee0e3 1px solid;
+          outline: #dee0e3 1px solid;
           padding: 1rem 1.25rem 0;
           background-color: #f5f6f7;
           font-weight: 500;
+          border-box: 
       }
 
       .url-preview>p:nth-child(1) {
           font-weight: normal;
           font-size: 0.9rem;
-          color: #888;
+          color: #6b7078;
           margin: 1rem 0;
       }
 
       .url-preview>p:nth-child(2), .url-preview>p>a:nth-child(1) {
           font-weight: normal;
           margin: 1rem 0;
+      }
+
+      .url-preview:hover {
+          outline: #dee0e3 2px solid;
+          cursor: pointer;
       }
     </style>
 </head>
@@ -75,6 +81,6 @@
     {% endblock footer %}
     </footer>
 </body>
-
+<script src="/zine.js"></script>
 </html>
 

@@ -120,5 +120,6 @@ fn copy_static_assets<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
             fs::copy(path, to)?;
         }
     }
+    fs::copy("src/zine.js", dest.join("zine.js"))?;
     Ok(())
 }
