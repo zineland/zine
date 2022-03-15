@@ -15,4 +15,9 @@
             }
         };
     }
+
+    mediumZoom(document.querySelectorAll('.prose p>img'), {
+        margin: 24,
+        background: '#000C',
+    });
 })();
