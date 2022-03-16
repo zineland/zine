@@ -22,6 +22,11 @@ impl Meta {
     pub fn is_filled(&self) -> bool {
         !self.title.is_empty() && !self.description.is_empty()
     }
+
+    fn truncate(&mut self) {
+        self.title.truncate(200);
+        self.description.truncate(200);
+    }
 }
 
 pub async fn fetch_url(url: &str) -> Result<Meta> {
@@ -51,6 +56,7 @@ pub fn parse_html_meta<R: Read>(mut html: R) -> Meta {
 
     let mut meta = Meta::default();
     walk(&rc_dom.document, &mut meta);
+    meta.truncate();
     meta
 }
 
@@ -86,7 +92,7 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                 let attrs = attrs.borrow();
                 if get_attribute(&*attrs, "name") == Some("description") {
                     if let Some(description) = get_attribute(&*attrs, "content") {
-                        meta.description = description.to_owned();
+                        meta.description = description.trim().to_owned();
                     }
                 }
             }
