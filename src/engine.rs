@@ -1,6 +1,5 @@
 use std::{
-    fs::{self, File},
-    io::Write,
+    fs,
     path::{Path, PathBuf},
 };
 
@@ -40,7 +39,7 @@ impl Render {
         }
 
         TERA.read().render_to(template, context, &mut buf)?;
-        File::create(dest)?.write_all(&buf)?;
+        fs::write(dest, buf)?;
         Ok(())
     }
 
@@ -50,7 +49,7 @@ impl Render {
         let dest = dest.as_ref().join("feed.xml");
 
         TERA.read().render_to("feed.jinja", &context, &mut buf)?;
-        File::create(dest)?.write_all(&buf)?;
+        fs::write(dest, buf)?;
         Ok(())
     }
 }
