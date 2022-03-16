@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fs::{self, File},
     io::Write,
     path::Path,
@@ -30,7 +30,7 @@ pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ZineData {
-    url_previews: HashMap<String, (String, String)>,
+    url_previews: BTreeMap<String, (String, String)>,
 }
 
 impl ZineData {
@@ -41,12 +41,12 @@ impl ZineData {
             Ok(serde_json::from_str(&json)?)
         } else {
             Ok(ZineData {
-                url_previews: HashMap::default(),
+                url_previews: BTreeMap::default(),
             })
         }
     }
 
-    pub fn url_previews(&self) -> &HashMap<String, (String, String)> {
+    pub fn url_previews(&self) -> &BTreeMap<String, (String, String)> {
         &self.url_previews
     }
 
