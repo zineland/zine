@@ -1,7 +1,7 @@
 // Install tailwindcss standalone CLI, see https://tailwindcss.com/blog/standalone-cli.
 // Or install node version of tailwindcss.
 //
-// tailwindcss -o target/zine.css --watch --minify
+// tailwindcss -i zine.css -o target/zine.css --watch --minify
 const colors = require('tailwindcss/colors');
 
 module.exports = {
