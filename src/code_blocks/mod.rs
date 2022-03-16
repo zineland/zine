@@ -1,0 +1,44 @@
+use anyhow::Result;
+
+mod url_preview;
+use crate::{data, helps};
+
+use url_preview::{UrlPreviewBlock, UrlPreviewError};
+
+trait CodeBlock {
+    fn render(&self) -> Result<String>;
+}
+
+const URL_PREVIEW: &str = "urlpreview";
+
+pub const ALL_CODE_BLOCKS: &[&str] = &[URL_PREVIEW];
+
+/// Render code block. Return rendered HTML string if success,
+/// otherwise return URL preview error HTML string to remind user we have error.
+///
+/// If the fenced is unsupported, we simply return `None`.
+pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
+    match fenced {
+        URL_PREVIEW => {
+            let url = block.trim();
+            let mut data = data::get();
+            if let Some((title, description)) = data.url_previews().get(url) {
+                Some(UrlPreviewBlock(url, title, description).render().unwrap())
+            } else {
+                println!("Preview new url: {}", url);
+                match helps::fetch_url(url).await {
+                    Ok(meta) => {
+                        let html = UrlPreviewBlock(url, &meta.title, &meta.description)
+                            .render()
+                            .unwrap();
+                        data.insert_url_preview(url, (meta.title, meta.description));
+                        Some(html)
+                    }
+                    // Return a preview error block.
+                    Err(err) => Some(UrlPreviewError(url, &err.to_string()).render().unwrap()),
+                }
+            }
+        }
+        _ => None,
+    }
+}

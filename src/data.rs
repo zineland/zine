@@ -55,6 +55,6 @@ impl ZineData {
     }
 
     fn export_to_json(&self) -> Result<String> {
-        Ok(serde_json::to_string(self)?)
+        Ok(serde_json::to_string_pretty(self)?)
     }
 }

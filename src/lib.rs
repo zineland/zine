@@ -1,3 +1,4 @@
+mod code_blocks;
 pub mod data;
 mod engine;
 mod entity;

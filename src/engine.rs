@@ -8,7 +8,10 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use tera::{Context, Tera};
 
-use crate::entity::{Entity, Zine};
+use crate::{
+    code_blocks::{render_code_block, ALL_CODE_BLOCKS},
+    entity::{Entity, Zine},
+};
 
 static TEMPLATE_DIR: &str = "templates/*.jinja";
 
@@ -60,7 +63,6 @@ impl ZineEngine {
         if !dest.exists() {
             fs::create_dir_all(&dest)?;
         }
-
         Ok(ZineEngine {
             source: source.as_ref().to_path_buf(),
             dest,
@@ -110,11 +112,47 @@ fn featured_fn(
 fn markdown_to_html_fn(
     map: &std::collections::HashMap<String, serde_json::Value>,
 ) -> tera::Result<serde_json::Value> {
+    use pulldown_cmark::*;
+
     if let Some(serde_json::Value::String(markdown)) = map.get("markdown") {
         let mut html = String::new();
-        let markdown_parser =
-            pulldown_cmark::Parser::new_ext(markdown, pulldown_cmark::Options::all());
-        pulldown_cmark::html::push_html(&mut html, markdown_parser);
+
+        let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
+        let mut events = vec![];
+        let mut code_block_fenced = None;
+        for (event, _range) in parser_events_iter {
+            match event {
+                Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name)))
+                    if ALL_CODE_BLOCKS.contains(&name.as_ref()) =>
+                {
+                    code_block_fenced = Some(name);
+                }
+                Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(name)))
+                    if ALL_CODE_BLOCKS.contains(&name.as_ref()) =>
+                {
+                    code_block_fenced = None;
+                }
+                Event::Text(text) => {
+                    if let Some(fenced) = code_block_fenced.as_ref() {
+                        if let Some(html) = tokio::runtime::Runtime::new()
+                            .expect("Tokio runtime error")
+                            .block_on(async { render_code_block(fenced, &text).await })
+                        {
+                            events.push(Event::Html(html.into()));
+                            continue;
+                        }
+                    }
+
+                    // Not a code block inside text, or the code block's fenced is unsupported.
+                    // We still need record this text event.
+                    events.push(Event::Text(text))
+                }
+                _ => {
+                    events.push(event);
+                }
+            }
+        }
+        html::push_html(&mut html, events.into_iter());
         Ok(serde_json::Value::String(html))
     } else {
         Ok(serde_json::Value::Array(vec![]))
