@@ -14,6 +14,7 @@ use super::{Page, Season, Site, Theme};
 #[derive(Deserialize)]
 pub struct Zine {
     pub site: Site,
+    #[serde(default)]
     pub theme: Theme,
     #[serde(default)]
     #[serde(rename = "season")]

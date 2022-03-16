@@ -1,5 +1,6 @@
 
 [site]
+url = "http://localhost"
 name = "Demo"
 title = "Demo Zine Site"
 description = "Demonstration of Zine."

@@ -25,6 +25,19 @@ pub struct Theme {
     pub footer_template: Option<String>,
 }
 
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            primary_color: Self::default_primary_color(),
+            primary_text_color: Self::default_text_color(),
+            primary_link_color: Self::default_link_color(),
+            secondary_color: Self::default_secondary_color(),
+            background_image: None,
+            footer_template: None,
+        }
+    }
+}
+
 impl std::fmt::Debug for Theme {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Theme")
