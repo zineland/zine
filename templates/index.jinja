@@ -9,7 +9,7 @@
                 <a class="before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block
                          transition hover:scale-110 duration-500"
                    href="/{{ season.slug }}">
-                    <div class="first-letter:text-4xl first-letter:font-bold relative text-primary-text px-10">{{ season.title }}</div>
+                    <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ season.title }}</div>
                 </a>
             </div>
             <div class="flex flex-wrap flex-col sm:flex-row sm:justify-between items-center">
@@ -17,7 +17,7 @@
                     {{ macros::article_card(season = season, article = article) }}
                 {% endfor %}
                 <div class="mt-8 flex flex-col justify-between w-full mx-auto sm:max-w-md">
-                    <a href="{{ season.slug }}" class="p-3 px-12 mx-auto my-8 bg-primary text-primary-text text-sm font-bold rounded transition hover:scale-110 duration-500">
+                    <a href="{{ season.slug }}" class="p-3 px-12 mx-auto my-8 bg-primary text-main text-sm font-bold rounded transition hover:scale-110 duration-500">
                         查看全部
                     </a>
                 </div>

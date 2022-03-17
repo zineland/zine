@@ -13,8 +13,8 @@
     <style>
       :root {
           --primary-color: {{ theme.primary_color }};
-          --primary-text-color: {{ theme.primary_text_color }};
-          --primary-link-color: {{ theme.primary_link_color }};
+          --main-color: {{ theme.main_color }};
+          --primary-link-color: {{ theme.link_color }};
           --secondary-color: {{ theme.secondary_color }};
       }
     </style>
@@ -22,9 +22,9 @@
 
 <body class="h-full bg-secondary">
     {% if theme.background_image %}
-    <div class="bg-primary text-primary-text font-bold text-center z-0" style="background-image: url('{{ theme.background_image }}')">
+    <div class="bg-primary text-main font-bold text-center z-0" style="background-image: url('{{ theme.background_image }}')">
     {% else %}
-    <div class="bg-primary text-primary-text font-bold text-center z-0">
+    <div class="bg-primary text-main font-bold text-center z-0">
     {% endif %}
         <header class="p-8 md:p-10">
             <div class="text-4xl lg:text-5xl"><a href="/">{{ site.name }}</a></div>

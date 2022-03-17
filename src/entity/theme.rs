@@ -11,10 +11,12 @@ pub struct Theme {
     // The primary color.
     #[serde(default = "Theme::default_primary_color")]
     pub primary_color: String,
-    #[serde(default = "Theme::default_text_color")]
-    pub primary_text_color: String,
+    // The text main color.
+    #[serde(default = "Theme::default_main_color")]
+    pub main_color: String,
+    // The article's link color.
     #[serde(default = "Theme::default_link_color")]
-    pub primary_link_color: String,
+    pub link_color: String,
     // The background color.
     #[serde(default = "Theme::default_secondary_color")]
     pub secondary_color: String,
@@ -29,8 +31,8 @@ impl Default for Theme {
     fn default() -> Self {
         Self {
             primary_color: Self::default_primary_color(),
-            primary_text_color: Self::default_text_color(),
-            primary_link_color: Self::default_link_color(),
+            main_color: Self::default_main_color(),
+            link_color: Self::default_link_color(),
             secondary_color: Self::default_secondary_color(),
             background_image: None,
             footer_template: None,
@@ -42,8 +44,8 @@ impl std::fmt::Debug for Theme {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Theme")
             .field("primary_color", &self.primary_color)
-            .field("primary_text_color", &self.primary_text_color)
-            .field("primary_link_color", &self.primary_link_color)
+            .field("main_color", &self.main_color)
+            .field("link_color", &self.link_color)
             .field("secondary_color", &self.secondary_color)
             .field("background_image", &self.background_image)
             .field("footer_template", &self.footer_template.is_some())
@@ -53,7 +55,7 @@ impl std::fmt::Debug for Theme {
 
 impl Theme {
     const DEFAULT_PRIMARY_COLOR: &'static str = "#2563eb";
-    const DEFAULT_TEXT_COLOR: &'static str = "#ffffff";
+    const DEFAULT_MAIN_COLOR: &'static str = "#ffffff";
     const DEFAULT_LINK_COLOR: &'static str = "#2563eb";
     const DEFAULT_SECONDARY_COLOR: &'static str = "#eff3f7";
 
@@ -61,8 +63,8 @@ impl Theme {
         Self::DEFAULT_PRIMARY_COLOR.to_string()
     }
 
-    fn default_text_color() -> String {
-        Self::DEFAULT_TEXT_COLOR.to_string()
+    fn default_main_color() -> String {
+        Self::DEFAULT_MAIN_COLOR.to_string()
     }
 
     fn default_link_color() -> String {

@@ -7,6 +7,7 @@ author = "Folyd"
 cover = "/static/duck.png"
 pub_date = "2022-03-25"
 publish = true
+featured = true
 
 [[article]]
 slug = "second"
@@ -16,3 +17,4 @@ author = "Folyd"
 cover = "/static/duck.png"
 pub_date = "2022-04-25"
 publish = false
+featured = true

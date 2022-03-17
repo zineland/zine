@@ -12,6 +12,7 @@ module.exports = {
         extend: {
             colors: {
                 primary: 'var(--primary-color)',
+                main: 'var(--main-color)',
                 secondary: 'var(--secondary-color)',
             },
             typography: {
