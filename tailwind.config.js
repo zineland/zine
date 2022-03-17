@@ -40,7 +40,10 @@ module.exports = {
                         // Customize the color of strong inside blockquote
                         'blockquote strong': {
                             color: '#6c6d6d',
-                        }
+                        },
+                        'ul > li::marker': {
+                            color: 'var(--primary-color)',
+                        },
                     },
                 },
                 // Customize the essential prose-slate colors.
