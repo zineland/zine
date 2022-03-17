@@ -90,10 +90,20 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                 // <meta name="description" content="xxx"/>
                 // get description value from attribute.
                 let attrs = attrs.borrow();
-                if get_attribute(&*attrs, "name") == Some("description") {
-                    if let Some(description) = get_attribute(&*attrs, "content") {
-                        meta.description = description.trim().to_owned();
+                match get_attribute(&*attrs, "name") {
+                    Some("description" | "og:description" | "twitter:description")
+                        if meta.description.is_empty() =>
+                    {
+                        if let Some(description) = get_attribute(&*attrs, "content") {
+                            meta.description = description.trim().to_owned();
+                        }
                     }
+                    Some("og:title" | "twitter:title") if meta.title.is_empty() => {
+                        if let Some(title) = get_attribute(&*attrs, "content") {
+                            meta.title = title.trim().to_owned();
+                        }
+                    }
+                    _ => {}
                 }
             }
             "link" => {
