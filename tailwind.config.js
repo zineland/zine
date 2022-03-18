@@ -31,6 +31,8 @@ module.exports = {
                         },
                         blockquote: {
                             color: "#7c8088",
+                            borderLeftWidth: '2px',
+                            borderLeftColor: 'var(--primary-color)',
                             // Make font weight and style to normal
                             fontWeight: '400',
                             fontStyle: 'normal',
