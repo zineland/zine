@@ -3,7 +3,7 @@ pub mod data;
 mod engine;
 mod entity;
 mod feed;
-mod helps;
+mod helpers;
 
 pub use self::engine::Render;
 pub use self::engine::ZineEngine;

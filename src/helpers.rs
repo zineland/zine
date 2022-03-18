@@ -90,7 +90,8 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                 // <meta name="description" content="xxx"/>
                 // get description value from attribute.
                 let attrs = attrs.borrow();
-                match get_attribute(&*attrs, "name") {
+                match get_attribute(&*attrs, "name").or_else(|| get_attribute(&*attrs, "property"))
+                {
                     Some("description" | "og:description" | "twitter:description")
                         if meta.description.is_empty() =>
                     {

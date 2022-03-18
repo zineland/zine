@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 mod url_preview;
-use crate::{data, helps};
+use crate::{data, helpers};
 
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
@@ -26,7 +26,7 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
                 Some(UrlPreviewBlock(url, title, description).render().unwrap())
             } else {
                 println!("Preview new url: {}", url);
-                match helps::fetch_url(url).await {
+                match helpers::fetch_url(url).await {
                     Ok(meta) => {
                         let html = UrlPreviewBlock(url, &meta.title, &meta.description)
                             .render()

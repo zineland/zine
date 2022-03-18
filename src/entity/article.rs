@@ -24,7 +24,7 @@ pub struct Article {
     #[serde(default)]
     pub markdown: String,
     // The publish date. Format like YYYY-MM-dd.
-    #[serde(with = "crate::helps::serde_date")]
+    #[serde(with = "crate::helpers::serde_date")]
     pub pub_date: Date,
     // The optional end matter of the article.
     pub end_matter: Option<EndMatter>,
