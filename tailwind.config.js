@@ -38,10 +38,17 @@ module.exports = {
                             fontStyle: 'normal',
                             // Disable blockquote's quotes style
                             quotes: 'none',
+                            paddingLeft: '0.8rem',
                         },
                         // Customize the color of strong inside blockquote
                         'blockquote strong': {
                             color: '#6c6d6d',
+                        },
+                        ol: {
+                            paddingLeft: '1rem',
+                        },
+                        ul: {
+                            paddingLeft: '1rem',
                         },
                         'ol > li::marker': {
                             fontWeight: '400',
