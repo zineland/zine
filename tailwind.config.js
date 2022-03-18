@@ -43,6 +43,10 @@ module.exports = {
                         'blockquote strong': {
                             color: '#6c6d6d',
                         },
+                        'ol > li::marker': {
+                            fontWeight: '400',
+                            color: 'var(--primary-color)',
+                        },
                         'ul > li::marker': {
                             color: 'var(--primary-color)',
                         },
