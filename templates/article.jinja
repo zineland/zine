@@ -43,6 +43,23 @@
         </div>
         {% endif %}
     </article>
-
+    {% if siblings.0 or siblings.1 %}
+        <div class="my-4 w-full border-dashed border-t border-slate-300"></div>
+        <div class="flex flex-col md:flex-row">
+        {% for article in [siblings.0, siblings.1] %}
+            {% if article %}
+                <a class="grow-0 sm:max-w-md w-full my-1 py-2 px-4 font-bold text-slate-700 hover:underline"
+                    href="/{{ season.slug }}/{{ article.slug }}">
+                    {% if loop.index0 == 0 %}
+                        上一篇：
+                    {% else %}
+                        下一篇：
+                    {% endif %}
+                    {{ article.title }}
+                </a>
+            {% endif %}
+        {% endfor %}
+        </div>
+    {% endif %}
 </div>
 {% endblock content %}

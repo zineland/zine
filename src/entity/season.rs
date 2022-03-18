@@ -36,6 +36,19 @@ impl std::fmt::Debug for Season {
     }
 }
 
+impl Season {
+    fn sibling_articles(&self, current: usize) -> (Option<&Article>, Option<&Article>) {
+        if current == 0 {
+            return (None, self.articles.get(current + 1));
+        }
+
+        (
+            self.articles.get(current - 1),
+            self.articles.get(current + 1),
+        )
+    }
+}
+
 impl Entity for Season {
     fn parse(&mut self, source: &Path) -> Result<()> {
         // Representing a zine.toml file for season.
@@ -64,6 +77,7 @@ impl Entity for Season {
         // Render articles with number context.
         for (index, article) in self.articles.iter().enumerate() {
             let mut context = context.clone();
+            context.insert("siblings", &self.sibling_articles(index));
             context.insert("number", &(index + 1));
             article.render(context.clone(), &season_dir.join(article.slug()))?;
         }
