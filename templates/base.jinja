@@ -48,13 +48,19 @@
     </main>
 
     <footer class="relative">
-    {% block footer %}
-        {% if theme.footer_template %}
-            {{ theme.footer_template }}
-        {% else %}
-            {% include "footer.jinja" %}
-        {% endif %}
-    {% endblock footer %}
+        {% block footer %}
+            {% if theme.footer_template %}
+                {{ theme.footer_template }}
+            {% else %}
+                {% include "footer.jinja" %}
+            {% endif %}
+        {% endblock footer %}
+        <a href="https://github.com/zineland" 
+           class="absolute z-20 bottom-0 left-0 right-0 text-center font-bold
+                  md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:p-4 md:bg-transparent
+                  bg-primary p-2 text-main">
+            Proudly powered by Zine.
+        </div>
     </footer>
 </body>
 <script src="/js/medium-zoom.min.js"></script>
