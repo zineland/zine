@@ -5,7 +5,7 @@ use clap::StructOpt;
 use notify::Watcher;
 use tokio::{runtime::Runtime, task};
 use tower_http::services::ServeDir;
-use zine::ZineEngine;
+use zine::{data, ZineEngine};
 
 #[derive(Debug, clap::Parser)]
 #[clap(name = "zine")]
@@ -46,12 +46,25 @@ fn main() -> Result<()> {
             dest,
             watch,
         } => {
+            data::load(&source);
+
             let dest = dest.unwrap_or_else(|| "build".into());
             watch_build(&source, &dest, watch)?;
+
+            data::export(source)?;
         }
         Commands::Serve { source, port } => {
+            data::load(&source);
+
             let rt = Runtime::new()?;
             rt.block_on(async {
+                let export_source = source.clone();
+                tokio::spawn(async move {
+                    tokio::signal::ctrl_c().await.unwrap();
+                    // Save zine data only when the process gonna exist
+                    data::export(export_source).unwrap();
+                });
+
                 let tmp_dir = env::temp_dir().join(zine::TEMP_ZINE_BUILD_DIR);
                 let addr = SocketAddr::from(([127, 0, 0, 1], port));
                 let service = ServeDir::new(&tmp_dir);
@@ -95,9 +108,7 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     let source = source.as_ref();
     let dest = dest.as_ref();
 
-    zine::data::load(source);
     ZineEngine::new(source, dest)?.build()?;
-    zine::data::export(source)?;
 
     copy_dir(&source.join("static"), dest)?;
     copy_dir(Path::new("./static"), dest)?;

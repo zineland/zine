@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use super::CodeBlock;
 
-pub struct UrlPreviewBlock<'a>(pub &'a str, pub &'a str, pub &'a str);
+pub(super) struct UrlPreviewBlock<'a>(pub &'a str, pub &'a str, pub &'a str);
 
 impl<'a> CodeBlock for UrlPreviewBlock<'a> {
     fn render(&self) -> anyhow::Result<String> {
