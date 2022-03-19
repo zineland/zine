@@ -63,6 +63,7 @@ fn main() -> Result<()> {
                     tokio::signal::ctrl_c().await.unwrap();
                     // Save zine data only when the process gonna exist
                     data::export(export_source).unwrap();
+                    std::process::exit(0);
                 });
 
                 let tmp_dir = env::temp_dir().join(zine::TEMP_ZINE_BUILD_DIR);
