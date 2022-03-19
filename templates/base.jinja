@@ -40,7 +40,7 @@
         <div class="w-full h-32 md:h-36 lg:h-44 xl:h-48 2xl:h-56"></div>
     </div>
 
-    <main class="pb-10 -translate-y-32 
+    <main class="pb-10 -translate-y-32
                  md:-translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56
                  mx-auto sm:max-w-scree-md md:max-w-screen-lg">
             {% block content %}
@@ -52,12 +52,17 @@
             {% if theme.footer_template %}
                 {{ theme.footer_template }}
             {% else %}
-                {% include "footer.jinja" %}
+                <footer class="bg-black text-white text-center p-16">
+                    <div>
+                        <a class="hover:underline" href="https://github.com/Folyd/zine">Zine</a> 
+                        - a simple and opinionated tool to build your own magazine.
+                    </div>
+                </footer>
             {% endif %}
         {% endblock footer %}
         <a href="https://github.com/zineland" 
-           class="absolute z-20 bottom-0 left-0 right-0 text-center font-bold
-                  md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:p-4 md:bg-transparent
+           class="absolute z-20 bottom-0 w-full text-center font-bold
+                  md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:bg-transparent
                   bg-primary p-2 text-main">
             Proudly powered by Zine.
         </a>
