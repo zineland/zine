@@ -40,7 +40,10 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
 
     ZineEngine::new(source, dest)?.build()?;
 
-    copy_dir(&source.join("static"), dest)?;
+    let static_dir = source.join("static");
+    if static_dir.exists() {
+        copy_dir(&static_dir, dest)?;
+    }
     copy_dir(Path::new("./static"), dest)?;
     Ok(())
 }

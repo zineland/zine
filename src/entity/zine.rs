@@ -72,15 +72,17 @@ impl Entity for Zine {
 
         // Parse pages
         let page_dir = source.join("pages");
-        for entry in WalkDir::new(&page_dir) {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_file() {
-                let markdown = fs::read_to_string(path)?;
-                self.pages.push(Page {
-                    markdown,
-                    file_path: path.strip_prefix(&page_dir)?.to_owned(),
-                });
+        if page_dir.exists() {
+            for entry in WalkDir::new(&page_dir) {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_file() {
+                    let markdown = fs::read_to_string(path)?;
+                    self.pages.push(Page {
+                        markdown,
+                        file_path: path.strip_prefix(&page_dir)?.to_owned(),
+                    });
+                }
             }
         }
         Ok(())
