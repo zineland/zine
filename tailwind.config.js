@@ -19,7 +19,7 @@ module.exports = {
                 DEFAULT: {
                     css: {
                         a: {
-                            color: 'var(--primary-link-color)',
+                            color: 'var(--link-color)',
                             textDecoration: 'none',
                             fontWeight: '400',
                         },
