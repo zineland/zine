@@ -15,7 +15,8 @@ pub struct Season {
     pub slug: String,
     pub number: u32,
     pub title: String,
-    pub summary: Option<String>,
+    /// The optional introduction for this season.
+    pub intro: Option<String>,
     pub cover: Option<String>,
     pub path: String,
     #[serde(rename(deserialize = "article"))]
@@ -29,7 +30,7 @@ impl std::fmt::Debug for Season {
             .field("slug", &self.slug)
             .field("number", &self.number)
             .field("title", &self.title)
-            .field("summary", &self.summary)
+            .field("intro", &self.intro.is_some())
             .field("cover", &self.cover)
             .field("articles", &self.articles)
             .finish()
@@ -51,6 +52,11 @@ impl Season {
 
 impl Entity for Season {
     fn parse(&mut self, source: &Path) -> Result<()> {
+        // Parse intro file
+        if let Some(intro_path) = &self.intro {
+            self.intro = Some(fs::read_to_string(&source.join(&intro_path))?);
+        }
+
         // Representing a zine.toml file for season.
         #[derive(Debug, Deserialize)]
         struct SeasonFile {

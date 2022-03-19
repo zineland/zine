@@ -3,15 +3,17 @@
 {% block content %}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white 
             shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-    <div class="text-2xl text-center m-4">
+    <div class="text-2xl text-center m-6">
         <span class="before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block">
             <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ season.title }}</div>
         </span>
     </div>
     <div class="max-w-[65ch] mx-auto">
+        {% if season.intro %}
         <div class="prose my-8">
-            {{ season.summary }}
+            {{ markdown_to_html(markdown = season.intro) }}
         </div>
+        {% endif %}
         {% for article in season.articles %}
         <div class="py-6 sm:px-8 transition ease-in-out hover:scale-110 duration-500 border-gray-200">
             <a class="group" href="/{{ season.slug }}/{{ article.slug }}">
