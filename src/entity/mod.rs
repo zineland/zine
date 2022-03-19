@@ -10,13 +10,13 @@ mod site;
 mod theme;
 mod zine;
 
+pub use self::zine::Zine;
 pub use article::Article;
 pub use end_matter::EndMatter;
 pub use page::Page;
 pub use season::Season;
 pub use site::Site;
 pub use theme::Theme;
-pub use zine::Zine;
 
 /// A trait represents the entity of zine config file.
 ///
