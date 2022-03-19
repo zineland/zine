@@ -99,10 +99,8 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     ZineEngine::new(source, dest)?.build()?;
     zine::data::export(source)?;
 
-    fs::copy("target/zine.css", format!("{}/zine.css", dest.display()))
-        .expect("File target/zine.css doesn't exists");
     copy_dir(&source.join("static"), dest)?;
-    copy_dir(Path::new("./js"), dest)?;
+    copy_dir(Path::new("./static"), dest)?;
     Ok(())
 }
 

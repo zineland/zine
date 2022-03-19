@@ -10,4 +10,6 @@ Zine - a simple and opinionated tool to build your own magazine.
 
 - [ ] Support render OGP meta
 
+- [ ] Support i18n
+
 - [ ] Generate word cloud for season
