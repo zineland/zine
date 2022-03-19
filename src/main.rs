@@ -1,6 +1,7 @@
 use anyhow::Result;
 use build::watch_build;
 use clap::StructOpt;
+use new::new_zine_project;
 use serve::run_serve;
 
 mod build;
@@ -10,6 +11,7 @@ mod engine;
 mod entity;
 mod feed;
 mod helpers;
+mod new;
 mod serve;
 
 pub use self::engine::Render;
@@ -31,7 +33,7 @@ struct Cli {
 
 #[derive(Debug, clap::Subcommand)]
 enum Commands {
-    /// Build zine site.
+    /// Build Zine site.
     #[clap(arg_required_else_help = true)]
     Build {
         /// The source directory of zine site.
@@ -42,7 +44,7 @@ enum Commands {
         #[clap(short, long)]
         watch: bool,
     },
-    /// Serve the zine site.
+    /// Serve the Zine site.
     #[clap(arg_required_else_help = true)]
     Serve {
         /// The source directory of zine site.
@@ -50,6 +52,11 @@ enum Commands {
         /// The listen port.
         #[clap(short, default_value_t = 3000)]
         port: u16,
+    },
+    /// New a Zine project.
+    New {
+        /// The project name.
+        name: String,
     },
 }
 
@@ -67,6 +74,7 @@ async fn main() -> Result<()> {
         Commands::Serve { source, port } => {
             run_serve(source, port).await?;
         }
+        Commands::New { name } => new_zine_project(&name)?,
     }
 
     Ok(())
