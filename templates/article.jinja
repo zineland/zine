@@ -14,7 +14,10 @@
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="prose mx-auto">
         <h1 class="text-center">{{ article.title }}</h1>
-        <div class="text-right text-sm text-gray-400">发布于 {{ article.pub_date }}</div>
+        <div class="relative text-sm text-gray-400">
+            <span>发布于 {{ article.pub_date }}</span>
+            <span class="absolute right-2">作者：{{ article.author }}</span>
+        </div>
     </div>
     <article class="prose mx-auto my-12">
         {{ markdown_to_html(markdown = article.markdown) | safe }}
