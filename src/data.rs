@@ -20,10 +20,14 @@ pub fn get() -> RwLockWriteGuard<'static, ZineData> {
     ZINE_DATA.get().unwrap().write()
 }
 
+/// Export all data into the `zine-data.json` file.
+/// If the data is empty, we never create the `zine-data.json` file.
 pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
-    let mut file = File::create(path.as_ref().join("zine-data.json"))?;
     let data = get();
-    file.write_all(data.export_to_json()?.as_bytes())?;
+    if !data.is_empty() {
+        let mut file = File::create(path.as_ref().join("zine-data.json"))?;
+        file.write_all(data.export_to_json()?.as_bytes())?;
+    }
     Ok(())
 }
 
@@ -44,6 +48,10 @@ impl ZineData {
                 url_previews: BTreeMap::default(),
             })
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.url_previews.is_empty()
     }
 
     pub fn url_previews(&self) -> &BTreeMap<String, (String, String)> {
