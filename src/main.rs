@@ -37,7 +37,7 @@ enum Commands {
     #[clap(arg_required_else_help = true)]
     Build {
         /// The source directory of zine site.
-        source: String,
+        source: Option<String>,
         /// The destination directory. Default dest dir is `build`.
         dest: Option<String>,
         /// Enable watching.
@@ -48,7 +48,7 @@ enum Commands {
     #[clap(arg_required_else_help = true)]
     Serve {
         /// The source directory of zine site.
-        source: String,
+        source: Option<String>,
         /// The listen port.
         #[clap(short, default_value_t = 3000)]
         port: u16,
@@ -56,7 +56,7 @@ enum Commands {
     /// New a Zine project.
     New {
         /// The project name.
-        name: String,
+        name: Option<String>,
     },
 }
 
@@ -69,12 +69,12 @@ async fn main() -> Result<()> {
             watch,
         } => {
             let dest = dest.unwrap_or_else(|| "build".into());
-            watch_build(&source, &dest, watch).await?;
+            watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch).await?;
         }
         Commands::Serve { source, port } => {
-            run_serve(source, port).await?;
+            run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
-        Commands::New { name } => new_zine_project(&name)?,
+        Commands::New { name } => new_zine_project(name)?,
     }
 
     Ok(())

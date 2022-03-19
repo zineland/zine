@@ -173,7 +173,7 @@ mod tests {
         let (_, end_matter) = split_article_content(input).unwrap();
         let end_matter = end_matter.unwrap();
         assert_eq!(1, end_matter.comments.len());
-        let comment = end_matter.comments.iter().next().unwrap();
+        let comment = end_matter.comments.get(0).unwrap();
         assert_eq!("Alice", comment.author);
         assert_eq!(None, comment.bio);
         assert_eq!("Hi", comment.content);
@@ -192,7 +192,7 @@ mod tests {
         let (_, end_matter) = split_article_content(input).unwrap();
         let end_matter = end_matter.unwrap();
         assert_eq!(1, end_matter.comments.len());
-        let comment = end_matter.comments.iter().next().unwrap();
+        let comment = end_matter.comments.get(0).unwrap();
         assert_eq!("Alice", comment.author);
         assert_eq!(Some("Developer".into()), comment.bio);
         assert_eq!("Hi", comment.content);

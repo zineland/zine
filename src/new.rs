@@ -31,11 +31,11 @@ publish = true
 featured = true
 "#;
 
-pub fn new_zine_project(name: &str) -> Result<()> {
-    let dir = if name == "." {
-        env::current_dir()?
-    } else {
+pub fn new_zine_project(name: Option<String>) -> Result<()> {
+    let dir = if let Some(name) = name.as_ref() {
         env::current_dir()?.join(name)
+    } else {
+        env::current_dir()?
     };
     if !dir.exists() {
         fs::create_dir_all(&dir)?;
@@ -44,7 +44,7 @@ pub fn new_zine_project(name: &str) -> Result<()> {
     // Generate project zine.toml
     fs::write(
         dir.join(ZINE_FILE),
-        TEMPLATE_PROJECT_FILE.replace("{name}", name),
+        TEMPLATE_PROJECT_FILE.replace("{name}", &name.unwrap_or_default()),
     )?;
 
     // Create season dir and season zine.toml
