@@ -14,24 +14,27 @@ use super::{EndMatter, Entity};
 #[derive(Serialize, Deserialize)]
 pub struct Article {
     pub file: String,
-    // The slug after this artcile rendered.
-    // Default to file name if no slug specified.
+    /// The slug after this artcile rendered.
+    /// Default to file name if no slug specified.
     pub slug: Option<String>,
     pub title: String,
     pub author: Option<String>,
     pub cover: Option<String>,
-    // The article's markdown content.
+    /// The article's markdown content.
     #[serde(default)]
     pub markdown: String,
-    // The publish date. Format like YYYY-MM-dd.
+    /// The publish date. Format like YYYY-MM-dd.
     #[serde(with = "crate::helpers::serde_date")]
     pub pub_date: Date,
-    // The optional end matter of the article.
+    /// The optional end matter of the article.
     pub end_matter: Option<EndMatter>,
-    // Wheter the article is an featured article.
-    // Featured article will display in home page.
+    /// Whether the article is an featured article.
+    /// Featured article will display in home page.
     #[serde(default)]
     pub featured: bool,
+    /// Whether publish the article. Publish means generate the article HTML file.
+    /// This field would be ignored if in `zine serve` mode, that's mean we alwasy
+    /// generate HTML file in this mode.
     #[serde(default)]
     pub publish: bool,
 }
@@ -70,9 +73,13 @@ impl Entity for Article {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        context.insert("article", &self);
-        context.insert("end_matter", &self.end_matter);
-        Render::render("article.jinja", &context, dest)?;
+        // Only render article if the publish property is true,
+        // or we are in `zine serve` mode which the dest path is `TEMP_ZINE_BUILD_DIR`.
+        if self.publish || dest.to_string_lossy().contains(crate::TEMP_ZINE_BUILD_DIR) {
+            context.insert("article", &self);
+            context.insert("end_matter", &self.end_matter);
+            Render::render("article.jinja", &context, dest)?;
+        }
         Ok(())
     }
 }

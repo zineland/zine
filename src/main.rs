@@ -52,7 +52,7 @@ fn main() -> Result<()> {
         Commands::Serve { source, port } => {
             let rt = Runtime::new()?;
             rt.block_on(async {
-                let tmp_dir = env::temp_dir();
+                let tmp_dir = env::temp_dir().join(zine::TEMP_ZINE_BUILD_DIR);
                 let addr = SocketAddr::from(([127, 0, 0, 1], port));
                 let service = ServeDir::new(&tmp_dir);
                 task::spawn_blocking(move || {
