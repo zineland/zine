@@ -7,6 +7,7 @@ use anyhow::Result;
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use tera::{Context, Tera};
+use tokio::{runtime::Handle, task};
 
 use crate::{
     code_blocks::{render_code_block, ALL_CODE_BLOCKS},
@@ -134,10 +135,12 @@ fn markdown_to_html_fn(
                 }
                 Event::Text(text) => {
                     if let Some(fenced) = code_block_fenced.as_ref() {
-                        if let Some(html) = tokio::runtime::Runtime::new()
-                            .expect("Tokio runtime error")
-                            .block_on(async { render_code_block(fenced, &text).await })
-                        {
+                        // Block in place to execute async task
+                        let rendered_html = task::block_in_place(|| {
+                            Handle::current()
+                                .block_on(async { render_code_block(fenced, &text).await })
+                        });
+                        if let Some(html) = rendered_html {
                             events.push(Event::Html(html.into()));
                             continue;
                         }
