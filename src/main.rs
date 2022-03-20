@@ -34,7 +34,6 @@ struct Cli {
 #[derive(Debug, clap::Subcommand)]
 enum Commands {
     /// Build Zine site.
-    #[clap(arg_required_else_help = true)]
     Build {
         /// The source directory of zine site.
         source: Option<String>,
@@ -45,7 +44,6 @@ enum Commands {
         watch: bool,
     },
     /// Serve the Zine site.
-    #[clap(arg_required_else_help = true)]
     Serve {
         /// The source directory of zine site.
         source: Option<String>,
