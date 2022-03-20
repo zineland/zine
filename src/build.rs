@@ -1,4 +1,4 @@
-use std::{path::Path, sync::mpsc, time::Duration};
+use std::{fs, path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, helpers::copy_dir, ZineEngine};
 use anyhow::Result;
@@ -44,6 +44,21 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     if static_dir.exists() {
         copy_dir(&static_dir, dest)?;
     }
-    copy_dir(Path::new("./static"), dest)?;
+
+    // Copy builtin static files into dest static dir.
+    let dest_static_dir = dest.join("static");
+    fs::create_dir_all(&dest_static_dir)?;
+    fs::write(
+        dest_static_dir.join("medium-zoom.min.js"),
+        include_str!("../static/medium-zoom.min.js"),
+    )?;
+    fs::write(
+        dest_static_dir.join("zine.css"),
+        include_str!("../static/zine.css"),
+    )?;
+    fs::write(
+        dest_static_dir.join("zine.js"),
+        include_str!("../static/zine.js"),
+    )?;
     Ok(())
 }

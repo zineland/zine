@@ -14,10 +14,22 @@ use crate::{
     entity::{Entity, Zine},
 };
 
-static TEMPLATE_DIR: &str = "templates/*.jinja";
-
 static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| {
-    let mut tera = Tera::new(TEMPLATE_DIR).expect("Invalid template dir.");
+    #[cfg(debug_assertions)]
+    let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
+
+    #[cfg(not(debug_assertions))]
+    let mut tera = Tera::default();
+    #[cfg(not(debug_assertions))]
+    tera.add_raw_templates(vec![
+        ("base.jinja", include_str!("../templates/base.jinja")),
+        ("index.jinja", include_str!("../templates/index.jinja")),
+        ("season.jinja", include_str!("../templates/season.jinja")),
+        ("article.jinja", include_str!("../templates/article.jinja")),
+        ("page.jinja", include_str!("../templates/page.jinja")),
+        ("feed.jinja", include_str!("../templates/feed.jinja")),
+    ])
+    .unwrap();
     tera.register_function("featured", featured_fn);
     tera.register_function("markdown_to_html", markdown_to_html_fn);
     RwLock::new(tera)
@@ -82,6 +94,7 @@ impl ZineEngine {
 
         zine.parse(&self.source)?;
         zine.render(Context::new(), &self.dest)?;
+        #[cfg(debug_assertions)]
         println!("Zine engine: {:?}", zine);
 
         let mut feed_context = Context::new();

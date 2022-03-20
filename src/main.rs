@@ -70,6 +70,7 @@ async fn main() -> Result<()> {
         } => {
             let dest = dest.unwrap_or_else(|| "build".into());
             watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch).await?;
+            println!("Build success! The build directory is `{}`.", dest);
         }
         Commands::Serve { source, port } => {
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
