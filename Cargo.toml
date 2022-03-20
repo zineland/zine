@@ -7,7 +7,7 @@ homepage = "https://github.com/zineland/zine"
 repository = "https://github.com/zineland/zine"
 license = "Apache-2.0"
 edition = "2021"
-exclude = ["demo", "tailwind.config.js", "zine.css"]
+exclude = ["demo", "tailwind.config.js", "zine-entry.css"]
 readme = "README.md"
 
 [dependencies]
