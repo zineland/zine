@@ -72,12 +72,19 @@ name = "Your Zine Site Name"
 title = "Your Zine Site Title"
 description = ""
 
-# You can customize some theme elements in this section
+# You can customize some theme elements in this section.
+# All of those elements are optional.
 [theme]
+# the primary color
 primary-color = "#abcdef"
+secondary-color = "#fff"
+# the main text color
 main-color = "#000"
+# the link color in article content
 link-color = "#e07312"
+# the background image
 background-image = "/static/background.png"
+# you can customize your footer here
 footer-template = "templates/footer.html"
 
 # Season 1
@@ -100,7 +107,7 @@ title = "Season 2"
 path = "content/season-2"
 ```
 
-### Season `zine.toml
+### Season `zine.toml`
 
 The season `zine.toml` file list all your articles of this season.
 
@@ -117,7 +124,7 @@ author = ""
 # the cover of this article
 cover = ""
 # the publish date of this article
-pub_date = "{pub_date}"
+pub_date = "2022-03-20"
 # whether to publish this article or not
 publish = true
 # whether mark this article as a featured article. 
@@ -155,11 +162,15 @@ content = "Another cool comment"
 
 ### Code blocks
 
+Zine provides some advanced code blocks to help you write articles.
+
 #### URL preview
 
+~~~
 ```urlpreview
 https://github.com/zineland/zine
 ```
+~~~
 
 ## Some cool magazines powered by Zine
 
