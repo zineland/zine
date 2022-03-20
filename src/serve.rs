@@ -4,6 +4,17 @@ use crate::{build::watch_build, TEMP_ZINE_BUILD_DIR};
 use anyhow::Result;
 use tower_http::services::ServeDir;
 
+static ZINE_BANNER: &str = r"
+
+███████╗██╗███╗   ██╗███████╗
+╚══███╔╝██║████╗  ██║██╔════╝
+  ███╔╝ ██║██╔██╗ ██║█████╗  
+ ███╔╝  ██║██║╚██╗██║██╔══╝  
+███████╗██║██║ ╚████║███████╗
+╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
+                             
+";
+
 pub async fn run_serve(source: String, port: u16) -> Result<()> {
     let tmp_dir = env::temp_dir().join(TEMP_ZINE_BUILD_DIR);
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
@@ -14,6 +25,7 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
             .unwrap();
     });
 
+    println!("{}", ZINE_BANNER);
     println!("listening on http://{}", addr.to_string());
     hyper::Server::bind(&addr)
         .serve(tower::make::Shared::new(service))
