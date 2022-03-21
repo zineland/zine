@@ -71,6 +71,11 @@ url = "https://your-domain.com"
 name = "Your Zine Site Name"
 title = "Your Zine Site Title"
 description = ""
+# the menu tabs
+menu = [
+    { name = "About", url = "/about" },
+    { name = "Blog", url = "/blog" },
+]
 
 # You can customize some theme elements in this section.
 # All of those elements are optional.
@@ -98,6 +103,8 @@ title = "Season 1"
 # the directory path to parse this season, you should put
 # your markdown files in this directory
 path = "content/season-1"
+# the introduction of this season. optional.
+intro = "content/season-1/intro.md"
 
 # Season 2
 [[season]]
@@ -138,6 +145,22 @@ featured = true
 
 ## Advanced
 
+### Pages
+
+Every markdown file located in `pages` will be rendered as a **Page**. Just intuitive like this:
+
+```
+$ tree pages
+pages
+├── about.md        # will be rendered as https://your-domain.com/about
+├── blog            
+│   └── first.md    # will be rendered as https://your-domain.com/blog/first
+├── blog.md         # will be rendered as https://your-domain.com/blog
+└── faq.md          # will be rendered as https://your-domain.com/faq
+
+1 directory, 4 files
+```
+
 ### Comment
 
 You can add an arbitrary number of comments for an article. Simply put the **end matter** below the article content.
@@ -174,7 +197,8 @@ https://github.com/zineland/zine
 
 ## Some cool magazines powered by Zine
 
-- [https://2d2d.io](https://2d2d.io)
+- [https://2d2d.io](https://2d2d.io) (available soon)
+
 ## TODO
 
 - [ ] Support table of content
