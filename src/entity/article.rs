@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::Result;
 use once_cell::sync::Lazy;
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::Render;
+use crate::{meta::Meta, strip_markdown::strip_markdown, Render};
 
 use super::{EndMatter, Entity};
 
@@ -60,6 +60,13 @@ impl Article {
             .cloned()
             .unwrap_or_else(|| self.file.replace(".md", ""))
     }
+
+    // Get the at most 200 worlds description of this article.
+    // Mainly for html meta description tag.
+    fn description(&self) -> String {
+        let raw = self.markdown.chars().take(200).collect::<String>();
+        strip_markdown(&raw)
+    }
 }
 
 impl Entity for Article {
@@ -76,6 +83,16 @@ impl Entity for Article {
         // Only render article if the publish property is true,
         // or we are in `zine serve` mode which the dest path is `TEMP_ZINE_BUILD_DIR`.
         if self.publish || dest.to_string_lossy().contains(crate::TEMP_ZINE_BUILD_DIR) {
+            context.insert(
+                "meta",
+                &Meta {
+                    title: Cow::Borrowed(&self.title),
+                    description: Cow::Owned(self.description()),
+                    url: Some(Cow::Owned(self.slug())),
+                    image: self.cover.as_deref().map(Cow::Borrowed),
+                },
+            );
+            context.insert("page_type", "article");
             context.insert("article", &self);
             context.insert("end_matter", &self.end_matter);
             Render::render("article.jinja", &context, dest)?;

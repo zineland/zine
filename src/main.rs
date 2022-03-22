@@ -11,6 +11,7 @@ mod engine;
 mod entity;
 mod feed;
 mod helpers;
+mod meta;
 mod new;
 mod serve;
 mod strip_markdown;

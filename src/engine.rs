@@ -22,6 +22,7 @@ static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| {
     let mut tera = Tera::default();
     #[cfg(not(debug_assertions))]
     tera.add_raw_templates(vec![
+        ("_meta.jinja", include_str!("../templates/_meta.jinja")),
         ("base.jinja", include_str!("../templates/base.jinja")),
         ("index.jinja", include_str!("../templates/index.jinja")),
         ("season.jinja", include_str!("../templates/season.jinja")),
