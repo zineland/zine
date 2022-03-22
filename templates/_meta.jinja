@@ -1,29 +1,34 @@
 
 {% if meta %}
-    <title>{{ meta.title }}</title>
-    <meta name="description" content="{{ meta.description }}">
+    {% set title = meta.title %}
+    {% set description = meta.description %}
+{% else %}
+    {% set title = site.title %}
+    {% set description = site.description %}
+{% endif %}
 
+    <title>{{ title }}</title>
+    <meta name="description" content="{{ description }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:description" content="{{ description }}">
+    <meta name="twitter:title" content="{{ title }}">
+    <meta name="twitter:description" content="{{ description }}">
+
+{% if meta %}
     {% if page_type and page_type == "article" %}
         {% set path = season.slug ~ "/" ~ meta.url %}
     {% else %}
         {% set path = meta.url %}
     {% endif %}
 
-    <meta property="og:type" content="website">
     <meta property="og:url" content="{{ site.url ~ "/" ~ path }}">
-    <meta property="og:title" content="{{ meta.title }}">
-    <meta property="og:description" content="{{ meta.description }}">
-
-    <meta name="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ site.url ~ "/" ~ path }}">
-    <meta name="twitter:title" content="{{ meta.title }}">
-    <meta name="twitter:description" content="{{ meta.description }}">
 
-{% if meta.image %}
+    {% if meta.image %}
+    <meta name="twitter:card" content="summary_large_image">
     <meta property="og:image" content="{{ site.url ~ meta.image }}">
     <meta name="twitter:image" content="{{ site.url ~ meta.image }}">
+    {% endif %}
 {% endif %}
-{% else %}
-    <title>{{ site.title }}</title>
-    <meta name="description" content="{{ site.description }}">
-{% endif %}
+
