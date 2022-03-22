@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// The end matter below the article content.
-/// 
+///
 /// Here is the format:
 /// ```toml
 /// +++
@@ -19,13 +19,13 @@ pub struct EndMatter {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Comment {
-    // The author name. 
+    // The author name.
     // Plain text format.
     pub author: String,
-    // The profile of the author. 
+    // The profile of the author.
     // Markdown format.
     pub bio: Option<String>,
-    // The comment content. 
+    // The comment content.
     // Markdown format.
     pub content: String,
 }

@@ -15,6 +15,10 @@
     <meta name="twitter:title" content="{{ title }}">
     <meta name="twitter:description" content="{{ description }}">
 
+{% if site.logo %}
+    <link rel="shortcut icon" href="{{ site.logo }}">
+{% endif %}
+
 {% if meta %}
     {% if page_type and page_type == "article" %}
         {% set path = season.slug ~ "/" ~ meta.url %}

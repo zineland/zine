@@ -73,6 +73,7 @@ This root `zine.toml` file describes your site meta and all your season's info.
 url = "https://your-domain.com"
 name = "Your Zine Site Name"
 description = ""
+logo = "path/to/favicon"
 # the menu tabs
 menu = [
     { name = "About", url = "/about" },
