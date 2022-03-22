@@ -6,7 +6,6 @@ pub struct Site {
     pub url: String,
     pub name: String,
     pub logo: Option<String>,
-    pub title: String,
     pub description: Option<String>,
     #[serde(rename(deserialize = "menu"))]
     #[serde(default)]
