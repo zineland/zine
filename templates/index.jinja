@@ -11,9 +11,9 @@
                     <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ season.title }}</div>
                 </a>
             </div>
-            <div class="flex flex-wrap flex-col sm:flex-row sm:justify-between items-center">
+            <div class="flex flex-wrap flex-col sm:flex-row sm:justify-evenly items-center">
                 {% for article in featured(articles = season.articles) %}
-                    <div class="mt-8 sm:max-w-md w-full transition ease-in-out hover:scale-105 duration-500 hover:border border-gray-200">
+                    <div class="mt-8 sm:mx-2 sm:max-w-md w-full transition ease-in-out hover:scale-105 duration-500 hover:border border-gray-200">
                         <a href="/{{ season.slug }}/{{ article.slug }}">
                             <div class="relative mx-auto ">
                                 <img class="z-0 w-full max-h-52 md:max-h-56 object-cover" src="{{ article.cover }}" alt="{{ article.title }}"/>
@@ -29,7 +29,7 @@
                         </a>
                     </div>
                 {% endfor %}
-                <div class="mt-8 flex flex-col justify-between w-full mx-auto sm:max-w-md">
+                <div class="mt-8 sm:mx-2 flex w-full mx-auto ">
                     <a href="{{ season.slug }}" class="p-3 px-12 mx-auto my-8 bg-primary text-main text-sm font-bold rounded transition hover:scale-110 duration-500">
                         查看全部
                     </a>
