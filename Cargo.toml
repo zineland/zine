@@ -1,6 +1,6 @@
 [package]
 name = "zine"
-version = "0.1.0"
+version = "0.2.0"
 description = "A simple and opinionated tool to build your own magazine."
 authors = ["Folyd"]
 homepage = "https://github.com/zineland/zine"

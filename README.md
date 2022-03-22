@@ -1,6 +1,8 @@
 # zine
 
+[![Crates.io](https://img.shields.io/crates/v/zine.svg)](https://crates.io/crates/zine)
 ![Crates.io](https://img.shields.io/crates/d/zine)
+[![license-apache](https://img.shields.io/badge/license-Apache-yellow.svg)](./LICENSE)
 
 Zine - a simple and opinionated tool to build your own magazine.
 
@@ -9,6 +11,7 @@ Zine - a simple and opinionated tool to build your own magazine.
 - Best reading experiences.
 - Theme customizable, extend friendly.
 - RSS Feed supported.
+- Open Graph Protocol supported.
 - Build into a static website, hosting anywhere.
 
 ## Installation
@@ -203,8 +206,6 @@ https://github.com/zineland/zine
 - [ ] Support table of content
 
 - [ ] Support code syntax highlight
-
-- [ ] Support render OGP meta
 
 - [ ] Support i18n
 
