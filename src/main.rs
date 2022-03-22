@@ -13,6 +13,7 @@ mod feed;
 mod helpers;
 mod new;
 mod serve;
+mod strip_markdown;
 
 pub use self::engine::Render;
 pub use self::engine::ZineEngine;
