@@ -1,10 +1,10 @@
-use std::{fs, path::Path};
+use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::Render;
+use crate::{meta::Meta, strip_markdown::strip_markdown, Render};
 
 use super::{article::Article, Entity};
 
@@ -38,6 +38,17 @@ impl std::fmt::Debug for Season {
 }
 
 impl Season {
+    // Get the at most 200 worlds description of this season.
+    // Mainly for html meta description tag.
+    fn description(&self) -> String {
+        if let Some(intro) = self.intro.as_ref() {
+            let raw = intro.chars().take(200).collect::<String>();
+            strip_markdown(&raw)
+        } else {
+            String::default()
+        }
+    }
+
     fn sibling_articles(&self, current: usize) -> (Option<&Article>, Option<&Article>) {
         if current == 0 {
             return (None, self.articles.get(current + 1));
@@ -88,6 +99,15 @@ impl Entity for Season {
             article.render(context.clone(), &season_dir.join(article.slug()))?;
         }
 
+        context.insert(
+            "meta",
+            &Meta {
+                title: Cow::Borrowed(&self.title),
+                description: Cow::Owned(self.description()),
+                url: Some(Cow::Borrowed(&self.slug)),
+                image: self.cover.as_deref().map(Cow::Borrowed),
+            },
+        );
         Render::render("season.jinja", &context, season_dir)?;
         Ok(())
     }

@@ -3,19 +3,19 @@
     <title>{{ meta.title }}</title>
     <meta name="description" content="{{ meta.description }}">
 
-    {% if page_type == "article" %}
-        {% set path = "/" ~ season.slug ~ "/" ~ meta.url %}
+    {% if page_type and page_type == "article" %}
+        {% set path = season.slug ~ "/" ~ meta.url %}
     {% else %}
         {% set path = meta.url %}
     {% endif %}
 
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ site.url ~ path }}">
+    <meta property="og:url" content="{{ site.url ~ "/" ~ path }}">
     <meta property="og:title" content="{{ meta.title }}">
     <meta property="og:description" content="{{ meta.description }}">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ site.url ~ path }}">
+    <meta property="twitter:url" content="{{ site.url ~ "/" ~ path }}">
     <meta name="twitter:title" content="{{ meta.title }}">
     <meta name="twitter:description" content="{{ meta.description }}">
 
