@@ -200,9 +200,13 @@ https://github.com/zineland/zine
 
 ## Some cool magazines powered by Zine
 
-- [https://2d2d.io](https://2d2d.io) (available soon)
+- [https://2d2d.io](https://2d2d.io)
 
 ## TODO
+
+- [x] Support RSS Feed
+
+- [x] Support render OGP meta
 
 - [ ] Support table of content
 
