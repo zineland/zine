@@ -31,7 +31,10 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
                         let html = UrlPreviewBlock(url, &meta.title, &meta.description)
                             .render()
                             .unwrap();
-                        data.insert_url_preview(url, (meta.title, meta.description));
+                        data.insert_url_preview(
+                            url,
+                            (meta.title.into_owned(), meta.description.into_owned()),
+                        );
                         Some(html)
                     }
                     // Return a preview error block.

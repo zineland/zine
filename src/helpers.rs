@@ -4,32 +4,16 @@ use hyper::{
     Client, Uri,
 };
 use hyper_tls::HttpsConnector;
-use std::{fs, io::Read, path::Path};
+use std::{borrow::Cow, fs, io::Read, path::Path};
 
 use html5ever::{
     parse_document, tendril::TendrilSink, tree_builder::TreeBuilderOpts, Attribute, ParseOpts,
 };
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
-/// The meta info parse from HTML page, mainly including: `title`, `description`.
-#[derive(Debug, Default)]
-pub struct Meta {
-    pub title: String,
-    pub description: String,
-}
+use crate::meta::Meta;
 
-impl Meta {
-    pub fn is_filled(&self) -> bool {
-        !self.title.is_empty() && !self.description.is_empty()
-    }
-
-    fn truncate(&mut self) {
-        self.title.truncate(200);
-        self.description.truncate(200);
-    }
-}
-
-pub async fn fetch_url(url: &str) -> Result<Meta> {
+pub async fn fetch_url(url: &str) -> Result<Meta<'_>> {
     let client = Client::builder().build::<_, hyper::Body>(HttpsConnector::new());
     let resp = client.get(url.parse::<Uri>()?).await?;
     let bytes = body::to_bytes(resp.into_body()).await?;
@@ -39,7 +23,7 @@ pub async fn fetch_url(url: &str) -> Result<Meta> {
 }
 
 /// Parse HTML ['Meta`] from `html`.
-pub fn parse_html_meta<R: Read>(mut html: R) -> Meta {
+pub fn parse_html_meta<'a, R: Read>(mut html: R) -> Meta<'a> {
     let parse_opts = ParseOpts {
         tree_builder: TreeBuilderOpts {
             scripting_enabled: false,
@@ -96,12 +80,12 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                         if meta.description.is_empty() =>
                     {
                         if let Some(description) = get_attribute(&*attrs, "content") {
-                            meta.description = description.trim().to_owned();
+                            meta.description = Cow::Owned(description.trim().to_owned());
                         }
                     }
                     Some("og:title" | "twitter:title") if meta.title.is_empty() => {
                         if let Some(title) = get_attribute(&*attrs, "content") {
-                            meta.title = title.trim().to_owned();
+                            meta.title = Cow::Owned(title.trim().to_owned());
                         }
                     }
                     _ => {}
@@ -131,7 +115,7 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                         _ => None,
                     })
                     .collect::<String>();
-                meta.title = title.trim().to_owned();
+                meta.title = Cow::Owned(title.trim().to_owned());
             }
             _ => {}
         }
