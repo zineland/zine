@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
-    <generator uri="{{ site.url }}" version="0.1.0">{{ site.name }}</generator>
-    <link href="{{ site.url }}/feed.xml" rel="self" type="application/atom+xml" />
-    <link href="{{ site.url }}" rel="alternate" type="text/html" />
-    <id>{{ site.url }}</id>
+<feed xmlns="http://www.w3.org/2005/Atom">
     <title>{{ site.name }}</title>
     <subtitle>{{ site.description }}</subtitle>
+    <updated>{{ now() }}</updated>
+    <id>{{ site.url }}</id>
+    <link href="{{ site.url }}/feed.xml" rel="self" type="application/atom+xml" />
+    <link href="{{ site.url }}" rel="alternate" type="text/html" />
+    <generator uri="https://github.com/zineland/zine" version="1.0">zine</generator>
     <author>
         <name>{{ site.name }}</name>
         <uri>{{ site.url }}</uri>
     </author>
-    <updated>{{ now() }}</updated>
 
     {% for entry in entries %}
     <entry>
@@ -20,7 +20,7 @@
         <updated>{{ entry.date }}</updated>
         <id>{{ entry.url }}</id>
         <content type="html" xml:base="{{ entry.url }}">
-            {{ markdown_to_html(markdown = entry.content) }}
+            <![CDATA[{{ markdown_to_html(markdown = entry.content) }}]]>
         </content>
 
         <author>
