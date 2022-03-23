@@ -101,6 +101,7 @@ impl ZineEngine {
         let mut feed_context = Context::new();
         feed_context.insert("site", &zine.site);
         feed_context.insert("entries", &zine.latest_feed_entries(20));
+        feed_context.insert("generator_version", env!("CARGO_PKG_VERSION"));
         Render::render_atom_feed(feed_context, &self.dest)?;
         Ok(())
     }
