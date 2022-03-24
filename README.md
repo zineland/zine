@@ -208,6 +208,8 @@ https://github.com/zineland/zine
 
 - [x] Support render OGP meta
 
+- [x] Support l10n
+
 - [ ] Support table of content
 
 - [ ] Support code syntax highlight

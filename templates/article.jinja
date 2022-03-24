@@ -9,14 +9,14 @@
                         href="/{{ season.slug }}">
             <div class="relative text-main px-4">{{ season.title }}</div>
         </a>
-        <span class="ml-2 text-gray-700"> / 第 {{ number }} 期</span>
+        <span class="ml-2 text-gray-700"> /  {{ fluent(key = "article-number", number = number) }}</span>
     </div>
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="prose mx-auto">
         <h1 class="text-center">{{ article.title }}</h1>
         <div class="relative text-sm text-gray-400">
-            <span>发布于 {{ article.pub_date }}</span>
-            <span class="absolute right-2">作者：{{ article.author }}</span>
+            <span>{{ article.pub_date }}</span>
+            <span class="absolute right-2">{{ article.author }}</span>
         </div>
     </div>
     <article class="prose mx-auto my-12">
@@ -54,9 +54,9 @@
                 <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline"
                     href="/{{ season.slug }}/{{ article.slug }}">
                     {% if loop.index0 == 0 %}
-                        上一篇：
+                        {{ fluent(key = "previous") }}
                     {% else %}
-                        下一篇：
+                        {{ fluent(key = "next") }}
                     {% endif %}
                     {{ article.title }}
                 </a>

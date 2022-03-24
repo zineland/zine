@@ -11,6 +11,7 @@ mod engine;
 mod entity;
 mod feed;
 mod helpers;
+mod locales;
 mod meta;
 mod new;
 mod serve;
