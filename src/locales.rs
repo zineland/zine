@@ -69,7 +69,7 @@ impl tera::Function for FluentLoader {
         let pattern = self
             .bundle
             .get_message(key)
-            .expect("Invalid fluent `key`")
+            .unwrap_or_else(|| panic!("Invalid fluent key: `{}`", key))
             .value()
             .expect("Missing Value.");
 
