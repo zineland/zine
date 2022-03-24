@@ -3,6 +3,6 @@ view-more = View more
 
 article-number = No. { $number }
 
-previous = Previous
+previous = Previous:
 
-next = Next
+next = Next:

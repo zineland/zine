@@ -33,9 +33,13 @@ impl FluentLoader {
 fn json_to_fluent(json: &Value) -> FluentValue {
     match json {
         Value::Number(n) if n.is_u64() => FluentValue::from(n.as_u64().unwrap()),
+        Value::Number(n) if n.is_i64() => FluentValue::from(n.as_i64().unwrap()),
         Value::Number(n) if n.is_f64() => FluentValue::from(n.as_f64().unwrap()),
         Value::String(s) => FluentValue::String(s.into()),
-        _ => FluentValue::None,
+        _ => {
+            println!("Invalid value to convert to fluent: {}", &json);
+            FluentValue::None
+        }
     }
 }
 
