@@ -1,40 +1,46 @@
 use std::{
     fs,
     path::{Path, PathBuf},
+    sync::Arc,
 };
-
-use anyhow::Result;
-use once_cell::sync::Lazy;
-use parking_lot::RwLock;
-use tera::{Context, Tera};
-use tokio::{runtime::Handle, task};
 
 use crate::{
     code_blocks::{render_code_block, ALL_CODE_BLOCKS},
     entity::{Entity, Zine},
+    locales::FluentLoader,
 };
 
-static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| {
-    #[cfg(debug_assertions)]
-    let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
+use anyhow::Result;
+use once_cell::sync::OnceCell;
+use tera::{Context, Tera};
+use tokio::{runtime::Handle, task};
 
-    #[cfg(not(debug_assertions))]
-    let mut tera = Tera::default();
-    #[cfg(not(debug_assertions))]
-    tera.add_raw_templates(vec![
-        ("_meta.jinja", include_str!("../templates/_meta.jinja")),
-        ("base.jinja", include_str!("../templates/base.jinja")),
-        ("index.jinja", include_str!("../templates/index.jinja")),
-        ("season.jinja", include_str!("../templates/season.jinja")),
-        ("article.jinja", include_str!("../templates/article.jinja")),
-        ("page.jinja", include_str!("../templates/page.jinja")),
-        ("feed.jinja", include_str!("../templates/feed.jinja")),
-    ])
-    .unwrap();
-    tera.register_function("featured", featured_fn);
-    tera.register_function("markdown_to_html", markdown_to_html_fn);
-    RwLock::new(tera)
-});
+static TERA: OnceCell<Arc<Tera>> = OnceCell::new();
+
+fn init_tera(locale: &str) {
+    TERA.get_or_init(|| {
+        #[cfg(debug_assertions)]
+        let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
+
+        #[cfg(not(debug_assertions))]
+        let mut tera = Tera::default();
+        #[cfg(not(debug_assertions))]
+        tera.add_raw_templates(vec![
+            ("_meta.jinja", include_str!("../templates/_meta.jinja")),
+            ("base.jinja", include_str!("../templates/base.jinja")),
+            ("index.jinja", include_str!("../templates/index.jinja")),
+            ("season.jinja", include_str!("../templates/season.jinja")),
+            ("article.jinja", include_str!("../templates/article.jinja")),
+            ("page.jinja", include_str!("../templates/page.jinja")),
+            ("feed.jinja", include_str!("../templates/feed.jinja")),
+        ])
+        .unwrap();
+        tera.register_function("featured", featured_fn);
+        tera.register_function("markdown_to_html", markdown_to_html_fn);
+        tera.register_function("fluent", FluentLoader::new(locale));
+        Arc::new(tera)
+    });
+}
 
 #[derive(Debug)]
 pub struct ZineEngine {
@@ -55,7 +61,9 @@ impl Render {
             }
         }
 
-        TERA.read().render_to(template, context, &mut buf)?;
+        TERA.get()
+            .expect("Tera haven't initialized")
+            .render_to(template, context, &mut buf)?;
         fs::write(dest, buf)?;
         Ok(())
     }
@@ -65,7 +73,11 @@ impl Render {
         let mut buf = vec![];
         let dest = dest.as_ref().join("feed.xml");
 
-        TERA.read().render_to("feed.jinja", &context, &mut buf)?;
+        TERA.get().expect("Tera haven't initialized").render_to(
+            "feed.jinja",
+            &context,
+            &mut buf,
+        )?;
         fs::write(dest, buf)?;
         Ok(())
     }
@@ -84,16 +96,15 @@ impl ZineEngine {
     }
 
     pub fn build(&self) -> Result<()> {
-        #[cfg(debug_assertions)]
-        {
-            // Full realod tera to load templates dynamically.
-            TERA.write().full_reload()?;
-        }
-
         let content = fs::read_to_string(&self.source.join(crate::ZINE_FILE))?;
         let mut zine = toml::from_str::<Zine>(&content)?;
 
         zine.parse(&self.source)?;
+
+        // Init tera with parsed locale.
+        let locale = zine.site.locale.as_deref().unwrap_or("en");
+        init_tera(locale);
+
         zine.render(Context::new(), &self.dest)?;
         #[cfg(debug_assertions)]
         println!("Zine engine: {:?}", zine);

@@ -74,6 +74,9 @@ url = "https://your-domain.com"
 name = "Your Zine Site Name"
 description = ""
 logo = "path/to/favicon"
+# the locale to localize your Zine site. default to "en".
+# Zine has builtin supported locales, please check the `locales` directory of this repo.
+locale = "en"
 # the menu tabs
 menu = [
     { name = "About", url = "/about" },
@@ -207,6 +210,8 @@ https://github.com/zineland/zine
 - [x] Support RSS Feed
 
 - [x] Support render OGP meta
+
+- [x] Support l10n
 
 - [ ] Support table of content
 
