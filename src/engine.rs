@@ -17,7 +17,7 @@ use tokio::{runtime::Handle, task};
 
 static TERA: OnceCell<Arc<Tera>> = OnceCell::new();
 
-fn init_tera(locale: &str) {
+fn init_tera(source: &Path, locale: &str) {
     TERA.get_or_init(|| {
         #[cfg(debug_assertions)]
         let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
@@ -37,7 +37,7 @@ fn init_tera(locale: &str) {
         .unwrap();
         tera.register_function("featured", featured_fn);
         tera.register_function("markdown_to_html", markdown_to_html_fn);
-        tera.register_function("fluent", FluentLoader::new(locale));
+        tera.register_function("fluent", FluentLoader::new(source, locale));
         Arc::new(tera)
     });
 }
@@ -103,7 +103,7 @@ impl ZineEngine {
 
         // Init tera with parsed locale.
         let locale = zine.site.locale.as_deref().unwrap_or("en");
-        init_tera(locale);
+        init_tera(&self.source, locale);
 
         zine.render(Context::new(), &self.dest)?;
         #[cfg(debug_assertions)]
