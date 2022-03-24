@@ -1,0 +1,20 @@
+name: Format check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  cargo_fmt_check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Rust toolchain
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    - name: Run format check
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        cargo fmt -- --check
