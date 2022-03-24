@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs, path::Path};
 
 use fluent::{bundle::FluentBundle, FluentArgs, FluentResource, FluentValue};
 use intl_memoizer::concurrent::IntlLangMemoizer;
 use serde_json::Value;
 
 static FLUENT_EN: &str = include_str!("../locales/en.ftl");
-static FLUENT_ZH_CN: &str = include_str!("../locales/zh-CN.ftl");
+static FLUENT_ZH_CN: &str = include_str!("../locales/zh.ftl");
 
 /// Fluent locale loader to localize text.
 ///
@@ -16,16 +16,32 @@ pub struct FluentLoader {
 }
 
 impl FluentLoader {
-    pub fn new(locale: &str) -> Self {
-        let mut bundle =
-            FluentBundle::new_concurrent(vec![locale.parse().expect("Invalid locale string.")]);
-        if let Some(resource) = match locale {
-            "en" => FluentResource::try_new(FLUENT_EN.to_owned()).ok(),
-            "zh-CN" => FluentResource::try_new(FLUENT_ZH_CN.to_owned()).ok(),
-            _ => None,
-        } {
-            bundle.add_resource(resource).unwrap();
+    pub fn new(source: &Path, mut locale: &str) -> Self {
+        let resource = match locale {
+            "en" => FluentResource::try_new(FLUENT_EN.to_owned()),
+            "zh" => FluentResource::try_new(FLUENT_ZH_CN.to_owned()),
+            _ => {
+                // Not a buitlin locale, load the user translation resource.
+                let file = format!("locales/{}.ftl", locale);
+                let path = source.join(&file);
+                if path.exists() {
+                    let translation = fs::read_to_string(path)
+                        .unwrap_or_else(|err| panic!("{file} read failed: {}", err));
+                    FluentResource::try_new(translation)
+                } else {
+                    println!("`{file}` does not exist, please add your translation to this file.");
+                    println!("fallback to default `en` locale.");
+
+                    locale = "en";
+                    FluentResource::try_new(FLUENT_EN.to_owned())
+                }
+            }
         }
+        .expect("Load translation failed.");
+
+        let lang_id = locale.parse().expect("Invalid locale string.");
+        let mut bundle = FluentBundle::new_concurrent(vec![lang_id]);
+        bundle.add_resource(resource).unwrap();
         FluentLoader { bundle }
     }
 }
@@ -53,7 +69,7 @@ impl tera::Function for FluentLoader {
         let pattern = self
             .bundle
             .get_message(key)
-            .expect("Invalid fluent `key`")
+            .unwrap_or_else(|| panic!("Invalid fluent key: `{}`", key))
             .value()
             .expect("Missing Value.");
 
