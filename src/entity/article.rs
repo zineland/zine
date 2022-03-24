@@ -7,7 +7,10 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{meta::Meta, strip_markdown::strip_markdown, Render};
+use crate::{
+    meta::{extract_decription_from_markdown, Meta},
+    Render,
+};
 
 use super::{EndMatter, Entity};
 
@@ -60,13 +63,6 @@ impl Article {
             .cloned()
             .unwrap_or_else(|| self.file.replace(".md", ""))
     }
-
-    // Get the at most 200 worlds description of this article.
-    // Mainly for html meta description tag.
-    fn description(&self) -> String {
-        let raw = self.markdown.chars().take(200).collect::<String>();
-        strip_markdown(&raw)
-    }
 }
 
 impl Entity for Article {
@@ -87,7 +83,7 @@ impl Entity for Article {
                 "meta",
                 &Meta {
                     title: Cow::Borrowed(&self.title),
-                    description: Cow::Owned(self.description()),
+                    description: Cow::Owned(extract_decription_from_markdown(&self.markdown)),
                     url: Some(Cow::Owned(self.slug())),
                     image: self.cover.as_deref().map(Cow::Borrowed),
                 },

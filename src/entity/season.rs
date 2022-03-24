@@ -4,7 +4,10 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{meta::Meta, strip_markdown::strip_markdown, Render};
+use crate::{
+    meta::{extract_decription_from_markdown, Meta},
+    Render,
+};
 
 use super::{article::Article, Entity};
 
@@ -38,12 +41,11 @@ impl std::fmt::Debug for Season {
 }
 
 impl Season {
-    // Get the at most 200 worlds description of this season.
+    // Get the description of this season.
     // Mainly for html meta description tag.
     fn description(&self) -> String {
         if let Some(intro) = self.intro.as_ref() {
-            let raw = intro.chars().take(200).collect::<String>();
-            strip_markdown(&raw)
+            extract_decription_from_markdown(intro)
         } else {
             String::default()
         }
