@@ -43,7 +43,8 @@ pub fn extract_decription_from_markdown(markdown: &str) -> String {
                     None
                 } else {
                     // No more than 200 chars.
-                    Some(raw.chars().take(200).collect::<String>())
+                    // Also, replace double quote to single quote.
+                    Some(raw.chars().take(200).collect::<String>().replace('"', "'"))
                 }
             }
         })
@@ -73,6 +74,11 @@ mod tests {
     aaaa"; "case2")]
     fn test_extract_decription_from_markdown2(markdown: &str) {
         assert_eq!("aaaa", extract_decription_from_markdown(markdown));
+    }
+
+    #[test_case("a \"aa\" a"; "quote replace")]
+    fn test_extract_decription_from_markdown3(markdown: &str) {
+        assert_eq!("a 'aa' a", extract_decription_from_markdown(markdown));
     }
 
     #[test]
