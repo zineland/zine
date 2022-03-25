@@ -1,5 +1,5 @@
-{% set h_tag = "h" ~ level %}
-<{{ h_tag}} id="{{ id }}" class="flex group">
+{% set htag = "h" ~ level %}
+<{{ htag }} id="{{ id }}" class="flex group">
     <span>{{ text }}</span>
     <a href="#{{ id }}" class="ml-2 inline-flex items-center opacity-0 border-0 group-hover:opacity-100" aria-label="Anchor">
         <div class="w-6 h-6 text-slate-400 ring-1 ring-slate-900/5 rounded-md shadow-sm flex items-center justify-center hover:ring-slate-900/10 hover:shadow hover:text-slate-700">
@@ -8,4 +8,4 @@
             </svg>
         </div>
     </a>
-</{{ h_tag}}>
+</{{ htag }}>
