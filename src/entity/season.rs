@@ -1,6 +1,7 @@
-use std::{borrow::Cow, fs, path::Path};
+use std::{borrow::Cow, collections::BTreeMap, fs, path::Path};
 
 use anyhow::Result;
+use jieba_rs::Jieba;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
@@ -25,6 +26,8 @@ pub struct Season {
     #[serde(rename(deserialize = "article"))]
     #[serde(default)]
     pub articles: Vec<Article>,
+    #[serde(skip)]
+    pub word_count: BTreeMap<String, u32>,
 }
 
 impl std::fmt::Debug for Season {
@@ -36,6 +39,7 @@ impl std::fmt::Debug for Season {
             .field("intro", &self.intro.is_some())
             .field("cover", &self.cover)
             .field("articles", &self.articles)
+            .field("word_count", &self.word_count)
             .finish()
     }
 }
@@ -86,6 +90,22 @@ impl Entity for Season {
             .sort_unstable_by_key(|article| article.pub_date);
 
         self.articles.parse(&dir)?;
+
+        // Analyze words frequencies
+        let jieba = Jieba::new();
+        let mut word_count: BTreeMap<String, u32> = BTreeMap::new();
+        for article in &self.articles {
+            let words = jieba.cut(&article.markdown, true);
+            for word in words {
+                // Count word only if its length is greater than 1
+                if word.chars().count() > 1 {
+                    let count = word_count.entry(word.to_string()).or_insert(0);
+                    *count += 1;
+                }
+            }
+        }
+        self.word_count = word_count;
+
         Ok(())
     }
 
