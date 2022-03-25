@@ -18,6 +18,7 @@ clap = { version = "3.1.2", default-features = false, features = [
 ] }
 fluent = "0.16.0"
 html5ever = "0.25.1"
+http-body = "0.4.4"
 hyper = { version = "0.14.17", features = ["client", "server", "tcp", "http1"] }
 hyper-tls = "0.5.0"
 intl-memoizer = "0.5.1"
@@ -33,7 +34,7 @@ tera = "1.15.0"
 time = { version = "0.3.7", features = ["serde", "serde-well-known"] }
 tokio = { version = "1.17.0", features = ["rt-multi-thread", "signal", "macros"] }
 toml = "0.5.8"
-tower = { version = "0.4.12", features = ["make"] }
+tower = { version = "0.4.12", features = ["make", "util"] }
 tower-http = { version = "0.2.3", features = ["fs"] }
 walkdir = "2.3.2"
 
