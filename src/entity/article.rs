@@ -8,7 +8,7 @@ use tera::Context;
 use time::Date;
 
 use crate::{
-    meta::{extract_decription_from_markdown, Meta},
+    meta::{extract_description_from_markdown, Meta},
     Render,
 };
 
@@ -83,7 +83,7 @@ impl Entity for Article {
                 "meta",
                 &Meta {
                     title: Cow::Borrowed(&self.title),
-                    description: Cow::Owned(extract_decription_from_markdown(&self.markdown)),
+                    description: Cow::Owned(extract_description_from_markdown(&self.markdown)),
                     url: Some(Cow::Owned(self.slug())),
                     image: self.cover.as_deref().map(Cow::Borrowed),
                 },

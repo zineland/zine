@@ -28,7 +28,7 @@ impl<'a> Meta<'a> {
 ///
 /// The strategy is extract the first meaningful line,
 /// and only take at most 200 plain chars from this line.
-pub fn extract_decription_from_markdown(markdown: &str) -> String {
+pub fn extract_description_from_markdown(markdown: &str) -> String {
     markdown
         .lines()
         .find_map(|line| {
@@ -55,12 +55,12 @@ pub fn extract_decription_from_markdown(markdown: &str) -> String {
 mod tests {
     use std::iter;
 
-    use super::extract_decription_from_markdown;
+    use super::extract_description_from_markdown;
     use test_case::test_case;
 
     #[test_case("aaaa"; "case1")]
     fn test_extract_decription_from_markdown1(markdown: &str) {
-        assert_eq!("aaaa", extract_decription_from_markdown(markdown));
+        assert_eq!("aaaa", extract_description_from_markdown(markdown));
     }
 
     #[test_case("
@@ -73,12 +73,12 @@ mod tests {
     ![](img.png)
     aaaa"; "case2")]
     fn test_extract_decription_from_markdown2(markdown: &str) {
-        assert_eq!("aaaa", extract_decription_from_markdown(markdown));
+        assert_eq!("aaaa", extract_description_from_markdown(markdown));
     }
 
     #[test_case("a \"aa\" a"; "quote replace")]
     fn test_extract_decription_from_markdown3(markdown: &str) {
-        assert_eq!("a 'aa' a", extract_decription_from_markdown(markdown));
+        assert_eq!("a 'aa' a", extract_description_from_markdown(markdown));
     }
 
     #[test]
@@ -87,7 +87,7 @@ mod tests {
         let mut p1 = base.clone();
         p1.push('\n');
         p1.push_str(&base.clone());
-        assert_eq!(base, extract_decription_from_markdown(&p1));
+        assert_eq!(base, extract_description_from_markdown(&p1));
     }
 
     #[test]
@@ -96,6 +96,6 @@ mod tests {
 
         let p2 = p1.clone();
         // Never extract more than 200 chars.
-        assert_eq!(p1[..200], extract_decription_from_markdown(&p2));
+        assert_eq!(p1[..200], extract_description_from_markdown(&p2));
     }
 }
