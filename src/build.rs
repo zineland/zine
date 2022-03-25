@@ -21,8 +21,14 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
         println!("Watching...");
         let (tx, rx) = mpsc::channel();
         let mut watcher = notify::watcher(tx, Duration::from_secs(1))?;
-        // watcher.watch("templates", notify::RecursiveMode::Recursive)?;
         watcher.watch(&source, notify::RecursiveMode::Recursive)?;
+
+        // Watch zine's templates and static directory in debug mode to support reload.
+        #[cfg(debug_assertions)]
+        {
+            watcher.watch("templates", notify::RecursiveMode::Recursive)?;
+            watcher.watch("static", notify::RecursiveMode::Recursive)?;
+        }
 
         loop {
             match rx.recv() {
