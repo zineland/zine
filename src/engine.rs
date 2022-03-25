@@ -174,7 +174,7 @@ fn markdown_to_html_fn(
                     heading_ref = Some(HeadingRef {
                         level: level as usize,
                         // This id is parsed from the markdow heading part.
-                        // Here is the syntax: 
+                        // Here is the syntax:
                         // `# Long title {#title}` parse the id: title
                         // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
                         id,
