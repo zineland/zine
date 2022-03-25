@@ -1,10 +1,16 @@
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::Cow,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::Render;
+use crate::{
+    meta::{extract_decription_from_markdown, Meta},
+    Render,
+};
 
 use super::Entity;
 
@@ -20,12 +26,70 @@ impl Page {
     pub fn slug(&self) -> String {
         self.file_path.to_str().unwrap().replace(".md", "")
     }
+
+    fn title(&self) -> String {
+        let prefix = &['#', ' '];
+        self.markdown
+            .lines()
+            .find_map(|line| {
+                if line.starts_with(prefix) {
+                    Some(line.trim_start_matches(prefix).to_owned())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default()
+    }
 }
 
 impl Entity for Page {
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert(
+            "meta",
+            &Meta {
+                title: Cow::Borrowed(&self.title()),
+                description: Cow::Owned(extract_decription_from_markdown(&self.markdown)),
+                url: Some(Cow::Owned(self.slug())),
+                image: None,
+            },
+        );
         context.insert("markdown", &self.markdown);
         Render::render("page.jinja", &context, dest.join(self.slug()))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use test_case::test_case;
+
+    use super::Page;
+
+    #[test_case("  # Title
+    aaa"; "case0")]
+    #[test_case("# Title
+    aaa"; "case1")]
+    #[test_case("## Title
+    aaa"; "case2")]
+    #[test_case("
+
+    # Title
+    aaa"; "case3")]
+    #[test_case("
+    # Title
+    aaa"; "case4")]
+    #[test_case("
+    # Title
+    ## Subtitle
+    aaa"; "case5")]
+    fn test_parse_page_title(markdown: &str) {
+        let page = Page {
+            markdown: markdown.to_owned(),
+            file_path: PathBuf::new(),
+        };
+
+        assert_eq!("Title", page.title());
     }
 }
