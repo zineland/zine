@@ -31,3 +31,9 @@
     outline: #dee0e3 2px solid;
     cursor: zoom-out;
 }
+
+/* auto center page's h1 heading */
+.zine-page>h1 {
+    display: flex;
+    justify-content: center;
+}

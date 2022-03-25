@@ -26,6 +26,10 @@ fn init_tera(source: &Path, locale: &str) {
         let mut tera = Tera::default();
         #[cfg(not(debug_assertions))]
         tera.add_raw_templates(vec![
+            (
+                "_anchor-link.jinja",
+                include_str!("../templates/_anchor-link.jinja"),
+            ),
             ("_meta.jinja", include_str!("../templates/_meta.jinja")),
             ("base.jinja", include_str!("../templates/base.jinja")),
             ("index.jinja", include_str!("../templates/index.jinja")),
@@ -141,12 +145,19 @@ fn markdown_to_html_fn(
 ) -> tera::Result<serde_json::Value> {
     use pulldown_cmark::*;
 
+    struct HeadingRef<'a> {
+        level: usize,
+        id: Option<&'a str>,
+    }
+
     if let Some(serde_json::Value::String(markdown)) = map.get("markdown") {
         let mut html = String::new();
 
         let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
         let mut events = vec![];
         let mut code_block_fenced = None;
+
+        let mut heading_ref = None;
         for (event, _range) in parser_events_iter {
             match event {
                 Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name)))
@@ -159,6 +170,19 @@ fn markdown_to_html_fn(
                 {
                     code_block_fenced = None;
                 }
+                Event::Start(Tag::Heading(level, id, _)) => {
+                    heading_ref = Some(HeadingRef {
+                        level: level as usize,
+                        // This id is parsed from the markdow heading part.
+                        // Here is the syntax:
+                        // `# Long title {#title}` parse the id: title
+                        // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
+                        id,
+                    });
+                }
+                Event::End(Tag::Heading(..)) => {
+                    heading_ref = None;
+                }
                 Event::Text(text) => {
                     if let Some(fenced) = code_block_fenced.as_ref() {
                         // Block in place to execute async task
@@ -170,6 +194,23 @@ fn markdown_to_html_fn(
                             events.push(Event::Html(html.into()));
                             continue;
                         }
+                    }
+
+                    // Render heading anchor link.
+                    if let Some(heading_ref) = heading_ref.as_ref() {
+                        let mut context = Context::new();
+                        context.insert("level", &heading_ref.level);
+                        // Fallback to raw text as the anchor id if the user didn't specify an id.
+                        context.insert("id", heading_ref.id.unwrap_or_else(|| text.as_ref()));
+                        context.insert("text", &text.as_ref());
+                        let html = TERA
+                            .get()
+                            .expect("Tera haven't initialized")
+                            .render("_anchor-link.jinja", &context)
+                            .expect("Render anchor link failed.");
+
+                        events.push(Event::Html(html.into()));
+                        continue;
                     }
 
                     // Not a code block inside text, or the code block's fenced is unsupported.
