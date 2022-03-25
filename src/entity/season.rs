@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 
 use crate::{
-    meta::{extract_decription_from_markdown, Meta},
+    meta::{extract_description_from_markdown, Meta},
     Render,
 };
 
@@ -45,7 +45,7 @@ impl Season {
     // Mainly for html meta description tag.
     fn description(&self) -> String {
         if let Some(intro) = self.intro.as_ref() {
-            extract_decription_from_markdown(intro)
+            extract_description_from_markdown(intro)
         } else {
             String::default()
         }

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 
 use crate::{
-    meta::{extract_decription_from_markdown, Meta},
+    meta::{extract_description_from_markdown, Meta},
     Render,
 };
 
@@ -48,7 +48,7 @@ impl Entity for Page {
             "meta",
             &Meta {
                 title: Cow::Borrowed(&self.title()),
-                description: Cow::Owned(extract_decription_from_markdown(&self.markdown)),
+                description: Cow::Owned(extract_description_from_markdown(&self.markdown)),
                 url: Some(Cow::Owned(self.slug())),
                 image: None,
             },
