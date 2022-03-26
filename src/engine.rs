@@ -1,7 +1,6 @@
 use std::{
     fs,
     path::{Path, PathBuf},
-    sync::Arc,
 };
 
 use crate::{
@@ -15,13 +14,18 @@ use once_cell::sync::OnceCell;
 use tera::{Context, Tera};
 use tokio::{runtime::Handle, task};
 
-static TERA: OnceCell<Arc<Tera>> = OnceCell::new();
+#[cfg(not(debug_assertions))]
+static TERA: OnceCell<std::sync::Arc<Tera>> = OnceCell::new();
+#[cfg(debug_assertions)]
+static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
 fn init_tera(source: &Path, locale: &str) {
     TERA.get_or_init(|| {
+        // Debug version tera which need to reload templates.
         #[cfg(debug_assertions)]
         let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
 
+        // Release version tera which not need to reload templates.
         #[cfg(not(debug_assertions))]
         let mut tera = Tera::default();
         #[cfg(not(debug_assertions))]
@@ -42,8 +46,31 @@ fn init_tera(source: &Path, locale: &str) {
         tera.register_function("featured", featured_fn);
         tera.register_function("markdown_to_html", markdown_to_html_fn);
         tera.register_function("fluent", FluentLoader::new(source, locale));
-        Arc::new(tera)
+
+        #[cfg(debug_assertions)]
+        return parking_lot::RwLock::new(tera);
+        #[cfg(not(debug_assertions))]
+        return Arc::new(tera);
     });
+    #[cfg(debug_assertions)]
+    {
+        // Full realod tera templates.
+        TERA.get()
+            .expect("Tera haven't initialized")
+            .write()
+            .full_reload()
+            .expect("reload tera template failed");
+    }
+}
+
+#[cfg(not(debug_assertions))]
+fn get_tera() -> std::sync::Arc<Tera> {
+    TERA.get().expect("Tera haven't initialized")
+}
+
+#[cfg(debug_assertions)]
+fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
+    TERA.get().expect("Tera haven't initialized").read()
 }
 
 #[derive(Debug)]
@@ -65,9 +92,7 @@ impl Render {
             }
         }
 
-        TERA.get()
-            .expect("Tera haven't initialized")
-            .render_to(template, context, &mut buf)?;
+        get_tera().render_to(template, context, &mut buf)?;
         fs::write(dest, buf)?;
         Ok(())
     }
@@ -77,11 +102,7 @@ impl Render {
         let mut buf = vec![];
         let dest = dest.as_ref().join("feed.xml");
 
-        TERA.get().expect("Tera haven't initialized").render_to(
-            "feed.jinja",
-            &context,
-            &mut buf,
-        )?;
+        get_tera().render_to("feed.jinja", &context, &mut buf)?;
         fs::write(dest, buf)?;
         Ok(())
     }
@@ -203,9 +224,7 @@ fn markdown_to_html_fn(
                         // Fallback to raw text as the anchor id if the user didn't specify an id.
                         context.insert("id", heading_ref.id.unwrap_or_else(|| text.as_ref()));
                         context.insert("text", &text.as_ref());
-                        let html = TERA
-                            .get()
-                            .expect("Tera haven't initialized")
+                        let html = get_tera()
                             .render("_anchor-link.jinja", &context)
                             .expect("Render anchor link failed.");
 
