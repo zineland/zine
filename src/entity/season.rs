@@ -22,8 +22,11 @@ pub struct Season {
     pub intro: Option<String>,
     pub cover: Option<String>,
     pub path: String,
+    // Skip serialize `articles` since a single article page would 
+    // contain a season context, the `articles` is useless for the 
+    // single article page.
+    #[serde(skip_serializing, default)]
     #[serde(rename(deserialize = "article"))]
-    #[serde(default)]
     pub articles: Vec<Article>,
 }
 
@@ -60,6 +63,13 @@ impl Season {
             self.articles.get(current - 1),
             self.articles.get(current + 1),
         )
+    }
+
+    pub fn featured_articles(&self) -> Vec<&Article> {
+        self.articles
+            .iter()
+            .filter(|article| article.featured)
+            .collect()
     }
 }
 
@@ -101,6 +111,7 @@ impl Entity for Season {
             article.render(context.clone(), &season_dir.join(article.slug()))?;
         }
 
+        context.insert("articles", &self.articles);
         context.insert(
             "meta",
             &Meta {

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use serde::Deserialize;
-use std::{fs, path::Path};
+use std::{collections::HashMap, fs, path::Path};
 use tera::Context;
 use walkdir::WalkDir;
 
@@ -99,6 +99,13 @@ impl Entity for Zine {
 
         // Render home page.
         context.insert("seasons", &self.seasons);
+        // `article_map` is the season number and season's featured articles map.
+        let article_map = self
+            .seasons
+            .iter()
+            .map(|season| (season.number, season.featured_articles()))
+            .collect::<HashMap<u32, Vec<_>>>();
+        context.insert("article_map", &article_map);
         Render::render("index.jinja", &context, dest)?;
         Ok(())
     }
