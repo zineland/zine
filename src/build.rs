@@ -73,6 +73,6 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
             fs::write(file, content).expect("Write file failed");
         });
     }
-    println!("Build cost: {}", instant.elapsed().as_micros());
+    println!("Build cost: {}ms", instant.elapsed().as_millis());
     Ok(())
 }
