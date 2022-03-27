@@ -50,7 +50,7 @@ fn init_tera(source: &Path, locale: &str) {
         #[cfg(debug_assertions)]
         return parking_lot::RwLock::new(tera);
         #[cfg(not(debug_assertions))]
-        return Arc::new(tera);
+        return std::sync::Arc::new(tera);
     });
     #[cfg(debug_assertions)]
     {
@@ -64,7 +64,7 @@ fn init_tera(source: &Path, locale: &str) {
 }
 
 #[cfg(not(debug_assertions))]
-fn get_tera() -> std::sync::Arc<Tera> {
+fn get_tera() -> &'static std::sync::Arc<Tera> {
     TERA.get().expect("Tera haven't initialized")
 }
 

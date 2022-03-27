@@ -17,11 +17,15 @@ jobs:
     - name: Build
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
-        cargo build
+        cargo build --release
+    - name: Run clippy
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        cargo clippy --release
     - name: Run test
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
-        cargo test
+        cargo test --release
     - name: Publish test
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
