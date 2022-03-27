@@ -22,8 +22,8 @@ pub struct Season {
     pub intro: Option<String>,
     pub cover: Option<String>,
     pub path: String,
-    // Skip serialize `articles` since a single article page would 
-    // contain a season context, the `articles` is useless for the 
+    // Skip serialize `articles` since a single article page would
+    // contain a season context, the `articles` is useless for the
     // single article page.
     #[serde(skip_serializing, default)]
     #[serde(rename(deserialize = "article"))]
