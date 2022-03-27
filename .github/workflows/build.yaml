@@ -30,3 +30,9 @@ jobs:
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
         cargo publish --dry-run
+    - name: Install zine and build demo
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        cargo install --path .
+        cd demo
+        zine build
