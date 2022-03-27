@@ -14,7 +14,7 @@ use crate::{
 
 use super::Entity;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Page {
     // The page's markdown content.
     pub markdown: String,

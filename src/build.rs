@@ -44,6 +44,7 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     let source = source.as_ref();
     let dest = dest.as_ref();
 
+    let instant = std::time::Instant::now();
     ZineEngine::new(source, dest)?.build()?;
 
     let static_dir = source.join("static");
@@ -54,17 +55,24 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     // Copy builtin static files into dest static dir.
     let dest_static_dir = dest.join("static");
     fs::create_dir_all(&dest_static_dir)?;
-    fs::write(
-        dest_static_dir.join("medium-zoom.min.js"),
-        include_str!("../static/medium-zoom.min.js"),
-    )?;
-    fs::write(
-        dest_static_dir.join("zine.css"),
-        include_str!("../static/zine.css"),
-    )?;
-    fs::write(
-        dest_static_dir.join("zine.js"),
-        include_str!("../static/zine.js"),
-    )?;
+    for (file, content) in [
+        (
+            dest_static_dir.join("medium-zoom.min.js"),
+            include_str!("../static/medium-zoom.min.js"),
+        ),
+        (
+            dest_static_dir.join("zine.css"),
+            include_str!("../static/zine.css"),
+        ),
+        (
+            dest_static_dir.join("zine.js"),
+            include_str!("../static/zine.js"),
+        ),
+    ] {
+        tokio::task::spawn_blocking(move || {
+            fs::write(file, content).expect("Write file failed");
+        });
+    }
+    println!("Build cost: {}", instant.elapsed().as_micros());
     Ok(())
 }

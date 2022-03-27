@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::Result;
+use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
@@ -13,7 +14,7 @@ use super::{article::Article, Entity};
 
 /// The season entity config.
 /// It parsed from season directory's `zine.toml`.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Season {
     pub slug: String,
     pub number: u32,
@@ -83,7 +84,7 @@ impl Entity for Season {
         self.articles = season_file.articles;
         // Sort all articles by pub_date.
         self.articles
-            .sort_unstable_by_key(|article| article.pub_date);
+            .par_sort_unstable_by_key(|article| article.pub_date);
 
         self.articles.parse(&dir)?;
         Ok(())
@@ -98,7 +99,14 @@ impl Entity for Season {
             let mut context = context.clone();
             context.insert("siblings", &self.sibling_articles(index));
             context.insert("number", &(index + 1));
-            article.render(context.clone(), &season_dir.join(article.slug()))?;
+            let dest = season_dir.join(article.slug());
+            let article = article.clone();
+
+            tokio::task::spawn_blocking(move || {
+                article
+                    .render(context.clone(), &dest)
+                    .expect("Render article failed.");
+            });
         }
 
         context.insert(

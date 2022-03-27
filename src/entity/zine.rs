@@ -1,4 +1,8 @@
 use anyhow::Result;
+use rayon::{
+    iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
+    slice::ParallelSliceMut,
+};
 use serde::Deserialize;
 use std::{fs, path::Path};
 use tera::Context;
@@ -40,7 +44,7 @@ impl Zine {
     pub fn latest_feed_entries(&self, limit: usize) -> Vec<FeedEntry> {
         let mut entries = self
             .seasons
-            .iter()
+            .par_iter()
             .flat_map(|season| {
                 season
                     .articles
@@ -57,7 +61,7 @@ impl Zine {
             .collect::<Vec<_>>();
 
         // Sort by date in descending order.
-        entries.sort_unstable_by(|a, b| b.date.cmp(a.date));
+        entries.par_sort_unstable_by(|a, b| b.date.cmp(a.date));
         entries.into_iter().take(limit).collect()
     }
 }
@@ -68,22 +72,33 @@ impl Entity for Zine {
 
         self.seasons.parse(source)?;
         // Sort all seasons by number.
-        self.seasons.sort_unstable_by_key(|s| s.number);
+        self.seasons.par_sort_unstable_by_key(|s| s.number);
 
         // Parse pages
         let page_dir = source.join("pages");
         if page_dir.exists() {
-            for entry in WalkDir::new(&page_dir) {
-                let entry = entry?;
-                let path = entry.path();
-                if path.is_file() {
-                    let markdown = fs::read_to_string(path)?;
-                    self.pages.push(Page {
-                        markdown,
-                        file_path: path.strip_prefix(&page_dir)?.to_owned(),
-                    });
-                }
-            }
+            // Parallelize pages dir walk
+            self.pages = WalkDir::new(&page_dir)
+                .into_iter()
+                .par_bridge()
+                .try_fold_with(vec![], |mut pages, entry| {
+                    let entry = entry?;
+                    let path = entry.path();
+                    if path.is_file() {
+                        let markdown = fs::read_to_string(path)?;
+                        pages.push(Page {
+                            markdown,
+                            file_path: path.strip_prefix(&page_dir)?.to_owned(),
+                        });
+                    }
+                    anyhow::Ok(pages)
+                })
+                .try_reduce_with(|mut pages, chuncks| {
+                    pages.par_extend(chuncks);
+                    anyhow::Ok(pages)
+                })
+                .transpose()?
+                .unwrap_or_default();
         }
         Ok(())
     }

@@ -4,6 +4,7 @@ use hyper::{
     Client, Uri,
 };
 use hyper_tls::HttpsConnector;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use std::{borrow::Cow, fs, io::Read, path::Path};
 
 use html5ever::{
@@ -133,16 +134,21 @@ fn walk(handle: &Handle, meta: &mut Meta) {
 
 pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
     let source_parent = source.parent().expect("Can not copy the root dir");
-    for entry in walkdir::WalkDir::new(source) {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_dir() {
-            fs::create_dir_all(dest.join(path.strip_prefix(source_parent)?))?;
-        } else if path.is_file() {
-            let to = dest.join(path.strip_prefix(source_parent)?);
-            fs::copy(path, to)?;
-        }
-    }
+    walkdir::WalkDir::new(source)
+        .into_iter()
+        .par_bridge()
+        .try_for_each(|entry| {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                fs::create_dir_all(dest.join(path.strip_prefix(source_parent)?))?;
+            } else if path.is_file() {
+                let to = dest.join(path.strip_prefix(source_parent)?);
+                fs::copy(path, to)?;
+            }
+
+            anyhow::Ok(())
+        })?;
     Ok(())
 }
 

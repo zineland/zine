@@ -14,7 +14,7 @@ use crate::{
 
 use super::{EndMatter, Entity};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Article {
     pub file: String,
     /// The slug after this artcile rendered.
