@@ -14,7 +14,7 @@
             {{ markdown_to_html(markdown = season.intro) }}
         </div>
         {% endif %}
-        {% for article in season.articles %}
+        {% for article in articles %}
         <div class="py-6 sm:px-8 transition ease-in-out hover:scale-110 duration-500 border-gray-200">
             <a class="group" href="/{{ season.slug }}/{{ article.slug }}">
                 <div class="relative">

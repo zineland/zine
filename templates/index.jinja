@@ -12,7 +12,7 @@
                 </a>
             </div>
             <div class="flex flex-wrap flex-col sm:flex-row sm:justify-evenly items-center">
-                {% for article in featured(articles = season.articles) %}
+                {% for article in article_map[season.number] %}
                     <div class="mt-8 sm:mx-2 sm:max-w-md w-full transition ease-in-out hover:scale-105 duration-500 hover:border border-gray-200">
                         <a href="/{{ season.slug }}/{{ article.slug }}">
                             <div class="relative mx-auto ">

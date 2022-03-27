@@ -43,7 +43,6 @@ fn init_tera(source: &Path, locale: &str) {
             ("feed.jinja", include_str!("../templates/feed.jinja")),
         ])
         .unwrap();
-        tera.register_function("featured", featured_fn);
         tera.register_function("markdown_to_html", markdown_to_html_fn);
         tera.register_function("fluent", FluentLoader::new(source, locale));
 
@@ -140,23 +139,6 @@ impl ZineEngine {
         feed_context.insert("generator_version", env!("CARGO_PKG_VERSION"));
         Render::render_atom_feed(feed_context, &self.dest)?;
         Ok(())
-    }
-}
-
-// A tera function to filter featured articles.
-fn featured_fn(
-    map: &std::collections::HashMap<String, serde_json::Value>,
-) -> tera::Result<serde_json::Value> {
-    if let Some(serde_json::Value::Array(articles)) = map.get("articles") {
-        Ok(serde_json::Value::Array(
-            articles
-                .iter()
-                .filter(|article| article.get("featured") == Some(&serde_json::Value::Bool(true)))
-                .cloned()
-                .collect(),
-        ))
-    } else {
-        Ok(serde_json::Value::Array(vec![]))
     }
 }
 
