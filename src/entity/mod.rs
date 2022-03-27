@@ -1,4 +1,5 @@
 use anyhow::Result;
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use std::path::Path;
 use tera::Context;
 
@@ -52,17 +53,19 @@ impl<T: Entity> Entity for Option<T> {
     }
 }
 
-impl<T: Entity> Entity for Vec<T> {
+impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        for item in self {
-            item.parse(source)?;
-        }
-        Ok(())
+        self.par_iter_mut().try_for_each(|item| item.parse(source))
     }
 
     fn render(&self, render: Context, dest: &Path) -> Result<()> {
         for item in self {
-            item.render(render.clone(), dest)?;
+            let item = item.clone();
+            let render = render.clone();
+            let dest = dest.to_path_buf();
+            tokio::task::spawn_blocking(move || {
+                item.render(render, &dest).expect("Render failed.")
+            });
         }
         Ok(())
     }
