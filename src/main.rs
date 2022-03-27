@@ -2,6 +2,8 @@ use anyhow::Result;
 use build::watch_build;
 use clap::StructOpt;
 use new::new_zine_project;
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use serve::run_serve;
 
 mod build;
@@ -25,6 +27,22 @@ pub static ZINE_FILE: &str = "zine.toml";
 
 /// The temporal build dir, mainly for `zine serve` command.
 pub static TEMP_ZINE_BUILD_DIR: &str = "__zine_build";
+
+pub static MODE: Lazy<RwLock<Option<Mode>>> = Lazy::new(|| RwLock::new(None));
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Mode {
+    Build,
+    Serve,
+}
+
+pub fn current_mode() -> Option<Mode> {
+    *MODE.read()
+}
+
+fn set_current_mode(mode: Mode) {
+    *MODE.write() = Some(mode);
+}
 
 #[derive(Debug, clap::Parser)]
 #[clap(name = "zine")]
@@ -69,11 +87,13 @@ async fn main() -> Result<()> {
             dest,
             watch,
         } => {
+            set_current_mode(Mode::Build);
             let dest = dest.unwrap_or_else(|| "build".into());
             watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch).await?;
             println!("Build success! The build directory is `{}`.", dest);
         }
         Commands::Serve { source, port } => {
+            set_current_mode(Mode::Serve);
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
         Commands::New { name } => new_zine_project(name)?,

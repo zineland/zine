@@ -10,9 +10,44 @@ use std::{borrow::Cow, fs, io::Read, path::Path};
 use html5ever::{
     parse_document, tendril::TendrilSink, tree_builder::TreeBuilderOpts, Attribute, ParseOpts,
 };
+use lol_html::{element, html_content::Element, HtmlRewriter, Settings};
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 use crate::meta::Meta;
+
+pub fn rewrite_html_base_url(raw: &[u8], base_url: &str) -> Result<Vec<u8>> {
+    let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
+        if let Some(attr) = el.get_attribute(attr_name) {
+            if attr.starts_with('/') {
+                el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
+                    .expect("Set attribute failed");
+            }
+        }
+    };
+
+    let mut html = vec![];
+    let mut html_rewriter = HtmlRewriter::new(
+        Settings {
+            element_content_handlers: vec![
+                element!("a[href]", |el| {
+                    rewrite_url_in_attr(el, "href");
+                    Ok(())
+                }),
+                element!("img[src]", |el| {
+                    rewrite_url_in_attr(el, "src");
+                    Ok(())
+                }),
+            ],
+            ..Default::default()
+        },
+        |c: &[u8]| {
+            html.extend_from_slice(c);
+        },
+    );
+    html_rewriter.write(raw)?;
+
+    Ok(html)
+}
 
 pub async fn fetch_url(url: &str) -> Result<Meta<'_>> {
     let client = Client::builder().build::<_, hyper::Body>(HttpsConnector::new());
