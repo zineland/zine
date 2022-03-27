@@ -104,7 +104,7 @@ impl Entity for Season {
 
             tokio::task::spawn_blocking(move || {
                 article
-                    .render(context.clone(), &dest)
+                    .render(context, &dest)
                     .expect("Render article failed.");
             });
         }
