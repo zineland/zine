@@ -132,6 +132,8 @@ fn walk(handle: &Handle, meta: &mut Meta) {
     }
 }
 
+/// Copy directory recursively.
+/// Note: the empty directory is ignored.
 pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
     let source_parent = source.parent().expect("Can not copy the root dir");
     walkdir::WalkDir::new(source)
@@ -140,9 +142,19 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
         .try_for_each(|entry| {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() {
-                fs::create_dir_all(dest.join(path.strip_prefix(source_parent)?))?;
-            } else if path.is_file() {
+            // `path` would be a file or directory. However, we are
+            // in a rayon's parallel thread, there is no guarantee
+            // that parent directory iterated before the file.
+            // So we just ignore the `path.is_dir()` case, when coming
+            // across the first file we'll create the parent directory.
+            if path.is_file() {
+                if let Some(parent) = path.parent() {
+                    let dest_parent = dest.join(parent.strip_prefix(source_parent)?);
+                    if !dest_parent.exists() {
+                        // Create the same dir concurrently is ok according to the docs.
+                        fs::create_dir_all(dest_parent)?;
+                    }
+                }
                 let to = dest.join(path.strip_prefix(source_parent)?);
                 fs::copy(path, to)?;
             }
