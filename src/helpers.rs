@@ -140,9 +140,13 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
         .try_for_each(|entry| {
             let entry = entry?;
             let path = entry.path();
-            if path.is_dir() {
-                fs::create_dir_all(dest.join(path.strip_prefix(source_parent)?))?;
-            } else if path.is_file() {
+            if path.is_file() {
+                if let Some(parent_path) = path.parent() {
+                    let dest_parent_path = dest.join(parent_path.strip_prefix(source_parent)?);
+                    if !dest_parent_path.exists() {
+                        fs::create_dir_all(dest_parent_path)?;
+                    }
+                }
                 let to = dest.join(path.strip_prefix(source_parent)?);
                 fs::copy(path, to)?;
             }
