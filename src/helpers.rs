@@ -132,7 +132,7 @@ fn walk(handle: &Handle, meta: &mut Meta) {
     }
 }
 
-/// Copy directory recursively. 
+/// Copy directory recursively.
 /// Note: the empty directory is ignored.
 pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
     let source_parent = source.parent().expect("Can not copy the root dir");
