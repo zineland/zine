@@ -30,12 +30,13 @@ pub static TEMP_ZINE_BUILD_DIR: &str = "__zine_build";
 
 pub static MODE: Lazy<RwLock<Option<Mode>>> = Lazy::new(|| RwLock::new(None));
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone)]
 pub enum Mode {
     Build,
     Serve,
 }
 
+/// Get current run mode.
 pub fn current_mode() -> Option<Mode> {
     *MODE.read()
 }

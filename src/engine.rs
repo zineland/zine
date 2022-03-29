@@ -98,11 +98,15 @@ impl Render {
 
         get_tera().render_to(template, context, &mut buf)?;
 
-        if current_mode() == Some(Mode::Build) {
+        // Rewrite root path links with site url if and only if:
+        // 1. in build run mode
+        // 2. site url has a path
+        if matches!(current_mode(), Some(Mode::Build)) {
             if let Some(Value::String(site_url)) =
                 context.get("site").and_then(|site| site.get("url"))
             {
                 let uri = site_url.parse::<Uri>().expect("Invalid site url.");
+                // We don't need to rewrite links if the site url is a naked domain without any path.
                 if !uri.path().is_empty() {
                     let html = rewrite_html_base_url(&buf, site_url)?;
                     fs::write(dest, html)?;
