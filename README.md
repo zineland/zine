@@ -1,3 +1,7 @@
+<p align="center">
+    <img align="center" width="280" src="zine.svg">
+</p>
+
 # zine
 
 [![Crates.io](https://img.shields.io/crates/v/zine.svg)](https://crates.io/crates/zine)
