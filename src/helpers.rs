@@ -213,11 +213,11 @@ mod tests {
     #[test_case("<a href=\"{}\"></a>", "/"; "a1")]
     #[test_case("<a href=\"{}\"></a>", "/hello"; "a2")]
     #[test_case("<a href=\"{}\"></a>", "/hello/world"; "a3")]
-    #[test_case("<link rel=\"stylesheet\" src=\"{}\"/>", "/hello.css"; "link")]
-    #[test_case("<img src=\"{}\"/>", "/hello.png"; "img")]
-    #[test_case("<script src=\"{}\"/>", "/hello.js"; "script")]
-    #[test_case("<audio src=\"{}\"/>", "/hello.mp3"; "audio")]
-    #[test_case("<video src=\"{}\"/>", "/hello.mp4"; "video")]
+    #[test_case("<link rel=\"stylesheet\" href=\"{}\" />", "/hello.css"; "link")]
+    #[test_case("<img src=\"{}\" />", "/hello.png"; "img")]
+    #[test_case("<script src=\"{}\" />", "/hello.js"; "script")]
+    #[test_case("<audio src=\"{}\" />", "/hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\" />", "/hello.mp4"; "video")]
     #[test_case("<iframe src=\"{}\"></iframe>", "/hello.html"; "iframe")]
     fn test_rewrite_html_base_url(html: &str, path: &str) {
         assert_eq!(
@@ -245,6 +245,22 @@ mod tests {
                     .unwrap()
             ),
             html.replace("{}", &whole_url)
+        );
+    }
+
+    #[test_case("<a href=\"{}\"></a>", "hello"; "a1")]
+    #[test_case("<link rel=\"stylesheet\" src=\"{}\"/>", "hello.css"; "link")]
+    #[test_case("<img src=\"{}\"/>", "hello.png"; "img")]
+    #[test_case("<script src=\"{}\"/>", "hello.js"; "script")]
+    #[test_case("<audio src=\"{}\"/>", "hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\"/>", "hello.mp4"; "video")]
+    #[test_case("<iframe src=\"{}\"></iframe>", "hello.html"; "iframe")]
+    fn test_not_rewrite_html_base_url_absolute_path(html: &str, path: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.replace("{}", &path).as_bytes(), BASE_URL).unwrap()
+            ),
+            html.replace("{}", &path)
         );
     }
 }
