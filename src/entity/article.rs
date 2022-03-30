@@ -70,6 +70,11 @@ impl Entity for Article {
         let markdown = fs::read_to_string(&source.join(&self.file))?;
         let (content, end_matter) = split_article_content(&markdown)?;
 
+        // Fallback to the default placeholder image if the cover is missing.
+        if self.cover.is_none() || self.cover.as_ref().map(|cover| cover.is_empty()) == Some(true) {
+            self.cover = Some(String::from("/static/zine-placeholder.svg"));
+        }
+
         self.markdown = content.to_owned();
         self.end_matter = end_matter;
         Ok(())
