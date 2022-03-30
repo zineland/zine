@@ -5,10 +5,7 @@ use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{
-    meta::{extract_description_from_markdown, Meta},
-    Render,
-};
+use crate::{markdown, meta::Meta, Render};
 
 use super::{article::Article, Entity};
 
@@ -49,7 +46,7 @@ impl Season {
     // Mainly for html meta description tag.
     fn description(&self) -> String {
         if let Some(intro) = self.intro.as_ref() {
-            extract_description_from_markdown(intro)
+            markdown::extract_description(intro)
         } else {
             String::default()
         }
