@@ -35,6 +35,22 @@ pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>>
                         Ok(())
                     }
                 ),
+                // Rewrite background image url.
+                element!("body>div.bg-primary.text-main", |el| {
+                    if let Some(attr) = el.get_attribute("style") {
+                        if attr.starts_with("background-image: url('/") {
+                            el.set_attribute(
+                                "style",
+                                &attr.replace(
+                                    "background-image: url('",
+                                    &format!("background-image: url('{}", base_url),
+                                ),
+                            )
+                            .expect("Rewrite background-image failed.")
+                        }
+                    }
+                    Ok(())
+                }),
             ],
             ..Default::default()
         },
@@ -163,6 +179,20 @@ mod tests {
 
     const BASE_URL: &str = "https://github.com";
 
+    #[test_case(
+        r#"
+        <body class="h-full bg-secondary">
+            <div class="bg-primary text-main" style="background-image: url('/test.png')"></div>
+        </body>
+        "#
+    )]
+    fn test_rewrite_background_image_url(html: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(&rewrite_html_base_url(html.as_bytes(), BASE_URL).unwrap()),
+            html.replace("/test.png", &format!("{}/test.png", BASE_URL))
+        );
+    }
+
     #[test_case("<a href=\"{}\"></a>", "/"; "a1")]
     #[test_case("<a href=\"{}\"></a>", "/hello"; "a2")]
     #[test_case("<a href=\"{}\"></a>", "/hello/world"; "a3")]
@@ -208,7 +238,7 @@ mod tests {
     #[test_case("<audio src=\"{}\"/>", "hello.mp3"; "audio")]
     #[test_case("<video src=\"{}\"/>", "hello.mp4"; "video")]
     #[test_case("<iframe src=\"{}\"></iframe>", "hello.html"; "iframe")]
-    fn test_not_rewrite_html_base_url_absolute_path(html: &str, path: &str) {
+    fn test_not_rewrite_html_base_url_relative_path(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
                 &rewrite_html_base_url(html.replace("{}", &path).as_bytes(), BASE_URL).unwrap()
