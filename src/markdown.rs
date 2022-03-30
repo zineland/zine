@@ -3,6 +3,33 @@
 use pulldown_cmark::Event::{Code, End, HardBreak, Rule, SoftBreak, Start, Text};
 use pulldown_cmark::{Options, Parser, Tag};
 
+/// Extract the description from markdown content.
+///
+/// The strategy is extract the first meaningful line,
+/// and only take at most 200 plain chars from this line.
+pub fn extract_description(markdown: &str) -> String {
+    markdown
+        .lines()
+        .find_map(|line| {
+            // Ignore heading, image line.
+            let line = line.trim();
+            if line.is_empty() || line.starts_with(&['#', '!']) {
+                None
+            } else {
+                let raw = strip_markdown(line);
+                // If the stripped raw text is empty, we step to next one.
+                if raw == "\n" || raw.is_empty() {
+                    None
+                } else {
+                    // No more than 200 chars.
+                    // Also, replace double quote to single quote.
+                    Some(raw.chars().take(200).collect::<String>().replace('"', "'"))
+                }
+            }
+        })
+        .unwrap_or_default()
+}
+
 /// Convert markdown into plain text.
 #[must_use]
 pub fn strip_markdown(markdown: &str) -> String {
@@ -63,7 +90,52 @@ fn fresh_line(buffer: &mut String) {
 
 #[cfg(test)]
 mod tests {
+    use std::iter;
+
     use super::*;
+    use test_case::test_case;
+
+    #[test_case("aaaa"; "case1")]
+    fn test_extract_decription1(markdown: &str) {
+        assert_eq!("aaaa", extract_description(markdown));
+    }
+
+    #[test_case("
+
+    aaaa"; "case0")]
+    #[test_case("
+    # h1
+    aaaa"; "case1")]
+    #[test_case("
+    ![](img.png)
+    aaaa"; "case2")]
+    fn test_extract_decription2(markdown: &str) {
+        assert_eq!("aaaa", extract_description(markdown));
+    }
+
+    #[test_case("a \"aa\" a"; "quote replace")]
+    fn test_extract_decription3(markdown: &str) {
+        assert_eq!("a 'aa' a", extract_description(markdown));
+    }
+
+    #[test]
+    fn test_extract_decription_at_most_1_paragraphs() {
+        let base = iter::repeat('a').take(10).collect::<String>();
+        let mut p1 = base.clone();
+        p1.push('\n');
+        p1.push_str(&base.clone());
+        assert_eq!(base, extract_description(&p1));
+    }
+
+    #[test]
+    fn test_extract_decription_at_most_200_chars() {
+        let p1 = iter::repeat('a').take(400).collect::<String>();
+
+        let p2 = p1.clone();
+        // Never extract more than 200 chars.
+        assert_eq!(p1[..200], extract_description(&p2));
+    }
+
     #[test]
     fn basic_inline_strong() {
         let markdown = r#"**Hello**"#;

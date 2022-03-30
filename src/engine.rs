@@ -7,7 +7,7 @@ use crate::{
     code_blocks::{render_code_block, ALL_CODE_BLOCKS},
     current_mode,
     entity::{Entity, Zine},
-    helpers::rewrite_html_base_url,
+    html::rewrite_html_base_url,
     locales::FluentLoader,
     Mode,
 };

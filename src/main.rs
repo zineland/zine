@@ -13,11 +13,12 @@ mod engine;
 mod entity;
 mod feed;
 mod helpers;
+mod html;
 mod locales;
+mod markdown;
 mod meta;
 mod new;
 mod serve;
-mod strip_markdown;
 
 pub use self::engine::Render;
 pub use self::engine::ZineEngine;

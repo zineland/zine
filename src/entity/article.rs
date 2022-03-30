@@ -7,10 +7,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{
-    meta::{extract_description_from_markdown, Meta},
-    Render,
-};
+use crate::{markdown, meta::Meta, Render};
 
 use super::{EndMatter, Entity};
 
@@ -83,7 +80,7 @@ impl Entity for Article {
                 "meta",
                 &Meta {
                     title: Cow::Borrowed(&self.title),
-                    description: Cow::Owned(extract_description_from_markdown(&self.markdown)),
+                    description: Cow::Owned(markdown::extract_description(&self.markdown)),
                     url: Some(Cow::Owned(self.slug())),
                     image: self.cover.as_deref().map(Cow::Borrowed),
                 },
