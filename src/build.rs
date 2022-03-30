@@ -1,7 +1,8 @@
-use std::{fs, path::Path, sync::mpsc, time::Duration};
+use std::{path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, helpers::copy_dir, ZineEngine};
 use anyhow::Result;
+use include_dir::include_dir;
 use notify::Watcher;
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
@@ -54,25 +55,8 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
 
     // Copy builtin static files into dest static dir.
     let dest_static_dir = dest.join("static");
-    fs::create_dir_all(&dest_static_dir)?;
-    for (file, content) in [
-        (
-            dest_static_dir.join("medium-zoom.min.js"),
-            include_str!("../static/medium-zoom.min.js"),
-        ),
-        (
-            dest_static_dir.join("zine.css"),
-            include_str!("../static/zine.css"),
-        ),
-        (
-            dest_static_dir.join("zine.js"),
-            include_str!("../static/zine.js"),
-        ),
-    ] {
-        tokio::task::spawn_blocking(move || {
-            fs::write(file, content).expect("Write file failed");
-        });
-    }
+    include_dir!("static").extract(dest_static_dir)?;
+
     println!("Build cost: {}ms", instant.elapsed().as_millis());
     Ok(())
 }
