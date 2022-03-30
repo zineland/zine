@@ -22,7 +22,7 @@
                         style="color: #eee; text-shadow: 1px 1px 2px #000">
                         No. {{ loop.index }}
                     </span>
-                    <img class="z-0 w-full max-h-52 md:max-h-72 object-cover" src="{{ article.cover }}" alt="{{ article.title }}"/>
+                    <img class="z-0 w-full max-h-52 md:max-h-72 object-cover" loading="lazy" src="{{ article.cover }}" alt="{{ article.title }}"/>
                 </div>
                 <div class="my-4 text-2xl text-black">
                     <div class="pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
