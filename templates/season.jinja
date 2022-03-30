@@ -1,6 +1,6 @@
-{% extends "base.jinja" %}
+{% extends "base.jinja" -%}
 
-{% block content %}
+{% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white 
             shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="text-2xl text-center m-6">
@@ -9,12 +9,12 @@
         </span>
     </div>
     <div class="max-w-[65ch] mx-auto">
-        {% if season.intro %}
+        {% if season.intro -%}
         <div class="prose my-8 md:mx-8">
             {{ markdown_to_html(markdown = season.intro) }}
         </div>
-        {% endif %}
-        {% for article in articles %}
+        {% endif -%}
+        {% for article in articles -%}
         <div class="py-6 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
             <a class="group" href="/{{ season.slug }}/{{ article.slug }}">
                 <div class="relative">
@@ -35,10 +35,10 @@
                 </div>
             </a>
         </div>
-        {% if not loop.last %}
+        {% if not loop.last -%}
         <hr>
-        {% endif %}
-    {% endfor %}
+        {% endif -%}
+    {% endfor -%}
     </div>
 </div>
-{% endblock content %}
+{% endblock content -%}
