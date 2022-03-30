@@ -10,9 +10,48 @@ use std::{borrow::Cow, fs, io::Read, path::Path};
 use html5ever::{
     parse_document, tendril::TendrilSink, tree_builder::TreeBuilderOpts, Attribute, ParseOpts,
 };
+use lol_html::{element, html_content::Element, HtmlRewriter, Settings};
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 use crate::meta::Meta;
+
+/// Rewrite root path URL in `raw_html` with `base_url`.
+pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>> {
+    let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
+        if let Some(attr) = el.get_attribute(attr_name) {
+            if attr.starts_with('/') {
+                el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
+                    .expect("Set attribute failed");
+            }
+        }
+    };
+
+    let mut html = vec![];
+    let mut html_rewriter = HtmlRewriter::new(
+        Settings {
+            element_content_handlers: vec![
+                element!("a[href], link[rel=stylesheet][href]", |el| {
+                    rewrite_url_in_attr(el, "href");
+                    Ok(())
+                }),
+                element!(
+                    "script[src], iframe[src], img[src], audio[src], video[src]",
+                    |el| {
+                        rewrite_url_in_attr(el, "src");
+                        Ok(())
+                    }
+                ),
+            ],
+            ..Default::default()
+        },
+        |c: &[u8]| {
+            html.extend_from_slice(c);
+        },
+    );
+    html_rewriter.write(raw_html)?;
+
+    Ok(html)
+}
 
 pub async fn fetch_url(url: &str) -> Result<Meta<'_>> {
     let client = Client::builder().build::<_, hyper::Body>(HttpsConnector::new());
@@ -162,6 +201,68 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
             anyhow::Ok(())
         })?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::rewrite_html_base_url;
+    use test_case::test_case;
+
+    const BASE_URL: &str = "https://github.com";
+
+    #[test_case("<a href=\"{}\"></a>", "/"; "a1")]
+    #[test_case("<a href=\"{}\"></a>", "/hello"; "a2")]
+    #[test_case("<a href=\"{}\"></a>", "/hello/world"; "a3")]
+    #[test_case("<link rel=\"stylesheet\" href=\"{}\" />", "/hello.css"; "link")]
+    #[test_case("<img src=\"{}\" />", "/hello.png"; "img")]
+    #[test_case("<script src=\"{}\" />", "/hello.js"; "script")]
+    #[test_case("<audio src=\"{}\" />", "/hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\" />", "/hello.mp4"; "video")]
+    #[test_case("<iframe src=\"{}\"></iframe>", "/hello.html"; "iframe")]
+    fn test_rewrite_html_base_url(html: &str, path: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.replace("{}", path).as_bytes(), BASE_URL).unwrap()
+            ),
+            html.replace("{}", &format!("{}{}", BASE_URL, path))
+        );
+    }
+
+    #[test_case("<a href=\"{}\"></a>", "/"; "a1")]
+    #[test_case("<a href=\"{}\"></a>", "/hello"; "a2")]
+    #[test_case("<a href=\"{}\"></a>", "/hello/world"; "a3")]
+    #[test_case("<link rel=\"stylesheet\" src=\"{}\"/>", "/hello.css"; "link")]
+    #[test_case("<img src=\"{}\"/>", "/hello.png"; "img")]
+    #[test_case("<script src=\"{}\"/>", "/hello.js"; "script")]
+    #[test_case("<audio src=\"{}\"/>", "/hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\"/>", "/hello.mp4"; "video")]
+    #[test_case("<iframe src=\"{}\"></iframe>", "/hello.html"; "iframe")]
+    fn test_not_rewrite_html_base_url(html: &str, path: &str) {
+        let whole_url = format!("{}{}", BASE_URL, path);
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.replace("{}", &whole_url).as_bytes(), BASE_URL)
+                    .unwrap()
+            ),
+            html.replace("{}", &whole_url)
+        );
+    }
+
+    #[test_case("<a href=\"{}\"></a>", "hello"; "a1")]
+    #[test_case("<link rel=\"stylesheet\" src=\"{}\"/>", "hello.css"; "link")]
+    #[test_case("<img src=\"{}\"/>", "hello.png"; "img")]
+    #[test_case("<script src=\"{}\"/>", "hello.js"; "script")]
+    #[test_case("<audio src=\"{}\"/>", "hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\"/>", "hello.mp4"; "video")]
+    #[test_case("<iframe src=\"{}\"></iframe>", "hello.html"; "iframe")]
+    fn test_not_rewrite_html_base_url_absolute_path(html: &str, path: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.replace("{}", &path).as_bytes(), BASE_URL).unwrap()
+            ),
+            html.replace("{}", &path)
+        );
+    }
 }
 
 /// A serde module to serialize and deserialize [`time::Date`] type.

@@ -5,12 +5,17 @@ use std::{
 
 use crate::{
     code_blocks::{render_code_block, ALL_CODE_BLOCKS},
+    current_mode,
     entity::{Entity, Zine},
+    helpers::rewrite_html_base_url,
     locales::FluentLoader,
+    Mode,
 };
 
 use anyhow::Result;
+use hyper::Uri;
 use once_cell::sync::OnceCell;
+use serde_json::Value;
 use tera::{Context, Tera};
 use tokio::{runtime::Handle, task};
 
@@ -92,6 +97,24 @@ impl Render {
         }
 
         get_tera().render_to(template, context, &mut buf)?;
+
+        // Rewrite root path links with site url if and only if:
+        // 1. in build run mode
+        // 2. site url has a path
+        if matches!(current_mode(), Some(Mode::Build)) {
+            if let Some(Value::String(site_url)) =
+                context.get("site").and_then(|site| site.get("url"))
+            {
+                let uri = site_url.parse::<Uri>().expect("Invalid site url.");
+                // We don't need to rewrite links if the site url is a naked domain without any path.
+                if !uri.path().is_empty() {
+                    let html = rewrite_html_base_url(&buf, site_url)?;
+                    fs::write(dest, html)?;
+                    return Ok(());
+                }
+            }
+        }
+
         fs::write(dest, buf)?;
         Ok(())
     }
