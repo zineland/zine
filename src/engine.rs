@@ -212,6 +212,12 @@ fn markdown_to_html_fn(
                 {
                     code_block_fenced = None;
                 }
+                Event::Start(Tag::Image(_, src, title)) => {
+                    // Add loading="lazy" attribute for markdown image.
+                    events.push(Event::Html(
+                        format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title).into(),
+                    ));
+                }
                 Event::Start(Tag::Heading(level, id, _)) => {
                     heading_ref = Some(HeadingRef {
                         level: level as usize,
