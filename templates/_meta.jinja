@@ -1,11 +1,11 @@
 
-{% if meta %}
-    {% set title = meta.title %}
-    {% set description = meta.description %}
-{% else %}
-    {% set title = site.name %}
-    {% set description = site.description %}
-{% endif %}
+{% if meta -%}
+    {% set title = meta.title -%}
+    {% set description = meta.description -%}
+{% else -%}
+    {% set title = site.name -%}
+    {% set description = site.description -%}
+{% endif -%}
 
     <title>{{ title }}</title>
     <meta name="description" content="{{ description }}">
@@ -15,24 +15,24 @@
     <meta name="twitter:title" content="{{ title }}">
     <meta name="twitter:description" content="{{ description }}">
 
-{% if site.logo %}
+{% if site.logo -%}
     <link rel="shortcut icon" href="{{ site.logo }}">
-{% endif %}
+{% endif -%}
 
-{% if meta %}
-    {% if page_type and page_type == "article" %}
-        {% set path = season.slug ~ "/" ~ meta.url %}
-    {% else %}
-        {% set path = meta.url %}
-    {% endif %}
+{% if meta -%}
+    {% if page_type and page_type == "article" -%}
+        {% set path = season.slug ~ "/" ~ meta.url -%}
+    {% else -%}
+        {% set path = meta.url -%}
+    {% endif -%}
 
     <meta property="og:url" content="{{ site.url ~ "/" ~ path }}">
     <meta property="twitter:url" content="{{ site.url ~ "/" ~ path }}">
 
-    {% if meta.image %}
+    {% if meta.image -%}
     <meta name="twitter:card" content="summary_large_image">
     <meta property="og:image" content="{{ site.url ~ meta.image }}">
     <meta name="twitter:image" content="{{ site.url ~ meta.image }}">
-    {% endif %}
-{% endif %}
+    {% endif -%}
+{% endif -%}
 

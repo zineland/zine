@@ -12,7 +12,7 @@
         <uri>{{ site.url }}</uri>
     </author>
 
-    {% for entry in entries %}
+    {% for entry in entries -%}
     <entry>
         <title>{{ entry.title }}</title>
         <link rel="alternate" href="{{ entry.url }}" type="text/html" title="{{ entry.title }}" />
@@ -27,5 +27,5 @@
             <name>{{ entry.author }}</name>
         </author>
     </entry>
-    {% endfor %}
+    {% endfor -%}
 </feed>
