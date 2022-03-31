@@ -217,6 +217,8 @@ https://github.com/zineland/zine
 
 - [x] Support l10n
 
+- [x] Support sitemap.xml
+
 - [ ] Support table of content
 
 - [ ] Support code syntax highlight
