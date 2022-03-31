@@ -46,6 +46,7 @@ fn init_tera(source: &Path, locale: &str) {
             ("article.jinja", include_str!("../templates/article.jinja")),
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
+            ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
         ])
         .unwrap();
         tera.register_function("markdown_to_html", markdown_to_html_fn);
@@ -128,6 +129,15 @@ impl Render {
         fs::write(dest, buf)?;
         Ok(())
     }
+
+    // Render sitemap.xml
+    fn render_sitemap(context: Context, dest: impl AsRef<Path>) -> Result<()> {
+        let mut buf = vec![];
+        let dest = dest.as_ref().join("sitemap.xml");
+        get_tera().render_to("sitemap.jinja", &context, &mut buf)?;
+        fs::write(dest, buf)?;
+        Ok(())
+    }
 }
 
 impl ZineEngine {
@@ -161,6 +171,12 @@ impl ZineEngine {
         feed_context.insert("entries", &zine.latest_feed_entries(20));
         feed_context.insert("generator_version", env!("CARGO_PKG_VERSION"));
         Render::render_atom_feed(feed_context, &self.dest)?;
+
+        let mut sitemap_context = Context::new();
+        sitemap_context.insert("site", &zine.site);
+        sitemap_context.insert("entries", &zine.sitemap_entries());
+        Render::render_sitemap(sitemap_context, &self.dest)?;
+
         Ok(())
     }
 }

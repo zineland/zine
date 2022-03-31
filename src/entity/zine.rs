@@ -64,6 +64,29 @@ impl Zine {
         entries.par_sort_unstable_by(|a, b| b.date.cmp(a.date));
         entries.into_iter().take(limit).collect()
     }
+
+    /// Get `sitemap.xml` entries.
+    pub fn sitemap_entries(&self) -> Vec<String> {
+        // Sitemap URL must begin with the protocol (such as http)
+        // and end with a trailing slash.
+        // https://www.sitemaps.org/protocol.html
+        let mut entries = vec![format!("{}/", &self.site.url)];
+        for season in &self.seasons {
+            entries.push(format!("{}/{}/", self.site.url, season.slug));
+            entries.par_extend(
+                season.articles.par_iter().map(|article| {
+                    format!("{}/{}/{}/", self.site.url, season.slug, article.slug())
+                }),
+            )
+        }
+
+        entries.par_extend(
+            self.pages
+                .par_iter()
+                .map(|page| format!("{}/{}/", self.site.url, page.slug())),
+        );
+        entries
+    }
 }
 
 impl Entity for Zine {
