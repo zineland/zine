@@ -34,5 +34,8 @@ jobs:
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
         cargo install --path .
-        cd demo
-        zine build
+        # Test build demo
+        cd demo; zine build
+        # Test new empty project then build
+        zine new test; cd test; zine build
+    
