@@ -1,4 +1,4 @@
-use std::{path::Path, sync::mpsc, time::Duration};
+use std::{fs, path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, helpers::copy_dir, ZineEngine};
 use anyhow::Result;
@@ -55,6 +55,8 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
 
     // Copy builtin static files into dest static dir.
     let dest_static_dir = dest.join("static");
+    fs::create_dir_all(&dest_static_dir)?;
+
     include_dir!("static").extract(dest_static_dir)?;
 
     println!("Build cost: {}ms", instant.elapsed().as_millis());
