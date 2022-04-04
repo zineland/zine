@@ -66,7 +66,7 @@ impl Season {
     pub fn featured_articles(&self) -> Vec<&Article> {
         self.articles
             .iter()
-            .filter(|article| article.featured)
+            .filter(|article| article.featured && article.publish)
             .collect()
     }
 }
