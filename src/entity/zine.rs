@@ -24,6 +24,7 @@ pub struct Zine {
     pub site: Site,
     #[serde(default)]
     pub theme: Theme,
+    #[serde(default)]
     pub authors: BTreeMap<String, Author>,
     #[serde(default)]
     #[serde(rename = "season")]
