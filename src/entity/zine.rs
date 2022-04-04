@@ -3,7 +3,7 @@ use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
     fs,
@@ -44,9 +44,16 @@ impl std::fmt::Debug for Zine {
     }
 }
 
+#[derive(Serialize)]
+struct AuthorArticle<'a> {
+    article: &'a MetaArticle,
+    season_title: &'a String,
+    season_slug: &'a String,
+}
+
 impl Zine {
     // Query the article metadata list by author id, sorted by descending order of publishing date.
-    fn query_articles_by_author(&self, author_id: &str) -> Vec<(String, MetaArticle)> {
+    fn query_articles_by_author(&self, author_id: &str) -> Vec<AuthorArticle> {
         let mut items = self
             .seasons
             .par_iter()
@@ -55,8 +62,12 @@ impl Zine {
                     .articles
                     .iter()
                     .filter_map(|article| {
-                        if dbg!(article.is_author(author_id)) {
-                            Some((season.slug.to_owned(), article.meta.to_owned()))
+                        if article.is_author(author_id) {
+                            Some(AuthorArticle {
+                                article: &article.meta,
+                                season_title: &season.title,
+                                season_slug: &season.slug,
+                            })
                         } else {
                             None
                         }
@@ -64,7 +75,7 @@ impl Zine {
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>();
-        items.par_sort_unstable_by(|(_, a), (_, b)| b.pub_date.cmp(&a.pub_date));
+        items.par_sort_unstable_by(|a, b| b.article.pub_date.cmp(&a.article.pub_date));
         items
     }
 
@@ -172,11 +183,16 @@ impl Entity for Zine {
         // Render all seasons pages.
         self.seasons.render(context.clone(), dest)?;
 
-        // Render all authors pages.
-        for author in self.authors() {
-            let mut context = context.clone();
-            context.insert("articles", &self.query_articles_by_author(&author.id));
-            author.render(context, dest)?;
+        let authors = self.authors();
+        if authors.is_empty() {
+            println!("WARN: no [authors] specified in root `zine.toml`.")
+        } else {
+            // Render all authors pages.
+            for author in self.authors() {
+                let mut context = context.clone();
+                context.insert("articles", &self.query_articles_by_author(&author.id));
+                author.render(context, dest)?;
+            }
         }
 
         // Render other pages.
