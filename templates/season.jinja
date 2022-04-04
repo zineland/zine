@@ -30,7 +30,7 @@
                     </div>
                     <div class="relative text-base text-gray-500">
                         <span>{{ article.pub_date }}</span>
-                        <span class="absolute right-2">{{ article.author }}</span>
+                        <a class="absolute right-2 hover:underline" href="/@{{ article.author | lower }}">{{ article.author }}</a>
                     </div>
                 </div>
             </a>

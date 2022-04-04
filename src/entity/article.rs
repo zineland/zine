@@ -11,21 +11,28 @@ use crate::{markdown, meta::Meta, Render};
 
 use super::{EndMatter, Entity};
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Article {
-    pub file: String,
+/// The Meta info of Article.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetaArticle {
     /// The slug after this artcile rendered.
     /// Default to file name if no slug specified.
     pub slug: Option<String>,
     pub title: String,
     pub author: Option<String>,
     pub cover: Option<String>,
-    /// The article's markdown content.
-    #[serde(default)]
-    pub markdown: String,
     /// The publish date. Format like YYYY-MM-dd.
     #[serde(with = "crate::helpers::serde_date")]
     pub pub_date: Date,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Article {
+    pub file: String,
+    #[serde(flatten)]
+    pub meta: MetaArticle,
+    /// The article's markdown content.
+    #[serde(default)]
+    pub markdown: String,
     /// The optional end matter of the article.
     pub end_matter: Option<EndMatter>,
     /// Whether the article is an featured article.
@@ -42,20 +49,25 @@ pub struct Article {
 impl std::fmt::Debug for Article {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Article")
-            .field("file", &self.file)
-            .field("slug", &self.slug)
-            .field("title", &self.title)
-            .field("author", &self.author)
-            .field("cover", &self.cover)
-            .field("pub_date", &self.pub_date)
+            .field("meta", &self.meta)
             .field("publish", &self.publish)
             .finish()
     }
 }
 
 impl Article {
+    /// Check whether `author` name is the author of this article.
+    pub fn is_author(&self, author: &str) -> bool {
+        self.meta
+            .author
+            .as_ref()
+            .map(|inner| inner.eq_ignore_ascii_case(author))
+            .unwrap_or_default()
+    }
+
     pub fn slug(&self) -> String {
-        self.slug
+        self.meta
+            .slug
             .as_ref()
             .cloned()
             .unwrap_or_else(|| self.file.replace(".md", ""))
@@ -67,9 +79,10 @@ impl Entity for Article {
         let markdown = fs::read_to_string(&source.join(&self.file))?;
         let (content, end_matter) = split_article_content(&markdown)?;
 
+        let mut meta = &mut self.meta;
         // Fallback to the default placeholder image if the cover is missing.
-        if self.cover.is_none() || self.cover.as_ref().map(|cover| cover.is_empty()) == Some(true) {
-            self.cover = Some(String::from("/static/zine-placeholder.svg"));
+        if meta.cover.is_none() || meta.cover.as_ref().map(|cover| cover.is_empty()) == Some(true) {
+            meta.cover = Some(String::from("/static/zine-placeholder.svg"));
         }
 
         self.markdown = content.to_owned();
@@ -84,10 +97,10 @@ impl Entity for Article {
             context.insert(
                 "meta",
                 &Meta {
-                    title: Cow::Borrowed(&self.title),
+                    title: Cow::Borrowed(&self.meta.title),
                     description: Cow::Owned(markdown::extract_description(&self.markdown)),
                     url: Some(Cow::Owned(self.slug())),
-                    image: self.cover.as_deref().map(Cow::Borrowed),
+                    image: self.meta.cover.as_deref().map(Cow::Borrowed),
                 },
             );
             context.insert("page_type", "article");

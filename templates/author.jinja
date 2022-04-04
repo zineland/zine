@@ -1,0 +1,40 @@
+{% extends "base.jinja" -%}
+
+{% block content -%}
+<div class="p-4 pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white 
+            shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+    <div class="max-w-[65ch] mx-auto">
+        <div>
+            <div>
+                <h2>{{ author.id }}</h2>
+                <div>
+                    {{ author.bio }}
+                </div>
+            </div>
+            <img class="rounded-full" src="{{ author.avatar }}" alt="Avatar">
+        </div>
+        {% for item in articles -%}
+            {% set season_slug = item.0 -%}
+            {% set article = item.1 -%}
+            <div class="py-6 sm:px-8 border-gray-200">
+                <a class="group" href="/{{ season_slug }}/{{ article.slug }}">
+                    <div>
+                        <img class="w-32 h-28 object-cover" src="{{ article.cover }}" alt="{{ article.title }}">
+                        <div class="my-4 text-lg text-black">
+                            <div class="pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
+                                {{ article.title }}
+                            </div>
+                            <div class="relative text-base text-gray-500">
+                                <span>{{ article.pub_date }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% if not loop.last -%}
+            <hr>
+            {% endif -%}
+        {% endfor -%}
+    </div>
+</div>
+{% endblock content -%}

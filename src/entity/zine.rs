@@ -4,13 +4,17 @@ use rayon::{
     slice::ParallelSliceMut,
 };
 use serde::Deserialize;
-use std::{collections::HashMap, fs, path::Path};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fs,
+    path::Path,
+};
 use tera::Context;
 use walkdir::WalkDir;
 
 use crate::{feed::FeedEntry, Entity, Render};
 
-use super::{Page, Season, Site, Theme};
+use super::{Author, MetaArticle, Page, Season, Site, Theme};
 
 /// The root zine entity config.
 ///
@@ -20,6 +24,7 @@ pub struct Zine {
     pub site: Site,
     #[serde(default)]
     pub theme: Theme,
+    pub authors: BTreeMap<String, Author>,
     #[serde(default)]
     #[serde(rename = "season")]
     pub seasons: Vec<Season>,
@@ -39,6 +44,40 @@ impl std::fmt::Debug for Zine {
 }
 
 impl Zine {
+    // Query the article metadata list by author id, sorted by descending order of publishing date.
+    fn query_articles_by_author(&self, author_id: &str) -> Vec<(String, MetaArticle)> {
+        let mut items = self
+            .seasons
+            .par_iter()
+            .flat_map(|season| {
+                season
+                    .articles
+                    .iter()
+                    .filter_map(|article| {
+                        if dbg!(article.is_author(author_id)) {
+                            Some((season.slug.to_owned(), article.meta.to_owned()))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        items.par_sort_unstable_by(|(_, a), (_, b)| b.pub_date.cmp(&a.pub_date));
+        items
+    }
+
+    /// Get author list.
+    pub fn authors(&self) -> Vec<Author> {
+        self.authors
+            .iter()
+            .map(|(id, author)| Author {
+                id: id.to_owned(),
+                ..author.to_owned()
+            })
+            .collect()
+    }
+
     /// Get latest `limit` number of articles in all seasons.
     /// Sort by date in descending order.
     pub fn latest_feed_entries(&self, limit: usize) -> Vec<FeedEntry> {
@@ -50,11 +89,11 @@ impl Zine {
                     .articles
                     .iter()
                     .map(|article| FeedEntry {
-                        title: &article.title,
+                        title: &article.meta.title,
                         url: format!("{}/{}/{}", self.site.url, season.slug, article.slug()),
                         content: &article.markdown,
-                        author: &article.author,
-                        date: &article.pub_date,
+                        author: &article.meta.author,
+                        date: &article.meta.pub_date,
                     })
                     .collect::<Vec<_>>()
             })
@@ -131,6 +170,13 @@ impl Entity for Zine {
         context.insert("site", &self.site);
         // Render all seasons pages.
         self.seasons.render(context.clone(), dest)?;
+
+        // Render all authors pages.
+        for author in self.authors() {
+            let mut context = context.clone();
+            context.insert("articles", &self.query_articles_by_author(&author.id));
+            author.render(context, dest)?;
+        }
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;

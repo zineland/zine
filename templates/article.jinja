@@ -16,7 +16,7 @@
         <h1 class="text-center">{{ article.title }}</h1>
         <div class="relative text-sm text-gray-400">
             <span>{{ article.pub_date }}</span>
-            <span class="absolute right-2">{{ article.author }}</span>
+            <a class="absolute right-2" href="/@{{ article.author | lower }}">@{{ article.author }}</a>
         </div>
     </div>
     <article class="prose mx-auto my-12">
