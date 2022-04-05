@@ -30,7 +30,7 @@ jobs:
           rust-version: stable
       - uses: actions/checkout@v2
       - name: Build
-        run: cargo build --release --locked
+        run: cargo build --release
       - name: Publish
         uses: svenstaro/upload-release-action@v1-release
         with:
