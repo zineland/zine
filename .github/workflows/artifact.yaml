@@ -1,0 +1,40 @@
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+name: Publish binaries to release
+
+jobs:
+  publish:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: zine
+            asset_name: zine-linux-amd64
+          - os: macos-latest
+            artifact_name: zine
+            asset_name: zine-macos-amd64
+          - os: windows-latest
+            artifact_name: zine.exe
+            asset_name: zine-windows-amd64.exe
+    
+    steps:
+      - uses: hecrj/setup-rust-action@master
+        with:
+          rust-version: stable
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --release --locked
+      - name: Publish
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.TOKEN }}
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
