@@ -1,0 +1,21 @@
+name: Build
+
+on:
+  push:
+    tags:        
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        cargo build --release
+    - name: Upload Zine Artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: zine
+        path: target/release/zine
