@@ -102,7 +102,7 @@ impl Entity for Article {
 static END_MATTER_REGEX: Lazy<Regex> = Lazy::new(|| {
     // The regex is an variant of zola's fronmatter regex.
     Regex::new(
-        r"^[[:space:]]*(?:$|(?:\r?\n((?s).*(?-s))))[[:space:]]*\+\+\+(\r?\n(?s).*?(?-s))\+\+\+[[:space:]]*$",
+        r"[[:space:]]*(?:$|(?:\r?\n((?s).*(?-s))))[[:space:]]*\+\+\+(\r?\n(?s).*?(?-s))\+\+\+[[:space:]]*$",
     )
     .unwrap()
 });
@@ -215,6 +215,7 @@ mod tests {
 
     #[test_case(r#"
     Hello
+
     +++
     [[comment]]
     author = "Alice"
