@@ -2,7 +2,6 @@ use std::{fs, path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, helpers::copy_dir, ZineEngine};
 use anyhow::Result;
-use include_dir::include_dir;
 use notify::Watcher;
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
@@ -57,7 +56,11 @@ fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
     let dest_static_dir = dest.join("static");
     fs::create_dir_all(&dest_static_dir)?;
 
-    include_dir!("static").extract(dest_static_dir)?;
+    #[cfg(not(debug_assertions))]
+    include_dir::include_dir!("static").extract(dest_static_dir)?;
+    // Alwasy copy static directory in debug mode.
+    #[cfg(debug_assertions)]
+    copy_dir(Path::new("./static"), dest)?;
 
     println!("Build cost: {}ms", instant.elapsed().as_millis());
     Ok(())
