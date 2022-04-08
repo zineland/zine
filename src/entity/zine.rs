@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
@@ -143,7 +143,7 @@ impl Zine {
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         if self.authors.is_empty() {
-            bail!("no author specified in [authors] of root `zine.toml`.");
+            println!("Warn: no author specified in [authors] of root `zine.toml`.");
         }
 
         self.theme.parse(source)?;
