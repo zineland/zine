@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
@@ -142,8 +142,11 @@ impl Zine {
 
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        self.theme.parse(source)?;
+        if self.authors.is_empty() {
+            bail!("no author specified in [authors] of root `zine.toml`.");
+        }
 
+        self.theme.parse(source)?;
         self.seasons.parse(source)?;
         // Sort all seasons by number.
         self.seasons.par_sort_unstable_by_key(|s| s.number);
@@ -183,16 +186,11 @@ impl Entity for Zine {
         // Render all seasons pages.
         self.seasons.render(context.clone(), dest)?;
 
-        let authors = self.authors();
-        if authors.is_empty() {
-            println!("WARN: no [authors] specified in root `zine.toml`.")
-        } else {
-            // Render all authors pages.
-            for author in self.authors() {
-                let mut context = context.clone();
-                context.insert("articles", &self.query_articles_by_author(&author.id));
-                author.render(context, dest)?;
-            }
+        // Render all authors pages.
+        for author in self.authors() {
+            let mut context = context.clone();
+            context.insert("articles", &self.query_articles_by_author(&author.id));
+            author.render(context, dest)?;
         }
 
         // Render other pages.

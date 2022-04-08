@@ -5,11 +5,19 @@ use anyhow::Result;
 use notify::Watcher;
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
+    if let Err(err) = _watch_build(source.as_ref(), dest.as_ref(), watch) {
+        println!("Error: {}", &err);
+        std::process::exit(1);
+    }
+    Ok(())
+}
+
+fn _watch_build(source: &Path, dest: &Path, watch: bool) -> Result<()> {
     data::load(&source);
 
-    build(&source, &dest)?;
+    build(source, dest)?;
 
-    let source_path_buf = source.as_ref().to_path_buf();
+    let source_path_buf = source.to_path_buf();
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
         // Save zine data only when the process gonna exist
@@ -32,7 +40,7 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
 
         loop {
             match rx.recv() {
-                Ok(_) => build(&source, &dest)?,
+                Ok(_) => build(source, dest)?,
                 Err(err) => println!("watch error: {:?}", &err),
             }
         }
@@ -40,10 +48,7 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
     Ok(())
 }
 
-fn build<P: AsRef<Path>>(source: P, dest: P) -> Result<()> {
-    let source = source.as_ref();
-    let dest = dest.as_ref();
-
+fn build(source: &Path, dest: &Path) -> Result<()> {
     let instant = std::time::Instant::now();
     ZineEngine::new(source, dest)?.build()?;
 
