@@ -4,6 +4,7 @@ use std::path::Path;
 use tera::Context;
 
 mod article;
+mod author;
 mod end_matter;
 mod page;
 mod season;
@@ -12,7 +13,8 @@ mod theme;
 mod zine;
 
 pub use self::zine::Zine;
-pub use article::Article;
+pub use article::{Article, MetaArticle};
+pub use author::Author;
 pub use end_matter::EndMatter;
 pub use page::Page;
 pub use season::Season;

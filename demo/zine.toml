@@ -8,6 +8,9 @@ menu = [
   { name = "Github", url = "https://github.com" },
 ]
 
+[authors]
+zine-team = { name = "Zine Team", avatar = "", bio = "The Zine Team."}
+
 [[season]]
 slug = "cloud"
 number = 1

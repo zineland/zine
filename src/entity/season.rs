@@ -91,7 +91,7 @@ impl Entity for Season {
         self.articles = season_file.articles;
         // Sort all articles by pub_date.
         self.articles
-            .par_sort_unstable_by_key(|article| article.pub_date);
+            .par_sort_unstable_by_key(|article| article.meta.pub_date);
 
         self.articles.parse(&dir)?;
         Ok(())

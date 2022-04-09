@@ -3,14 +3,18 @@ use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
 };
-use serde::Deserialize;
-use std::{collections::HashMap, fs, path::Path};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fs,
+    path::Path,
+};
 use tera::Context;
 use walkdir::WalkDir;
 
 use crate::{feed::FeedEntry, Entity, Render};
 
-use super::{Page, Season, Site, Theme};
+use super::{Author, MetaArticle, Page, Season, Site, Theme};
 
 /// The root zine entity config.
 ///
@@ -20,6 +24,8 @@ pub struct Zine {
     pub site: Site,
     #[serde(default)]
     pub theme: Theme,
+    #[serde(default)]
+    pub authors: BTreeMap<String, Author>,
     #[serde(default)]
     #[serde(rename = "season")]
     pub seasons: Vec<Season>,
@@ -38,7 +44,52 @@ impl std::fmt::Debug for Zine {
     }
 }
 
+#[derive(Serialize)]
+struct AuthorArticle<'a> {
+    article: &'a MetaArticle,
+    season_title: &'a String,
+    season_slug: &'a String,
+}
+
 impl Zine {
+    // Query the article metadata list by author id, sorted by descending order of publishing date.
+    fn query_articles_by_author(&self, author_id: &str) -> Vec<AuthorArticle> {
+        let mut items = self
+            .seasons
+            .par_iter()
+            .flat_map(|season| {
+                season
+                    .articles
+                    .iter()
+                    .filter_map(|article| {
+                        if article.is_author(author_id) {
+                            Some(AuthorArticle {
+                                article: &article.meta,
+                                season_title: &season.title,
+                                season_slug: &season.slug,
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        items.par_sort_unstable_by(|a, b| b.article.pub_date.cmp(&a.article.pub_date));
+        items
+    }
+
+    /// Get author list.
+    pub fn authors(&self) -> Vec<Author> {
+        self.authors
+            .iter()
+            .map(|(id, author)| Author {
+                id: id.to_owned(),
+                ..author.to_owned()
+            })
+            .collect()
+    }
+
     /// Get latest `limit` number of articles in all seasons.
     /// Sort by date in descending order.
     pub fn latest_feed_entries(&self, limit: usize) -> Vec<FeedEntry> {
@@ -50,11 +101,11 @@ impl Zine {
                     .articles
                     .iter()
                     .map(|article| FeedEntry {
-                        title: &article.title,
+                        title: &article.meta.title,
                         url: format!("{}/{}/{}", self.site.url, season.slug, article.slug()),
                         content: &article.markdown,
-                        author: &article.author,
-                        date: &article.pub_date,
+                        author: &article.meta.author,
+                        date: &article.meta.pub_date,
                     })
                     .collect::<Vec<_>>()
             })
@@ -91,8 +142,11 @@ impl Zine {
 
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        self.theme.parse(source)?;
+        if self.authors.is_empty() {
+            println!("Warn: no author specified in [authors] of root `zine.toml`.");
+        }
 
+        self.theme.parse(source)?;
         self.seasons.parse(source)?;
         // Sort all seasons by number.
         self.seasons.par_sort_unstable_by_key(|s| s.number);
@@ -131,6 +185,13 @@ impl Entity for Zine {
         context.insert("site", &self.site);
         // Render all seasons pages.
         self.seasons.render(context.clone(), dest)?;
+
+        // Render all authors pages.
+        for author in self.authors() {
+            let mut context = context.clone();
+            context.insert("articles", &self.query_articles_by_author(&author.id));
+            author.render(context, dest)?;
+        }
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;
