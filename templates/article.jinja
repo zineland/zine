@@ -16,7 +16,14 @@
         <h1 class="text-center">{{ article.title }}</h1>
         <div class="relative text-sm text-gray-400">
             <span>{{ article.pub_date }}</span>
-            <a class="absolute right-2" href="/@{{ article.author | lower }}">@{{ article.author }}</a>
+            {% if author %}
+            <a class="absolute right-2" href="/@{{ author.id | lower }}">
+                <img class="inline !m-0 mx-2 w-5 h-5 align-bottom rounded-full object-cover" src="{{ author.avatar }}" alt="avatar">
+                {{ author.name }}
+            </a>
+            {% else %}
+            <span class="absolute right-2">{{ article.author }}</span>
+            {% endif %}
         </div>
     </div>
     <article class="prose mx-auto my-12">
