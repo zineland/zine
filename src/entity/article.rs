@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{markdown, meta::Meta, Render};
+use crate::{current_mode, markdown, meta::Meta, Mode, Render};
 
 use super::{EndMatter, Entity};
 
@@ -65,6 +65,15 @@ impl Article {
             .unwrap_or_default()
     }
 
+    /// Check whether the article need publish.
+    ///
+    /// The article need publish in any of two conditions:
+    /// - the publish property is true
+    /// - in `zine serve` mode
+    pub fn need_publish(&self) -> bool {
+        self.publish || matches!(current_mode(), Some(Mode::Serve))
+    }
+
     pub fn slug(&self) -> String {
         self.meta
             .slug
@@ -91,23 +100,19 @@ impl Entity for Article {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        // Only render article if the publish property is true,
-        // or we are in `zine serve` mode which the dest path is `TEMP_ZINE_BUILD_DIR`.
-        if self.publish || dest.to_string_lossy().contains(crate::TEMP_ZINE_BUILD_DIR) {
-            context.insert(
-                "meta",
-                &Meta {
-                    title: Cow::Borrowed(&self.meta.title),
-                    description: Cow::Owned(markdown::extract_description(&self.markdown)),
-                    url: Some(Cow::Owned(self.slug())),
-                    image: self.meta.cover.as_deref().map(Cow::Borrowed),
-                },
-            );
-            context.insert("page_type", "article");
-            context.insert("article", &self);
-            context.insert("end_matter", &self.end_matter);
-            Render::render("article.jinja", &context, dest)?;
-        }
+        context.insert(
+            "meta",
+            &Meta {
+                title: Cow::Borrowed(&self.meta.title),
+                description: Cow::Owned(markdown::extract_description(&self.markdown)),
+                url: Some(Cow::Owned(self.slug())),
+                image: self.meta.cover.as_deref().map(Cow::Borrowed),
+            },
+        );
+        context.insert("page_type", "article");
+        context.insert("article", &self);
+        context.insert("end_matter", &self.end_matter);
+        Render::render("article.jinja", &context, dest)?;
         Ok(())
     }
 }
