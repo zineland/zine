@@ -108,8 +108,8 @@ impl Render {
                 context.get("site").and_then(|site| site.get("url"))
             {
                 let uri = site_url.parse::<Uri>().expect("Invalid site url.");
-                // We don't need to rewrite links if the site url is a naked domain without any path.
-                if !uri.path().is_empty() {
+                // We don't need to rewrite links if the site url has a root path.
+                if uri.path() != "/" {
                     let html = rewrite_html_base_url(&buf, site_url)?;
                     fs::write(dest, html)?;
                     return Ok(());
