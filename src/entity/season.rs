@@ -101,13 +101,19 @@ impl Entity for Season {
         let season_dir = dest.join(&self.slug);
         context.insert("season", &self);
 
+        let articles = self
+            .articles
+            .iter()
+            // Only render article which need published.
+            .filter(|article| article.need_publish())
+            .collect::<Vec<_>>();
         // Render articles with number context.
-        for (index, article) in self.articles.iter().enumerate() {
+        for (index, article) in articles.iter().enumerate() {
             let mut context = context.clone();
             context.insert("siblings", &self.sibling_articles(index));
             context.insert("number", &(index + 1));
             let dest = season_dir.join(article.slug());
-            let article = article.clone();
+            let article = (*article).clone();
 
             tokio::task::spawn_blocking(move || {
                 article
@@ -116,7 +122,7 @@ impl Entity for Season {
             });
         }
 
-        context.insert("articles", &self.articles);
+        context.insert("articles", &articles);
         context.insert(
             "meta",
             &Meta {
