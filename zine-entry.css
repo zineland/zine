@@ -20,6 +20,8 @@
 
 .url-preview>a {
     font-size: 0.8rem;
+    overflow: hidden;
+    display: block;
 }
 
 .url-preview:hover {

@@ -1,6 +1,6 @@
 use std::{env, io, net::SocketAddr, path::Path};
 
-use crate::{build::watch_build, TEMP_ZINE_BUILD_DIR};
+use crate::build::watch_build;
 use anyhow::Result;
 use http_body::Full;
 use hyper::{body::HttpBody, Response, StatusCode};
@@ -17,6 +17,9 @@ static ZINE_BANNER: &str = r"
 ╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
                              
 ";
+
+// The temporal build dir, mainly for `zine serve` command.
+static TEMP_ZINE_BUILD_DIR: &str = "__zine_build";
 
 pub async fn run_serve(source: String, port: u16) -> Result<()> {
     let tmp_dir = env::temp_dir().join(TEMP_ZINE_BUILD_DIR);
