@@ -9,7 +9,6 @@ static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
 url = "http://localhost"
 name = "{name}"
-title = "{name}"
 description = ""
 
 [[season]]
