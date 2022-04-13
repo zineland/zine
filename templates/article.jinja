@@ -14,15 +14,15 @@
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="prose mx-auto">
         <h1 class="text-center">{{ article.title }}</h1>
-        <div class="relative text-sm text-gray-400">
+        <div class="flex items-center justify-between text-gray-500">
             <span>{{ article.pub_date }}</span>
             {% if author %}
-            <a class="absolute right-2" href="/@{{ author.id | lower }}">
-                <img class="inline !m-0 mx-2 w-5 h-5 align-bottom rounded-full object-cover" src="{{ author.avatar }}" alt="avatar">
-                {{ author.name }}
+            <a class="flex items-center px-2 py-1 !text-gray-500 rounded-full hover:bg-gray-200 hover:!no-underline" href="/@{{ author.id | lower }}">
+                <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover" src="{{ author.avatar }}" alt="avatar">
+                <span>{{ author.name }}</span>
             </a>
             {% else %}
-            <span class="absolute right-2">{{ article.author }}</span>
+            <span>{{ article.author }}</span>
             {% endif %}
         </div>
     </div>
