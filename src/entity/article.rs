@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{data, markdown, meta::Meta, Render};
+use crate::{markdown, meta::Meta, Render};
 
 use super::{EndMatter, Entity};
 
@@ -106,10 +106,6 @@ impl Entity for Article {
             context.insert("page_type", "article");
             context.insert("article", &self);
             context.insert("end_matter", &self.end_matter);
-            if let Some(author_id) = self.meta.author.as_ref() {
-                let data = data::get();
-                context.insert("author", &data.get_author_by_id(author_id));
-            }
             Render::render("article.jinja", &context, dest)?;
         }
         Ok(())

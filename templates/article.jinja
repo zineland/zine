@@ -1,4 +1,5 @@
 {% extends "base.jinja" -%}
+{% import "_macros.jinja" as macros %}
 
 {% block content -%}
 <div class="p-4 pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white 
@@ -16,14 +17,7 @@
         <h1 class="text-center">{{ article.title }}</h1>
         <div class="flex items-center justify-between text-gray-500">
             <span>{{ article.pub_date }}</span>
-            {% if author %}
-            <a class="flex items-center px-2 py-1 !text-gray-500 rounded-full hover:bg-gray-200 hover:!no-underline" href="/@{{ author.id | lower }}">
-                <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover" src="{{ author.avatar }}" alt="avatar">
-                <span>{{ author.name }}</span>
-            </a>
-            {% else %}
-            <span>{{ article.author }}</span>
-            {% endif %}
+            {{ macros::article_author_link(article = article) }}
         </div>
     </div>
     <article class="prose mx-auto my-12">
