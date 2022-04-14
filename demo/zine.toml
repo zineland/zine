@@ -9,7 +9,7 @@ menu = [
 ]
 
 [authors]
-zine-team = { name = "Zine Team", avatar = "/static/duck.png", bio = "The Zine Team." }
+zine-team = { name = "Zine Team", bio = "The Zine Team." }
 
 [[season]]
 slug = "cloud"
