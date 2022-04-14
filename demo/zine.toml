@@ -4,12 +4,12 @@ url = "http://localhost"
 name = "Demo"
 description = "Demonstration of Zine."
 menu = [
-  { name = "About", url = "/page/about" },
-  { name = "Github", url = "https://github.com" },
+    { name = "About", url = "/about" },
+    { name = "Github", url = "https://github.com" },
 ]
 
 [authors]
-zine-team = { name = "Zine Team", avatar = "", bio = "The Zine Team."}
+zine-team = { name = "Zine Team", avatar = "/static/duck.png", bio = "The Zine Team." }
 
 [[season]]
 slug = "cloud"
