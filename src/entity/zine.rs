@@ -144,6 +144,10 @@ impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         if self.authors.is_empty() {
             println!("Warn: no author specified in [authors] of root `zine.toml`.");
+        } else {
+            self.authors
+                .values_mut()
+                .try_for_each(|author| author.parse(source))?;
         }
 
         self.theme.parse(source)?;

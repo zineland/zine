@@ -9,11 +9,21 @@ pub struct Author {
     #[serde(skip_deserializing, default)]
     pub id: String,
     pub name: String,
-    pub avatar: String,
+    pub avatar: Option<String>,
     pub bio: String,
 }
 
 impl Entity for Author {
+    fn parse(&mut self, _source: &std::path::Path) -> anyhow::Result<()> {
+        // Fallback to default zine avatar if neccessary.
+        if self.avatar.is_none()
+            || self.avatar.as_ref().map(|avatar| avatar.is_empty()) == Some(true)
+        {
+            self.avatar = Some(String::from("/static/zine.png"));
+        }
+        Ok(())
+    }
+
     fn render(&self, mut context: tera::Context, dest: &std::path::Path) -> anyhow::Result<()> {
         let slug = format!("@{}", self.id.to_lowercase());
         context.insert(
