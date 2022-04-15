@@ -12,7 +12,7 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{feed::FeedEntry, Entity, Render};
+use crate::{data, feed::FeedEntry, Entity, Render};
 
 use super::{Author, MetaArticle, Page, Season, Site, Theme};
 
@@ -79,8 +79,8 @@ impl Zine {
         items
     }
 
-    /// Get author list.
-    pub fn authors(&self) -> Vec<Author> {
+    // Get author list.
+    fn authors(&self) -> Vec<Author> {
         self.authors
             .iter()
             .map(|(id, author)| Author {
@@ -144,6 +144,10 @@ impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         if self.authors.is_empty() {
             println!("Warn: no author specified in [authors] of root `zine.toml`.");
+        } else {
+            self.authors
+                .values_mut()
+                .try_for_each(|author| author.parse(source))?;
         }
 
         self.theme.parse(source)?;
@@ -183,15 +187,18 @@ impl Entity for Zine {
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("theme", &self.theme);
         context.insert("site", &self.site);
-        // Render all seasons pages.
-        self.seasons.render(context.clone(), dest)?;
 
         // Render all authors pages.
-        for author in self.authors() {
+        let authors = self.authors();
+        for author in &authors {
             let mut context = context.clone();
             context.insert("articles", &self.query_articles_by_author(&author.id));
             author.render(context, dest)?;
         }
+        data::get().set_authors(authors);
+
+        // Render all seasons pages.
+        self.seasons.render(context.clone(), dest)?;
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;

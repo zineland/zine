@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     code_blocks::{render_code_block, ALL_CODE_BLOCKS},
-    current_mode,
+    current_mode, data,
     entity::{Entity, Zine},
     html::rewrite_html_base_url,
     locales::FluentLoader,
@@ -35,6 +35,7 @@ fn init_tera(source: &Path, locale: &str) {
         let mut tera = Tera::default();
         #[cfg(not(debug_assertions))]
         tera.add_raw_templates(vec![
+            ("_macros.jinja", include_str!("../templates/_macros.jinja")),
             (
                 "_anchor-link.jinja",
                 include_str!("../templates/_anchor-link.jinja"),
@@ -51,6 +52,7 @@ fn init_tera(source: &Path, locale: &str) {
         ])
         .unwrap();
         tera.register_function("markdown_to_html", markdown_to_html_fn);
+        tera.register_function("get_author", get_author_fn);
         tera.register_function("fluent", FluentLoader::new(source, locale));
 
         #[cfg(debug_assertions)]
@@ -273,5 +275,17 @@ fn markdown_to_html_fn(
         Ok(serde_json::Value::String(html))
     } else {
         Ok(serde_json::Value::Array(vec![]))
+    }
+}
+
+fn get_author_fn(
+    map: &std::collections::HashMap<String, serde_json::Value>,
+) -> tera::Result<serde_json::Value> {
+    if let Some(serde_json::Value::String(author_id)) = map.get("id") {
+        let data = data::get();
+        let author = data.get_author_by_id(author_id);
+        Ok(serde_json::to_value(&author)?)
+    } else {
+        Ok(serde_json::Value::Null)
     }
 }

@@ -3,7 +3,7 @@
 slug = "first"
 file = "first.md"
 title = "First article"
-author = "Folyd"
+author = "zine-team"
 cover = "/static/duck.png"
 pub_date = "2022-02-25"
 publish = true
@@ -13,7 +13,7 @@ featured = true
 slug = "second"
 file = "second.md"
 title = "Second article"
-author = "Folyd"
+author = "zine-team"
 cover = "/static/duck.png"
 pub_date = "2022-03-25"
 publish = false

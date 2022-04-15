@@ -10,6 +10,8 @@ use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 
+use crate::entity::Author;
+
 static ZINE_DATA: OnceCell<RwLock<ZineData>> = OnceCell::new();
 
 pub fn load<P: AsRef<Path>>(path: P) {
@@ -34,6 +36,8 @@ pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ZineData {
+    #[serde(skip)]
+    authors: Vec<Author>,
     url_previews: BTreeMap<String, (String, String)>,
 }
 
@@ -46,6 +50,7 @@ impl ZineData {
         } else {
             Ok(ZineData {
                 url_previews: BTreeMap::default(),
+                authors: Vec::default(),
             })
         }
     }
@@ -60,6 +65,14 @@ impl ZineData {
 
     pub fn insert_url_preview(&mut self, url: &str, preview: (String, String)) {
         self.url_previews.insert(url.to_owned(), preview);
+    }
+
+    pub fn set_authors(&mut self, authors: Vec<Author>) {
+        self.authors = authors;
+    }
+
+    pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {
+        self.authors.iter().find(|author| author.id == author_id)
     }
 
     fn export_to_json(&self) -> Result<String> {

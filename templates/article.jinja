@@ -1,4 +1,5 @@
 {% extends "base.jinja" -%}
+{% import "_macros.jinja" as macros %}
 
 {% block content -%}
 <div class="p-4 pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white 
@@ -14,9 +15,9 @@
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="prose mx-auto">
         <h1 class="text-center">{{ article.title }}</h1>
-        <div class="relative text-sm text-gray-400">
+        <div class="flex items-center justify-between text-gray-500">
             <span>{{ article.pub_date }}</span>
-            <a class="absolute right-2" href="/@{{ article.author | lower }}">@{{ article.author }}</a>
+            {{ macros::article_author_link(article = article) }}
         </div>
     </div>
     <article class="prose mx-auto my-12">
