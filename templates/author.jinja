@@ -9,7 +9,13 @@
                 <img class="mx-auto w-40 h-40 object-cover rounded-full border" src="{{ author.avatar }}" alt="Avatar" loading="lazy">
             </div>
             <div class="prose my-2 sm:m-8 grow">
-                <div class="text-4xl font-bold py-2 text-center sm:text-start">{{ author.name }}</div>
+                <div class="text-4xl font-bold py-2 text-center sm:text-start">
+                {% if author.name -%}
+                    {{ author.name }}
+                {% else -%}
+                    {{ author.id | capitalize }}
+                {% endif -%}
+                </div>
                 <div>{{ markdown_to_html(markdown = author.bio) | safe }}</div>
             </div>
         </div>

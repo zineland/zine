@@ -4,12 +4,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::{markdown, meta::Meta, Entity, Render};
 
+/// The author of an article. Declared in the root `zine.toml`'s **[authors]** table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Author {
+    /// The author id.
     #[serde(skip_deserializing, default)]
     pub id: String,
-    pub name: String,
+    /// The author's name. Will fallback to capitalized id if missing.
+    pub name: Option<String>,
+    /// The optional avatar url. Will fallback to default zine logo if missing.
     pub avatar: Option<String>,
+    /// The bio of author (markdown format).
     pub bio: String,
 }
 
@@ -29,7 +34,7 @@ impl Entity for Author {
         context.insert(
             "meta",
             &Meta {
-                title: Cow::Borrowed(&self.name),
+                title: Cow::Borrowed(&self.name.as_deref().unwrap_or(&self.id)),
                 description: Cow::Owned(markdown::extract_description(&self.bio)),
                 url: Some(Cow::Borrowed(&slug)),
                 image: None,
