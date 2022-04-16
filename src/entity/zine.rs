@@ -118,23 +118,36 @@ impl Zine {
 
     /// Get `sitemap.xml` entries.
     pub fn sitemap_entries(&self) -> Vec<String> {
+        let base_url = &self.site.url;
         // Sitemap URL must begin with the protocol (such as http)
         // and end with a trailing slash.
         // https://www.sitemaps.org/protocol.html
-        let mut entries = vec![format!("{}/", &self.site.url)];
+        let mut entries = vec![format!("{}/", base_url)];
+
+        // Seasons and articles
         for season in &self.seasons {
-            entries.push(format!("{}/{}/", self.site.url, season.slug));
+            entries.push(format!("{}/{}/", base_url, season.slug));
             entries.par_extend(
-                season.articles.par_iter().map(|article| {
-                    format!("{}/{}/{}/", self.site.url, season.slug, article.slug())
-                }),
+                season
+                    .articles
+                    .par_iter()
+                    .map(|article| format!("{}/{}/{}/", base_url, season.slug, article.slug())),
             )
         }
 
+        // Authors
+        entries.push(format!("{}/authors/", base_url));
+        entries.par_extend(
+            self.authors
+                .par_iter()
+                .map(|(id, _)| format!("{}/@{}/", base_url, id.to_lowercase())),
+        );
+
+        // Pages
         entries.par_extend(
             self.pages
                 .par_iter()
-                .map(|page| format!("{}/{}/", self.site.url, page.slug())),
+                .map(|page| format!("{}/{}/", base_url, page.slug())),
         );
         entries
     }
