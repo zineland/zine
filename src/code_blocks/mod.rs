@@ -3,8 +3,8 @@ use anyhow::Result;
 mod author;
 mod url_preview;
 
-pub use author::AuthorCode;
 use crate::{data, helpers, html};
+pub use author::AuthorCode;
 
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
