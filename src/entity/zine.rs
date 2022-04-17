@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{data, feed::FeedEntry, Entity, Render};
 
-use super::{Author, MetaArticle, Page, Season, Site, Theme};
+use super::{Author, AuthorList, MetaArticle, Page, Season, Site, Theme};
 
 /// The root zine entity config.
 ///
@@ -213,11 +213,7 @@ impl Entity for Zine {
             author.render(context, dest)?;
         }
         // Render author list page.
-        AuthorList {
-            authors: &authors,
-            article_counts,
-        }
-        .render(context.clone(), dest)?;
+        AuthorList::new(&authors, article_counts).render(context.clone(), dest)?;
         data::get().set_authors(authors);
 
         // Render all seasons pages.
@@ -236,22 +232,6 @@ impl Entity for Zine {
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
         Render::render("index.jinja", &context, dest)?;
-        Ok(())
-    }
-}
-
-#[derive(Serialize)]
-struct AuthorList<'a> {
-    authors: &'a Vec<Author>,
-    article_counts: HashMap<&'a String, usize>,
-}
-
-impl<'a> Entity for AuthorList<'a> {
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        // TODO: open graph
-        context.insert("authors", &self.authors);
-        context.insert("article_counts", &self.article_counts);
-        Render::render("author-list.jinja", &context, dest.join("authors"))?;
         Ok(())
     }
 }

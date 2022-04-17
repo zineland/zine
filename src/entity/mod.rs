@@ -14,7 +14,7 @@ mod zine;
 
 pub use self::zine::Zine;
 pub use article::{Article, MetaArticle};
-pub use author::Author;
+pub use author::{Author, AuthorList};
 pub use end_matter::EndMatter;
 pub use page::Page;
 pub use season::Season;
