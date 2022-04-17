@@ -1,8 +1,22 @@
 {% extends "base.jinja" -%}
 
 {% block content -%}
+{% if author.name -%}
+    {% set author_name = author.name -%}
+{% else -%}
+    {% set author_name = author.id | capitalize -%}
+{% endif -%}
 <div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-white 
             shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+    <div class="relative mx-2">
+        <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block
+                transition sm:hover:scale-110 duration-500"
+                href="/authors">
+            <div class="relative text-main px-4">{{ fluent(key="author-list") }}</div>
+        </a>
+        <span class="ml-2 text-gray-700"> /  {{ author_name }}</span>
+    </div>
+    <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="max-w-[65ch] mx-auto">
         <div class="flex flex-col sm:flex-row py-6">
             <div class="m-4 sm:m-8">
@@ -10,11 +24,7 @@
             </div>
             <div class="prose my-2 sm:m-8 grow">
                 <div class="text-4xl font-bold py-2 text-center sm:text-start">
-                {% if author.name -%}
-                    {{ author.name }}
-                {% else -%}
-                    {{ author.id | capitalize }}
-                {% endif -%}
+                    {{ author_name }}
                 </div>
                 <div>{{ markdown_to_html(markdown = author.bio) | safe }}</div>
             </div>
