@@ -87,6 +87,10 @@ menu = [
     { name = "Blog", url = "/blog" },
 ]
 
+# Declare authors of this magazine.
+[authors]
+zine-team = { name = "Zine Team", bio = "The Zine Team." }
+
 # You can customize some theme elements in this section.
 # All of those elements are optional.
 [theme]
@@ -136,8 +140,8 @@ slug = "1"
 file = "1-first.md"
 # the title of this article
 title = "First article"
-# the optional author of this article
-author = ""
+# the optional author id of this article.
+author = "zine-team"
 # the cover of this article
 cover = ""
 # the publish date of this article
@@ -154,6 +158,22 @@ featured = true
 ```
 
 ## Advanced
+
+### Author
+
+Zine will generate a dedicated page for each author declared in the root `zine.toml` table.
+
+```toml
+[authors]
+# https://your-domain.com/@alice
+alice = { name = "Alice", bio = "An engineer." }
+# https://your-domain.com/@bob
+bob = { name = "Bob", avatar = "/cool/avatar.png", bio = "An engineer." }
+```
+
+> The path of an author page consists of `@` and author id, for example above, the path are `@alice` and `@bob`.
+>
+> If the author of an article hasn't declared in `[authors]`, no author page will be generated for that author.
 
 ### Pages
 

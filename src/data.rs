@@ -72,7 +72,9 @@ impl ZineData {
     }
 
     pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {
-        self.authors.iter().find(|author| author.id == author_id)
+        self.authors
+            .iter()
+            .find(|author| author.id.eq_ignore_ascii_case(author_id))
     }
 
     fn export_to_json(&self) -> Result<String> {

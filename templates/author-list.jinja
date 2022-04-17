@@ -1,0 +1,31 @@
+{% extends "base.jinja" -%}
+{% block content -%}
+    <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+        <div class="max-w-[65ch] mx-auto">
+            <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="author-list") }}</div>
+            <div class="flex flex-wrap flex-col sm:flex-row justify-center">
+                {% for author in authors -%}
+                    <a href="/@{{ author.id | lower }}">
+                        <div class="p-6 my-4 text-center  hover:bg-gray-100">
+                            <div class="">
+                                <img class="mx-auto w-40 h-32 object-cover rounded border"
+                                     src="{{ author.avatar }}"
+                                     alt="Avatar"
+                                     loading="lazy">
+                            </div>
+                            <div class="relative m-3 font-bold text-2xl text-black">
+                                {% if author.name -%}
+                                    {{ author.name }}
+                                {% else -%}
+                                    {{ author.id | capitalize }}
+                                {% endif -%}
+                            </div>
+                            <div class="p-2 text-sm text-gray-500">{{ fluent(key="author-article-count", number=article_counts[author.id]) }}</div>
+                        </div>
+                    </a>
+                {% endfor -%}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content -%}
