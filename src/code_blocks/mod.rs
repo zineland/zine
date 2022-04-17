@@ -1,11 +1,14 @@
 use anyhow::Result;
 
+mod author;
 mod url_preview;
+
+pub use author::AuthorCode;
 use crate::{data, helpers, html};
 
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
-trait CodeBlock {
+pub trait CodeBlock {
     fn render(&self) -> Result<String>;
 }
 

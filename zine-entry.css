@@ -1,6 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.author-code {
+    padding: 0 2px;
+    @apply inline-flex items-center align-bottom rounded;
+    @apply text-gray-500 !important;
+}
+
+.author-code:hover {
+    @apply bg-gray-200 no-underline !important;
+}
+
+.author-code>img {
+    margin: 3px !important;
+    @apply w-4 h-4 rounded-full object-cover;
+}
+
 .url-preview {
     outline: #dee0e3 1px solid;
     padding: 1rem 1.25rem;
@@ -34,7 +49,9 @@
     cursor: zoom-out;
 }
 
+
 /* auto center page's h1 heading */
+
 .zine-page>h1 {
     display: flex;
     justify-content: center;
