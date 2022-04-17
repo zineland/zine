@@ -8,3 +8,7 @@ previous = 上一篇：
 next = 下一篇：
 
 author-article-title = 已发布 { $number } 篇文章
+
+author-list = 作者列表
+
+author-article-count = { $number } 篇文章

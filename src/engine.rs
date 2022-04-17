@@ -46,6 +46,7 @@ fn init_tera(source: &Path, locale: &str) {
             ("season.jinja", include_str!("../templates/season.jinja")),
             ("article.jinja", include_str!("../templates/article.jinja")),
             ("author.jinja", include_str!("../templates/author.jinja")),
+            ("author-list.jinja", include_str!("../templates/author-list.jinja")),
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
