@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{render_code_block, ALL_CODE_BLOCKS},
+    code_blocks::{render_code_block, AuthorCode, CodeBlock, ALL_CODE_BLOCKS},
     current_mode, data,
     entity::{Entity, Zine},
     html::rewrite_html_base_url,
@@ -237,6 +237,20 @@ fn markdown_to_html_fn(
                 }
                 Event::End(Tag::Heading(..)) => {
                     heading_ref = None;
+                }
+                Event::Code(code) if code.starts_with('@') => {
+                    if let Some(maybe_author_id) = code.strip_prefix('@') {
+                        let data = data::get();
+                        if let Some(author) = data.get_author_by_id(maybe_author_id) {
+                            // Render author code UI.
+                            let html = AuthorCode(author)
+                                .render()
+                                .expect("Render author code failed.");
+                            events.push(Event::Html(html.into()));
+                            continue;
+                        }
+                    }
+                    events.push(Event::Code(code))
                 }
                 Event::Text(text) => {
                     if let Some(fenced) = code_block_fenced.as_ref() {

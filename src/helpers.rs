@@ -7,6 +7,14 @@ use hyper_tls::HttpsConnector;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use std::{fs, io::Read, path::Path};
 
+pub fn capitalize(text: &str) -> String {
+    let mut chars = text.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase(),
+    }
+}
+
 pub async fn fetch_url(url: &str) -> Result<impl Read> {
     let client = Client::builder().build::<_, hyper::Body>(HttpsConnector::new());
     let resp = client.get(url.parse::<Uri>()?).await?;
