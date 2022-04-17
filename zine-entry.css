@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 .author-code {
-    padding: 0 2px;
-    @apply inline-flex items-center align-bottom rounded;
+    padding: 2px;
+    @apply inline rounded;
     @apply text-gray-500 !important;
 }
 
@@ -13,7 +13,7 @@
 
 .author-code>img {
     margin: 3px !important;
-    @apply w-4 h-4 rounded-full object-cover;
+    @apply inline w-4 h-4 align-text-top rounded-full object-cover;
 }
 
 .url-preview {
