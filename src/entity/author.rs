@@ -21,12 +21,12 @@ pub struct Author {
 
 #[derive(Serialize)]
 pub struct AuthorList<'a> {
-    authors: &'a Vec<Author>,
+    authors: &'a [Author],
     article_counts: HashMap<&'a String, usize>,
 }
 
 impl<'a> AuthorList<'a> {
-    pub fn new(authors: &'a Vec<Author>, article_counts: HashMap<&'a String, usize>) -> Self {
+    pub fn new(authors: &'a [Author], article_counts: HashMap<&'a String, usize>) -> Self {
         Self {
             authors,
             article_counts,
@@ -50,7 +50,7 @@ impl Entity for Author {
         context.insert(
             "meta",
             &Meta {
-                title: Cow::Borrowed(&self.name.as_deref().unwrap_or(&self.id)),
+                title: Cow::Borrowed(self.name.as_deref().unwrap_or(&self.id)),
                 description: Cow::Owned(markdown::extract_description(&self.bio)),
                 url: Some(Cow::Borrowed(&slug)),
                 image: None,
