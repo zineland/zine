@@ -7,8 +7,8 @@
     <div class="relative mx-2">
         <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block
                                 transition sm:hover:scale-110 duration-500"
-                        href="/{{ season.slug }}">
-            <div class="relative text-main px-4">{{ season.title }}</div>
+                        href="/{{ issue.slug }}">
+            <div class="relative text-main px-4">{{ issue.title }}</div>
         </a>
         <span class="ml-2 text-gray-700"> /  {{ fluent(key = "article-number", number = number) }}</span>
     </div>
@@ -53,7 +53,7 @@
         {% for article in [siblings.0, siblings.1] -%}
             {% if article -%}
                 <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline"
-                    href="/{{ season.slug }}/{{ article.slug }}">
+                    href="/{{ issue.slug }}/{{ article.slug }}">
                     {% if loop.index0 == 0 -%}
                         {{ fluent(key = "previous") }}
                     {% else -%}

@@ -29,10 +29,10 @@ Run `zine new your-zine-site`, you'll get following directory:
 ```
 $ tree your-zine-site
 your-zine-site
-├── content             # The content directory your seasons located
-│   └── season-1        # The first season directory
-│       ├── 1-first.md  # The first markdown article in this season
-│       └── zine.toml   # The season Zine config file
+├── content             # The content directory your issues located
+│   └── issue-1         # The first issue directory
+│       ├── 1-first.md  # The first markdown article in this issue
+│       └── zine.toml   # The issue Zine config file
 └── zine.toml           # The root Zine config file of this project
 
 2 directories, 3 files
@@ -70,7 +70,7 @@ A Zine project mainly consists of two kind `zine.toml` files and a bunch of mark
 
 ### Root `zine.toml`
 
-This root `zine.toml` file describes your site meta and all your season's info.
+This root `zine.toml` file describes your site meta and all your issue's info.
 
 ```toml
 [site]
@@ -106,31 +106,31 @@ background-image = "/static/background.png"
 # you can customize your footer here
 footer-template = "templates/footer.html"
 
-# Season 1
-[[season]]
-# the slug of this season: https://your-domain.com/s1
+# Issue 1
+[[issue]]
+# the slug of this issue: https://your-domain.com/s1
 slug = "s1"
-# the number of this season
+# the number of this issue
 number = 1
-# season title
-title = "Season 1"
-# the directory path to parse this season, you should put
+# issue title
+title = "Issue 1"
+# the directory path to parse this issue, you should put
 # your markdown files in this directory
-path = "content/season-1"
-# the introduction of this season. optional.
-intro = "content/season-1/intro.md"
+path = "content/issue-1"
+# the introduction of this issue. optional.
+intro = "content/issue-1/intro.md"
 
-# Season 2
-[[season]]
+# Issue 2
+[[issue]]
 slug = "s2"
 number = 2
-title = "Season 2"
-path = "content/season-2"
+title = "Issue 2"
+path = "content/issue-2"
 ```
 
-### Season `zine.toml`
+### Issue `zine.toml`
 
-The season `zine.toml` file list all your articles of this season.
+The issue `zine.toml` file list all your articles of this issue.
 
 ```toml
 [[article]]
@@ -253,7 +253,7 @@ https://github.com/zineland/zine
 
 - [ ] Support i18n
 
-- [ ] Generate word cloud for season
+- [ ] Generate word cloud for issue
 
 ## License
 
