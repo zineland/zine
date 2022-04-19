@@ -17,6 +17,10 @@ pub struct Author {
     pub avatar: Option<String>,
     /// The bio of author (markdown format).
     pub bio: String,
+    /// Whether the author is an editor.
+    #[serde(default)]
+    #[serde(rename(deserialize = "editor"))]
+    pub is_editor: bool,
 }
 
 #[derive(Serialize)]

@@ -20,6 +20,9 @@
                                     {{ author.id | capitalize }}
                                 {% endif -%}
                             </div>
+                            {% if author.is_editor -%}
+                                <div>Editor</div>
+                            {% endif -%}
                             <div class="p-2 text-sm text-gray-500">{{ fluent(key="author-article-count", number=article_counts[author.id]) }}</div>
                         </div>
                     </a>

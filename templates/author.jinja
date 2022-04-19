@@ -19,8 +19,11 @@
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="max-w-[65ch] mx-auto">
         <div class="flex flex-col sm:flex-row py-6">
-            <div class="m-4 sm:m-8">
+            <div class="m-4 sm:m-8 text-center">
                 <img class="mx-auto w-44 h-44 object-cover rounded-full border" src="{{ author.avatar }}" alt="Avatar" loading="lazy">
+                {% if author.is_editor -%}
+                    <div>Editor</div>
+                {% endif -%}
             </div>
             <div class="prose my-2 sm:m-8 grow">
                 <div class="text-4xl font-bold py-2 text-center sm:text-start">
