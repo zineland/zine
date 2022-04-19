@@ -14,6 +14,7 @@ module.exports = {
                 primary: 'var(--primary-color)',
                 main: 'var(--main-color)',
                 secondary: 'var(--secondary-color)',
+                link: 'var(--link-color)',
             },
             typography: {
                 DEFAULT: {
