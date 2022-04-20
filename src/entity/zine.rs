@@ -203,17 +203,18 @@ impl Entity for Zine {
 
         // Render all authors pages.
         let authors = self.authors();
-        let mut article_counts = HashMap::with_capacity(self.authors.len());
+        let mut author_list = AuthorList::default();
         for author in &authors {
             let articles = self.query_articles_by_author(&author.id);
-            article_counts.insert(&author.id, articles.len());
+            author_list.record_author(author, articles.len());
 
             let mut context = context.clone();
             context.insert("articles", &articles);
             author.render(context, dest)?;
         }
+
         // Render author list page.
-        AuthorList::new(&authors, article_counts).render(context.clone(), dest)?;
+        author_list.render(context.clone(), dest)?;
         data::get().set_authors(authors);
 
         // Render all issues pages.
