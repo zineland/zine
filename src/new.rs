@@ -11,14 +11,14 @@ url = "http://localhost"
 name = "{name}"
 description = ""
 
-[[season]]
+[[issue]]
 slug = "s1"
 number = 1
-title = "Season 1"
-path = "content/season-1"
+title = "Issue 1"
+path = "content/issue-1"
 "#;
 
-static TEMPLATE_SEASON_FILE: &str = r#"
+static TEMPLATE_ISSUE_FILE: &str = r#"
 [[article]]
 slug = "1"
 file = "1-first.md"
@@ -46,17 +46,17 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
         TEMPLATE_PROJECT_FILE.replace("{name}", &name.unwrap_or_default()),
     )?;
 
-    // Create season dir and season zine.toml
-    let season_dir = dir.join("content/season-1");
-    fs::create_dir_all(&season_dir)?;
+    // Create issue dir and issue zine.toml
+    let issue_dir = dir.join("content/issue-1");
+    fs::create_dir_all(&issue_dir)?;
     let format = format_description::parse("[year]-[month]-[day]")?;
     let today = OffsetDateTime::now_utc().format(&format)?;
     fs::write(
-        season_dir.join(ZINE_FILE),
-        TEMPLATE_SEASON_FILE.replace("{pub_date}", &today),
+        issue_dir.join(ZINE_FILE),
+        TEMPLATE_ISSUE_FILE.replace("{pub_date}", &today),
     )?;
 
     // Create first article
-    fs::write(season_dir.join("1-first.md"), "Hello Zine")?;
+    fs::write(issue_dir.join("1-first.md"), "Hello Zine")?;
     Ok(())
 }

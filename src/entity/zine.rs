@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{data, feed::FeedEntry, Entity, Render};
 
-use super::{Author, AuthorList, MetaArticle, Page, Season, Site, Theme};
+use super::{Author, AuthorList, Issue, MetaArticle, Page, Site, Theme};
 
 /// The root zine entity config.
 ///
@@ -27,8 +27,8 @@ pub struct Zine {
     #[serde(default)]
     pub authors: BTreeMap<String, Author>,
     #[serde(default)]
-    #[serde(rename = "season")]
-    pub seasons: Vec<Season>,
+    #[serde(rename = "issue")]
+    pub issues: Vec<Issue>,
     #[serde(rename = "page")]
     #[serde(default)]
     pub pages: Vec<Page>,
@@ -39,7 +39,7 @@ impl std::fmt::Debug for Zine {
         f.debug_struct("Zine")
             .field("site", &self.site)
             .field("theme", &self.theme)
-            .field("seasons", &self.seasons)
+            .field("issues", &self.issues)
             .finish()
     }
 }
@@ -47,26 +47,26 @@ impl std::fmt::Debug for Zine {
 #[derive(Serialize)]
 struct AuthorArticle<'a> {
     article: &'a MetaArticle,
-    season_title: &'a String,
-    season_slug: &'a String,
+    issue_title: &'a String,
+    issue_slug: &'a String,
 }
 
 impl Zine {
     // Query the article metadata list by author id, sorted by descending order of publishing date.
     fn query_articles_by_author(&self, author_id: &str) -> Vec<AuthorArticle> {
         let mut items = self
-            .seasons
+            .issues
             .par_iter()
-            .flat_map(|season| {
-                season
+            .flat_map(|issue| {
+                issue
                     .articles
                     .iter()
                     .filter_map(|article| {
                         if article.is_author(author_id) {
                             Some(AuthorArticle {
                                 article: &article.meta,
-                                season_title: &season.title,
-                                season_slug: &season.slug,
+                                issue_title: &issue.title,
+                                issue_slug: &issue.slug,
                             })
                         } else {
                             None
@@ -90,19 +90,19 @@ impl Zine {
             .collect()
     }
 
-    /// Get latest `limit` number of articles in all seasons.
+    /// Get latest `limit` number of articles in all issues.
     /// Sort by date in descending order.
     pub fn latest_feed_entries(&self, limit: usize) -> Vec<FeedEntry> {
         let mut entries = self
-            .seasons
+            .issues
             .par_iter()
-            .flat_map(|season| {
-                season
+            .flat_map(|issue| {
+                issue
                     .articles
                     .iter()
                     .map(|article| FeedEntry {
                         title: &article.meta.title,
-                        url: format!("{}/{}/{}", self.site.url, season.slug, article.slug()),
+                        url: format!("{}/{}/{}", self.site.url, issue.slug, article.slug()),
                         content: &article.markdown,
                         author: &article.meta.author,
                         date: &article.meta.pub_date,
@@ -124,14 +124,14 @@ impl Zine {
         // https://www.sitemaps.org/protocol.html
         let mut entries = vec![format!("{}/", base_url)];
 
-        // Seasons and articles
-        for season in &self.seasons {
-            entries.push(format!("{}/{}/", base_url, season.slug));
+        // Issues and articles
+        for issue in &self.issues {
+            entries.push(format!("{}/{}/", base_url, issue.slug));
             entries.par_extend(
-                season
+                issue
                     .articles
                     .par_iter()
-                    .map(|article| format!("{}/{}/{}/", base_url, season.slug, article.slug())),
+                    .map(|article| format!("{}/{}/{}/", base_url, issue.slug, article.slug())),
             )
         }
 
@@ -164,9 +164,9 @@ impl Entity for Zine {
         }
 
         self.theme.parse(source)?;
-        self.seasons.parse(source)?;
-        // Sort all seasons by number.
-        self.seasons.par_sort_unstable_by_key(|s| s.number);
+        self.issues.parse(source)?;
+        // Sort all issues by number.
+        self.issues.par_sort_unstable_by_key(|s| s.number);
 
         // Parse pages
         let page_dir = source.join("pages");
@@ -216,19 +216,19 @@ impl Entity for Zine {
         AuthorList::new(&authors, article_counts).render(context.clone(), dest)?;
         data::get().set_authors(authors);
 
-        // Render all seasons pages.
-        self.seasons.render(context.clone(), dest)?;
+        // Render all issues pages.
+        self.issues.render(context.clone(), dest)?;
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;
 
         // Render home page.
-        context.insert("seasons", &self.seasons);
-        // `article_map` is the season number and season's featured articles map.
+        context.insert("issues", &self.issues);
+        // `article_map` is the issue number and issue's featured articles map.
         let article_map = self
-            .seasons
+            .issues
             .iter()
-            .map(|season| (season.number, season.featured_articles()))
+            .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
         Render::render("index.jinja", &context, dest)?;

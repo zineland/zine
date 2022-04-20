@@ -1,5 +1,5 @@
 
-# The first article of Season #1
+# The second article of Issue 1
 
 Hello Zine.
 

@@ -11,16 +11,14 @@ menu = [
 [authors]
 zine-team = { name = "Zine Team", bio = "The Zine Team." }
 
-[[season]]
+[[issue]]
 slug = "cloud"
 number = 1
-title = "Season #1"
-summary = "Summary of Season #1"
-path = "season-1"
+title = "Issue 1"
+path = "issue-1"
 
-[[season]]
+[[issue]]
 slug = "dev"
 number = 2
-title = "Season #2"
-summary = "Summary of Season #2"
-path = "season-2"
+title = "Issue 2"
+path = "issue-2"

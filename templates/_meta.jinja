@@ -21,7 +21,7 @@
 
 {% if meta -%}
     {% if page_type and page_type == "article" -%}
-        {% set path = season.slug ~ "/" ~ meta.url -%}
+        {% set path = issue.slug ~ "/" ~ meta.url -%}
     {% else -%}
         {% set path = meta.url -%}
     {% endif -%}

@@ -9,28 +9,28 @@ use crate::{markdown, meta::Meta, Render};
 
 use super::{article::Article, Entity};
 
-/// The season entity config.
-/// It parsed from season directory's `zine.toml`.
+/// The issue entity config.
+/// It parsed from issue directory's `zine.toml`.
 #[derive(Clone, Serialize, Deserialize)]
-pub struct Season {
+pub struct Issue {
     pub slug: String,
     pub number: u32,
     pub title: String,
-    /// The optional introduction for this season.
+    /// The optional introduction for this issue.
     pub intro: Option<String>,
     pub cover: Option<String>,
     pub path: String,
     // Skip serialize `articles` since a single article page would
-    // contain a season context, the `articles` is useless for the
+    // contain a issue context, the `articles` is useless for the
     // single article page.
     #[serde(skip_serializing, default)]
     #[serde(rename(deserialize = "article"))]
     pub articles: Vec<Article>,
 }
 
-impl std::fmt::Debug for Season {
+impl std::fmt::Debug for Issue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Season")
+        f.debug_struct("Issue")
             .field("slug", &self.slug)
             .field("number", &self.number)
             .field("title", &self.title)
@@ -41,8 +41,8 @@ impl std::fmt::Debug for Season {
     }
 }
 
-impl Season {
-    // Get the description of this season.
+impl Issue {
+    // Get the description of this issue.
     // Mainly for html meta description tag.
     fn description(&self) -> String {
         if let Some(intro) = self.intro.as_ref() {
@@ -71,24 +71,24 @@ impl Season {
     }
 }
 
-impl Entity for Season {
+impl Entity for Issue {
     fn parse(&mut self, source: &Path) -> Result<()> {
         // Parse intro file
         if let Some(intro_path) = &self.intro {
             self.intro = Some(fs::read_to_string(&source.join(&intro_path))?);
         }
 
-        // Representing a zine.toml file for season.
+        // Representing a zine.toml file for issue.
         #[derive(Debug, Deserialize)]
-        struct SeasonFile {
+        struct IssueFile {
             #[serde(rename = "article")]
             articles: Vec<Article>,
         }
 
         let dir = source.join(&self.path);
         let content = fs::read_to_string(&dir.join(crate::ZINE_FILE))?;
-        let season_file = toml::from_str::<SeasonFile>(&content)?;
-        self.articles = season_file.articles;
+        let issue_file = toml::from_str::<IssueFile>(&content)?;
+        self.articles = issue_file.articles;
         // Sort all articles by pub_date.
         self.articles
             .par_sort_unstable_by_key(|article| article.meta.pub_date);
@@ -98,8 +98,8 @@ impl Entity for Season {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        let season_dir = dest.join(&self.slug);
-        context.insert("season", &self);
+        let issue_dir = dest.join(&self.slug);
+        context.insert("issue", &self);
 
         let articles = self
             .articles
@@ -112,7 +112,7 @@ impl Entity for Season {
             let mut context = context.clone();
             context.insert("siblings", &self.sibling_articles(index));
             context.insert("number", &(index + 1));
-            let dest = season_dir.join(article.slug());
+            let dest = issue_dir.join(article.slug());
             let article = (*article).clone();
 
             tokio::task::spawn_blocking(move || {
@@ -132,7 +132,7 @@ impl Entity for Season {
                 image: self.cover.as_deref().map(Cow::Borrowed),
             },
         );
-        Render::render("season.jinja", &context, season_dir)?;
+        Render::render("issue.jinja", &context, issue_dir)?;
         Ok(())
     }
 }
