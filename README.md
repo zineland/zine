@@ -89,7 +89,8 @@ menu = [
 
 # Declare authors of this magazine.
 [authors]
-zine-team = { name = "Zine Team", bio = "The Zine Team." }
+# set editor to true will show the Editor badge on the author profile page
+zine-team = { name = "Zine Team", editor = true, bio = "The Zine Team." }
 
 # You can customize some theme elements in this section.
 # All of those elements are optional.
@@ -161,7 +162,7 @@ featured = true
 
 ### Author
 
-Zine will generate a dedicated page for each author declared in the root `zine.toml` table.
+Zine will generate a dedicated profile page for each author declared in the root `zine.toml` table.
 
 ```toml
 [authors]
