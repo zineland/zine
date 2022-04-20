@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, path::Path};
+use std::{borrow::Cow, path::Path};
 
 use serde::{Deserialize, Serialize};
 use tera::Context;
@@ -23,18 +23,26 @@ pub struct Author {
     pub is_editor: bool,
 }
 
-#[derive(Serialize)]
+// A [`Author`] struct with additional `article_count` field.
+#[derive(Debug, Serialize)]
+struct AuthorExt<'a> {
+    #[serde(flatten)]
+    author: &'a Author,
+    // How many articles this author has.
+    article_count: usize,
+}
+
+#[derive(Default, Serialize)]
 pub struct AuthorList<'a> {
-    authors: &'a [Author],
-    article_counts: HashMap<&'a String, usize>,
+    authors: Vec<AuthorExt<'a>>,
 }
 
 impl<'a> AuthorList<'a> {
-    pub fn new(authors: &'a [Author], article_counts: HashMap<&'a String, usize>) -> Self {
-        Self {
-            authors,
-            article_counts,
-        }
+    pub fn record_author(&mut self, author: &'a Author, article_count: usize) {
+        self.authors.push(AuthorExt {
+            author,
+            article_count,
+        });
     }
 }
 
@@ -70,7 +78,6 @@ impl<'a> Entity for AuthorList<'a> {
     fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
         // TODO: open graph
         context.insert("authors", &self.authors);
-        context.insert("article_counts", &self.article_counts);
         Render::render("author-list.jinja", &context, dest.join("authors"))?;
         Ok(())
     }
