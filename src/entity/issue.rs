@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fs, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
 use tera::Context;
@@ -75,7 +75,10 @@ impl Entity for Issue {
     fn parse(&mut self, source: &Path) -> Result<()> {
         // Parse intro file
         if let Some(intro_path) = &self.intro {
-            self.intro = Some(fs::read_to_string(&source.join(&intro_path))?);
+            self.intro = Some(
+                fs::read_to_string(&source.join(&intro_path))
+                    .with_context(|| format!("Failed to read intro from {}", intro_path))?,
+            );
         }
 
         // Representing a zine.toml file for issue.
@@ -86,7 +89,8 @@ impl Entity for Issue {
         }
 
         let dir = source.join(&self.path);
-        let content = fs::read_to_string(&dir.join(crate::ZINE_FILE))?;
+        let content = fs::read_to_string(&dir.join(crate::ZINE_FILE))
+            .with_context(|| format!("Failed to parse `zine.toml` of `{}`", dir.display()))?;
         let issue_file = toml::from_str::<IssueFile>(&content)?;
         self.articles = issue_file.articles;
         // Sort all articles by pub_date.

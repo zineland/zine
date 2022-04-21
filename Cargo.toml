@@ -11,7 +11,7 @@ exclude = ["demo", "tailwind.config.js", "zine-entry.css"]
 readme = "README.md"
 
 [dependencies]
-anyhow = { version = "1.0", features = ["backtrace"] }
+anyhow = "1.0"
 clap = { version = "3.1.2", default-features = false, features = [
     "std",
     "derive",
@@ -46,4 +46,5 @@ tower-http = { version = "0.2.3", features = ["fs"] }
 walkdir = "2.3.2"
 
 [dev-dependencies]
+anyhow = { version = "1.0", features = ["backtrace"] }
 test-case = "2"
