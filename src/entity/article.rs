@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fs, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -85,7 +85,10 @@ impl Article {
 
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        let markdown = fs::read_to_string(&source.join(&self.file))?;
+        let file_path = source.join(&self.file);
+        let markdown = fs::read_to_string(&file_path).with_context(|| {
+            format!("Failed to read markdown file of `{}`", file_path.display())
+        })?;
         let (content, end_matter) = split_article_content(&markdown)?;
 
         let mut meta = &mut self.meta;

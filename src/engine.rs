@@ -12,7 +12,7 @@ use crate::{
     Mode,
 };
 
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use hyper::Uri;
 use once_cell::sync::OnceCell;
 use serde_json::Value;
@@ -160,7 +160,13 @@ impl ZineEngine {
     }
 
     pub fn build(&self) -> Result<()> {
-        let content = fs::read_to_string(&self.source.join(crate::ZINE_FILE))?;
+        let content =
+            fs::read_to_string(&self.source.join(crate::ZINE_FILE)).with_context(|| {
+                format!(
+                    "Failed to parse root `zine.toml` of `{}`",
+                    self.source.display()
+                )
+            })?;
         let mut zine = toml::from_str::<Zine>(&content)?;
 
         zine.parse(&self.source)?;

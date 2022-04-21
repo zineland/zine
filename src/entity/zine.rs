@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
@@ -179,7 +179,9 @@ impl Entity for Zine {
                     let entry = entry?;
                     let path = entry.path();
                     if path.is_file() {
-                        let markdown = fs::read_to_string(path)?;
+                        let markdown = fs::read_to_string(path).with_context(|| {
+                            format!("Failed to read markdown file of `{}`", path.display())
+                        })?;
                         pages.push(Page {
                             markdown,
                             file_path: path.strip_prefix(&page_dir)?.to_owned(),
