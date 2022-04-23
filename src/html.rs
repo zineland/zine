@@ -63,7 +63,7 @@ pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>>
     Ok(html)
 }
 
-/// Parse HTML ['Meta`] from `html`.
+/// Parse HTML [`Meta`] from `html`.
 pub fn parse_html_meta<'a, R: Read>(mut html: R) -> Meta<'a> {
     let parse_opts = ParseOpts {
         tree_builder: TreeBuilderOpts {

@@ -7,6 +7,8 @@ pub struct Site {
     pub name: String,
     pub logo: Option<String>,
     pub description: Option<String>,
+    /// The OpenGraph social image.
+    pub social_image: Option<String>,
     /// The locale to localize some builtin text.
     /// Default to 'en'.
     pub locale: Option<String>,
