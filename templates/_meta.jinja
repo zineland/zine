@@ -6,7 +6,11 @@
     {% set title = site.name -%}
     {% set description = site.description -%}
 {% endif -%}
-
+{% if meta.image -%}
+    {% set image = meta.image -%}
+{% elif site.social_image -%}
+    {% set image = site.social_image -%}
+{% endif -%}
     <title>{{ title }}</title>
     <meta name="description" content="{{ description }}">
     <meta property="og:type" content="website">
@@ -28,11 +32,10 @@
 
     <meta property="og:url" content="{{ site.url ~ "/" ~ path }}">
     <meta property="twitter:url" content="{{ site.url ~ "/" ~ path }}">
-
-    {% if meta.image -%}
-    <meta name="twitter:card" content="summary_large_image">
-    <meta property="og:image" content="{{ site.url ~ meta.image }}">
-    <meta name="twitter:image" content="{{ site.url ~ meta.image }}">
-    {% endif -%}
 {% endif -%}
+    {% if image -%}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:image" content="{{ site.url ~ image }}">
+    <meta name="twitter:image" content="{{ site.url ~ image }}">
+    {% endif -%}
 

@@ -77,7 +77,9 @@ This root `zine.toml` file describes your site meta and all your issue's info.
 url = "https://your-domain.com"
 name = "Your Zine Site Name"
 description = ""
-logo = "path/to/favicon"
+logo = "/path/to/favicon"
+# the OpenGraph social image path.
+social_image = "/path/to/social_image"
 # the locale to localize your Zine site. default to "en".
 # Zine has builtin supported locales, please check the `locales` directory of this repo.
 locale = "en"
@@ -222,7 +224,7 @@ Zine provides some advanced code blocks to help you write articles.
 
 The author code is designed to render the avatar-name link on the markdown page.
 
-The syntax is very simple, just write like this `@author_id`.
+The syntax is very simple, just write like this \`@author_id\`.
 If the `author_id` is declared in the `[authors]` table of the root `zine.toml`, 
 it will render the UI as expected, otherwise it fallback into the raw code UI.
 
