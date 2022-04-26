@@ -106,6 +106,8 @@ main-color = "#000"
 link-color = "#e07312"
 # the background image
 background-image = "/static/background.png"
+# you can customize your head here, such as your css, js.
+head-template = "templates/head.html"
 # you can customize your footer here
 footer-template = "templates/footer.html"
 
