@@ -10,6 +10,9 @@
     {% endblock favicon -%}
     <link rel="stylesheet" href="/static/zine.css">
     <link rel="alternate" type="application/atom+xml" title="{{ site.name }} RSS" href="/feed.xml">
+    {% if theme.head_template -%}
+        {{ theme.head_template }}
+    {% endif -%}
     <style>
       :root {
           --primary-color: {{ theme.primary_color }};
@@ -35,8 +38,6 @@
                 {% endfor -%}
             </ul>
         </header>
-        {% block hero -%}
-        {% endblock hero -%}
         <div class="w-full h-32 md:h-36 lg:h-44 xl:h-48 2xl:h-56"></div>
     </div>
 
@@ -48,18 +49,16 @@
     </main>
 
     <footer class="relative">
-        {% block footer -%}
-            {% if theme.footer_template -%}
-                {{ theme.footer_template }}
-            {% else -%}
-                <footer class="bg-black text-white text-center p-16">
-                    <div>
-                        <a class="hover:underline" href="https://github.com/Folyd/zine">Zine</a> 
-                        - a simple and opinionated tool to build your own magazine.
-                    </div>
-                </footer>
-            {% endif -%}
-        {% endblock footer -%}
+        {% if theme.footer_template -%}
+            {{ theme.footer_template }}
+        {% else -%}
+            <footer class="bg-black text-white text-center p-16">
+                <div>
+                    <a class="hover:underline" href="https://github.com/Folyd/zine">Zine</a> 
+                    - a simple and opinionated tool to build your own magazine.
+                </div>
+            </footer>
+        {% endif -%}
         <a href="https://github.com/zineland" 
            class="absolute z-20 bottom-0 w-full text-center font-bold
                   md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:bg-transparent
