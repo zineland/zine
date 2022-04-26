@@ -1,17 +1,21 @@
 {% macro article_author_link(article) -%}
     {% set author = get_author(id = article.author) -%}
     {% if author -%}
-    <a class="flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline" href="/@{{ author.id | lower }}">
-        <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover" src="{{ author.avatar }}" alt="avatar" loading="lazy">
-        <span>
-        {% if author.name -%}
-            {{ author.name }}
-        {% else -%}
-            {{ author.id | capitalize }}
-        {% endif -%}
-        </span>
-    </a>
+        <a class="flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline"
+           href="/@{{ author.id | lower }}">
+            <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover"
+                 src="{{ author.avatar }}"
+                 alt="avatar"
+                 loading="lazy">
+            <span>
+                {% if author.name -%}
+                    {{ author.name }}
+                {% else -%}
+                    {{ author.id | capitalize }}
+                {% endif -%}
+            </span>
+        </a>
     {% else -%}
-    <span>{{ article.author }}</span>
+        <span>{{ article.author }}</span>
     {% endif -%}
 {% endmacro input -%}

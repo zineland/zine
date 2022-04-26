@@ -1,68 +1,82 @@
 {% extends "base.jinja" -%}
-
 {% block content -%}
-{% if author.name -%}
-    {% set author_name = author.name -%}
-{% else -%}
-    {% set author_name = author.id | capitalize -%}
-{% endif -%}
-<div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-white 
-            shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-    <div class="relative mx-2">
-        <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block
-                transition sm:hover:scale-110 duration-500"
-                href="/authors">
-            <div class="relative text-main px-4">{{ fluent(key="author-list") }}</div>
-        </a>
-        <span class="ml-2 text-gray-700"> /  {{ author_name }}</span>
-    </div>
-    <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
-    <div class="max-w-[65ch] mx-auto">
-        <div class="flex flex-col sm:flex-row py-6">
-            <div class="m-4 sm:m-8 text-center">
-                <img class="mx-auto w-44 h-44 object-cover rounded-full border" src="{{ author.avatar }}" alt="Avatar" loading="lazy">
-                {% if author.is_editor -%}
-                    <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-4">
-                        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="{{ theme.link_color }}" width="32" height="32" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><style type="text/css"></style></defs><path d="M512.001023 202.583928c-108.74982 0-196.906625 88.159876-196.906625 196.903555 0 108.74675 88.156806 196.906625 196.906625 196.906625 108.744703 0 196.901509-88.159876 196.901509-196.906625C708.902532 290.74278 620.745726 202.583928 512.001023 202.583928zM512.001023 540.132734c-77.67815 0-140.64832-62.97017-140.64832-140.645251s62.97017-140.645251 140.64832-140.645251c77.673034 0 140.643204 62.97017 140.643204 140.645251S589.674057 540.132734 512.001023 540.132734z" p-id="14602"></path><path d="M822.012659 552.372499c22.598694-45.279253 35.636638-96.027054 35.636638-149.891845 0-188.077539-154.75255-340.543-345.648274-340.543-190.900841 0-345.653391 152.46546-345.653391 340.543 0 53.864792 13.037944 104.612593 35.639708 149.888775L61.684898 791.787264c0 0 88.978521 17.845437 179.252547 36.427654C301.111942 895.212822 361.02652 962.061322 361.02652 962.061322l129.000026-220.130559c7.302313 0.450255 14.554484 1.091868 21.974477 1.091868 7.417947 0 14.669094-0.641613 21.971407-1.091868L662.97348 962.061322c0 0 59.914578-66.848501 120.086006-133.846404 90.27505-18.582217 179.255617-36.427654 179.255617-36.427654L822.012659 552.372499zM354.340237 859.95583c0 0-43.212174-40.97011-83.815941-80.449263-57.608046-16.382109-115.743094-33.06814-115.743094-33.06814l81.541131-139.14099c47.035246 61.349253 114.502847 106.387006 192.589296 125.405151L354.340237 859.95583zM512.001023 680.989809c-155.204851 0-281.018302-126.066207-281.018302-281.589306 0-155.511843 125.81345-281.58112 281.018302-281.58112 155.199735 0 281.013185 126.069277 281.013185 281.58112C793.014208 554.923602 667.200758 680.989809 512.001023 680.989809zM753.475703 779.506567c-40.60479 39.479153-83.819011 80.449263-83.819011 80.449263l-74.570369-127.253242c78.086449-19.018146 145.55712-64.055898 192.591343-125.405151l81.541131 139.14099C869.218798 746.437403 811.081703 763.124458 753.475703 779.506567z"></path></svg>
-                        <span class="pl-2 text-lg">{{ fluent(key="editor") }}</span>
-                    </div>
-                {% endif -%}
-            </div>
-            <div class="prose my-2 sm:m-8 grow">
-                <div class="text-4xl font-bold py-2 text-center sm:text-start">
-                    {{ author_name }}
-                </div>
-                <div>{{ markdown_to_html(markdown = author.bio) | safe }}</div>
-            </div>
+    {% if author.name -%}
+        {% set author_name = author.name -%}
+    {% else -%}
+        {% set author_name = author.id | capitalize -%}
+    {% endif -%}
+    <div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+        <div class="relative mx-2">
+            <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
+               href="/authors">
+                <div class="relative text-main px-4">{{ fluent(key="author-list") }}</div>
+            </a>
+            <span class="ml-2 text-gray-700">/  {{ author_name }}</span>
         </div>
-        <div class="my-4 sm:my-6 text-2xl font-bold">
-            <span class="w-4 h-4 border-4 border-primary"></span>
-            <span class="px-2">{{ fluent(key = "author-article-title", number = articles | length) }}</span>
-        </div>
-        <div>
-        {% for item in articles -%}
-            {% set article = item.article -%}
-            <div class="py-6 sm:px-8 hover:bg-gray-100">
-                <a href="/{{ item.issue_slug }}/{{ article.slug }}">
-                    <div class="flex">
-                        <img class="w-28 h-18 sm:w-40 sm:h-28 object-cover" src="{{ article.cover }}" alt="{{ article.title }}" loading="lazy">
-                        <div class="flex flex-col justify-between ml-4 sm:ml-8 text-base sm:text-lg text-black grow">
-                            <div class="py-2 font-bold line-clamp-2">{{ article.title }}</div>
-                            <div class="relative text-base text-gray-500 flex justify-between items-center">
-                                <span>{{ article.pub_date }}</span>
-                                <span class="mx-4 my-2 before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block">
-                                    <span class="relative text-main text-xs">{{ item.issue_title }}</span>
-                                </span>
-                            </div>
+        <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
+        <div class="max-w-[65ch] mx-auto">
+            <div class="flex flex-col sm:flex-row py-6">
+                <div class="m-4 sm:m-8 text-center">
+                    <img class="mx-auto w-44 h-44 object-cover rounded-full border"
+                         src="{{ author.avatar }}"
+                         alt="Avatar"
+                         loading="lazy">
+                    {% if author.is_editor -%}
+                        <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-4">
+                            <svg viewBox="0 0 1024 1024"
+                                 version="1.1"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 fill="{{ theme.link_color }}"
+                                 width="32"
+                                 height="32"
+                                 xmlns:xlink="http://www.w3.org/1999/xlink">
+                                <defs><style type="text/css"></style></defs>
+                                <path d="M512.001023 202.583928c-108.74982 0-196.906625 88.159876-196.906625 196.903555 0 108.74675 88.156806 196.906625 196.906625 196.906625 108.744703 0 196.901509-88.159876 196.901509-196.906625C708.902532 290.74278 620.745726 202.583928 512.001023 202.583928zM512.001023 540.132734c-77.67815 0-140.64832-62.97017-140.64832-140.645251s62.97017-140.645251 140.64832-140.645251c77.673034 0 140.643204 62.97017 140.643204 140.645251S589.674057 540.132734 512.001023 540.132734z"
+                                      p-id="14602">
+                                </path>
+                                <path d="M822.012659 552.372499c22.598694-45.279253 35.636638-96.027054 35.636638-149.891845 0-188.077539-154.75255-340.543-345.648274-340.543-190.900841 0-345.653391 152.46546-345.653391 340.543 0 53.864792 13.037944 104.612593 35.639708 149.888775L61.684898 791.787264c0 0 88.978521 17.845437 179.252547 36.427654C301.111942 895.212822 361.02652 962.061322 361.02652 962.061322l129.000026-220.130559c7.302313 0.450255 14.554484 1.091868 21.974477 1.091868 7.417947 0 14.669094-0.641613 21.971407-1.091868L662.97348 962.061322c0 0 59.914578-66.848501 120.086006-133.846404 90.27505-18.582217 179.255617-36.427654 179.255617-36.427654L822.012659 552.372499zM354.340237 859.95583c0 0-43.212174-40.97011-83.815941-80.449263-57.608046-16.382109-115.743094-33.06814-115.743094-33.06814l81.541131-139.14099c47.035246 61.349253 114.502847 106.387006 192.589296 125.405151L354.340237 859.95583zM512.001023 680.989809c-155.204851 0-281.018302-126.066207-281.018302-281.589306 0-155.511843 125.81345-281.58112 281.018302-281.58112 155.199735 0 281.013185 126.069277 281.013185 281.58112C793.014208 554.923602 667.200758 680.989809 512.001023 680.989809zM753.475703 779.506567c-40.60479 39.479153-83.819011 80.449263-83.819011 80.449263l-74.570369-127.253242c78.086449-19.018146 145.55712-64.055898 192.591343-125.405151l81.541131 139.14099C869.218798 746.437403 811.081703 763.124458 753.475703 779.506567z">
+                                </path>
+                            </svg>
+                            <span class="pl-2 text-lg">{{ fluent(key="editor") }}</span>
                         </div>
-                    </div>
-                </a>
+                    {% endif -%}
+                </div>
+                <div class="prose my-2 sm:m-8 grow">
+                    <div class="text-4xl font-bold py-2 text-center sm:text-start">{{ author_name }}</div>
+                    <div>{{ markdown_to_html(markdown = author.bio) | safe }}</div>
+                </div>
             </div>
-            {% if not loop.last -%}
-            <hr>
-            {% endif -%}
-        {% endfor -%}
+            <div class="my-4 sm:my-6 text-2xl font-bold">
+                <span class="w-4 h-4 border-4 border-primary"></span>
+                <span class="px-2">{{ fluent(key = "author-article-title", number = articles | length) }}</span>
+            </div>
+            <div>
+                {% for item in articles -%}
+                    {% set article = item.article -%}
+                    <div class="py-6 sm:px-8 hover:bg-gray-100">
+                        <a href="/{{ item.issue_slug }}/{{ article.slug }}">
+                            <div class="flex">
+                                <img class="w-28 h-18 sm:w-40 sm:h-28 object-cover"
+                                     src="{{ article.cover }}"
+                                     alt="{{ article.title }}"
+                                     loading="lazy">
+                                <div class="flex flex-col justify-between ml-4 sm:ml-8 text-base sm:text-lg text-black grow">
+                                    <div class="py-2 font-bold line-clamp-2">{{ article.title }}</div>
+                                    <div class="relative text-base text-gray-500 flex justify-between items-center">
+                                        <span>{{ article.pub_date }}</span>
+                                        <span class="mx-4 my-2 before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block">
+                                            <span class="relative text-main text-xs">{{ item.issue_title }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% if not loop.last -%}
+                        <hr>
+                    {% endif -%}
+                {% endfor -%}
+            </div>
         </div>
     </div>
-</div>
 {% endblock content -%}
