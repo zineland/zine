@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use super::Entity;
@@ -84,11 +84,25 @@ impl Entity for Theme {
     fn parse(&mut self, source: &Path) -> Result<()> {
         if let Some(head_template) = self.head_template.as_ref() {
             // Read head template from path to html.
-            self.head_template = Some(fs::read_to_string(source.join(&head_template))?);
+            self.head_template = Some(
+                fs::read_to_string(source.join(&head_template)).with_context(|| {
+                    format!(
+                        "Failed to parse the head template: `{}`",
+                        source.join(head_template).display(),
+                    )
+                })?,
+            );
         }
         if let Some(footer_template) = self.footer_template.as_ref() {
             // Read footer template from path to html.
-            self.footer_template = Some(fs::read_to_string(source.join(&footer_template))?);
+            self.footer_template = Some(
+                fs::read_to_string(source.join(&footer_template)).with_context(|| {
+                    format!(
+                        "Failed to parse the footer template: `{}`",
+                        source.join(footer_template).display(),
+                    )
+                })?,
+            );
         }
         Ok(())
     }
