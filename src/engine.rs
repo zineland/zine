@@ -16,6 +16,7 @@ use anyhow::{Context as _, Result};
 use hyper::Uri;
 use once_cell::sync::OnceCell;
 use serde_json::Value;
+use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
 use tera::{Context, Tera};
 use tokio::{runtime::Handle, task};
 
@@ -209,20 +210,19 @@ fn markdown_to_html_fn(
         let mut html = String::new();
 
         let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
+        let ss = SyntaxSet::load_defaults_newlines();
+        let ts = ThemeSet::load_defaults();
+
         let mut events = vec![];
         let mut code_block_fenced = None;
 
         let mut heading_ref = None;
         for (event, _range) in parser_events_iter {
             match event {
-                Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name)))
-                    if ALL_CODE_BLOCKS.contains(&name.as_ref()) =>
-                {
+                Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name))) => {
                     code_block_fenced = Some(name);
                 }
-                Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(name)))
-                    if ALL_CODE_BLOCKS.contains(&name.as_ref()) =>
-                {
+                Event::End(Tag::CodeBlock(_)) => {
                     code_block_fenced = None;
                 }
                 Event::Start(Tag::Image(_, src, title)) => {
@@ -260,13 +260,28 @@ fn markdown_to_html_fn(
                 }
                 Event::Text(text) => {
                     if let Some(fenced) = code_block_fenced.as_ref() {
-                        // Block in place to execute async task
-                        let rendered_html = task::block_in_place(|| {
-                            Handle::current()
-                                .block_on(async { render_code_block(fenced, &text).await })
-                        });
-                        if let Some(html) = rendered_html {
+                        if ALL_CODE_BLOCKS.contains(&fenced.as_ref()) {
+                            // Block in place to execute async task
+                            let rendered_html = task::block_in_place(|| {
+                                Handle::current()
+                                    .block_on(async { render_code_block(fenced, &text).await })
+                            });
+                            if let Some(html) = rendered_html {
+                                events.push(Event::Html(html.into()));
+                                continue;
+                            }
+                        } else if let Some(syntax) = ss.find_syntax_by_extension(fenced) {
+                            // Syntax highlight
+                            let html = highlighted_html_for_string(
+                                &text,
+                                &ss,
+                                syntax,
+                                &ts.themes["InspiredGitHub"],
+                            );
                             events.push(Event::Html(html.into()));
+                            continue;
+                        } else {
+                            events.push(Event::Html(format!("<pre>{}</pre>", text).into()));
                             continue;
                         }
                     }
