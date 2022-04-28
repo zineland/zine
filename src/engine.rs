@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{render_code_block, AuthorCode, CodeBlock, ALL_CODE_BLOCKS},
+    code_blocks::{is_custom_code_block, render_code_block, AuthorCode, CodeBlock},
     current_mode, data,
     entity::{Entity, Zine},
     html::rewrite_html_base_url,
@@ -260,7 +260,7 @@ fn markdown_to_html_fn(
                 }
                 Event::Text(text) => {
                     if let Some(fenced) = code_block_fenced.as_ref() {
-                        if ALL_CODE_BLOCKS.contains(&fenced.as_ref()) {
+                        if is_custom_code_block(fenced.as_ref()) {
                             // Block in place to execute async task
                             let rendered_html = task::block_in_place(|| {
                                 Handle::current()

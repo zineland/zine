@@ -14,7 +14,11 @@ pub trait CodeBlock {
 
 const URL_PREVIEW: &str = "urlpreview";
 
-pub const ALL_CODE_BLOCKS: &[&str] = &[URL_PREVIEW];
+const ALL_CODE_BLOCKS: &[&str] = &[URL_PREVIEW];
+
+pub fn is_custom_code_block(fenced: &str) -> bool {
+    ALL_CODE_BLOCKS.contains(&fenced)
+}
 
 /// Render code block. Return rendered HTML string if success,
 /// otherwise return URL preview error HTML string to remind user we have error.
