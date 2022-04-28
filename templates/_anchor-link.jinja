@@ -1,11 +1,17 @@
 {% set htag = "h" ~ level -%}
 <{{ htag }} id="{{ id | lower }}" class="flex group">
-    <span>{{ text }}</span>
-    <a href="#{{ id | lower }}" class="ml-2 inline-flex items-center opacity-0 border-0 group-hover:opacity-100" aria-label="Anchor">
-        <div class="w-6 h-6 text-slate-400 ring-1 ring-slate-900/5 rounded-md shadow-sm flex items-center justify-center hover:ring-slate-900/10 hover:shadow hover:text-slate-700">
-            <svg width="12" height="12" fill="none" aria-hidden="true">
-                <path d="M3.75 1v10M8.25 1v10M1 3.75h10M1 8.25h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-            </svg>
-        </div>
-    </a>
+<span>{{ text }}</span>
+<a href="#{{ id | lower }}"
+   class="ml-2 inline-flex items-center opacity-0 border-0 group-hover:opacity-100"
+   aria-label="Anchor">
+    <div class="w-6 h-6 text-slate-400 ring-1 ring-slate-900/5 rounded-md shadow-sm flex items-center justify-center hover:ring-slate-900/10 hover:shadow hover:text-slate-700">
+        <svg width="12" height="12" fill="none" aria-hidden="true">
+            <path d="M3.75 1v10M8.25 1v10M1 3.75h10M1 8.25h10"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round">
+            </path>
+        </svg>
+    </div>
+</a>
 </{{ htag }}>

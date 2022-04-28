@@ -1,74 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    {% include "_meta.jinja" -%}
-    {% block favicon -%}
-    <link rel="icon" type="image/png" href="/favicon.ico">
-    {% endblock favicon -%}
-    <link rel="stylesheet" href="/static/zine.css">
-    <link rel="alternate" type="application/atom+xml" title="{{ site.name }} RSS" href="/feed.xml">
-    {% if theme.head_template -%}
-        {{ theme.head_template }}
-    {% endif -%}
-    <style>
-      :root {
-          --primary-color: {{ theme.primary_color }};
-          --main-color: {{ theme.main_color }};
-          --link-color: {{ theme.link_color }};
-          --secondary-color: {{ theme.secondary_color }};
-      }
-    </style>
-</head>
-
-<body class="h-full bg-secondary">
-    {% if theme.background_image -%}
-    <div class="bg-primary text-main font-bold text-center z-0" style="background-image: url('{{ theme.background_image }}')">
-    {% else -%}
-    <div class="bg-primary text-main font-bold text-center z-0">
-    {% endif -%}
-        <header class="p-8 md:p-10">
-            <div class="text-4xl lg:text-5xl"><a href="/">{{ site.name }}</a></div>
-
-            <ul>
-                {% for menu in site.menus -%}
-                    <li class="inline-block mt-6 mx-5 text-base hover:underline"><a href="{{ menu.url }}">{{ menu.name }}</a></li>
-                {% endfor -%}
-            </ul>
-        </header>
-        <div class="w-full h-32 md:h-36 lg:h-44 xl:h-48 2xl:h-56"></div>
-    </div>
-
-    <main class="pb-10 -translate-y-32
-                 md:-translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56
-                 mx-auto sm:max-w-scree-md md:max-w-screen-lg">
-            {% block content -%}
-            {% endblock content -%}
-    </main>
-
-    <footer class="relative">
-        {% if theme.footer_template -%}
-            {{ theme.footer_template }}
-        {% else -%}
-            <footer class="bg-black text-white text-center p-16">
-                <div>
-                    <a class="hover:underline" href="https://github.com/Folyd/zine">Zine</a> 
-                    - a simple and opinionated tool to build your own magazine.
-                </div>
-            </footer>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        {% include "_meta.jinja" -%}
+        <link rel="icon" type="image/png" href="/favicon.ico">
+        <link rel="stylesheet" href="/static/zine.css">
+        <link rel="alternate"
+              type="application/atom+xml"
+              title="{{ site.name }} RSS"
+              href="/feed.xml">
+        {% if theme.head_template -%}
+            {{ theme.head_template }}
         {% endif -%}
-        <a href="https://github.com/zineland" 
-           class="absolute z-20 bottom-0 w-full text-center font-bold
-                  md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:bg-transparent
-                  bg-primary p-2 text-main">
-            Proudly powered by Zine.
-        </a>
-        </div>
-    </footer>
-</body>
-<script src="/static/medium-zoom.min.js"></script>
-<script src="/static/zine.js"></script>
+        <style>
+            :root {
+                --primary-color: {{ theme.primary_color }};
+                --main-color: {{ theme.main_color }};
+                --link-color: {{ theme.link_color }};
+                --secondary-color: {{ theme.secondary_color }};
+            }
+        </style>
+    </head>
+    <body class="h-full bg-secondary">
+        {% if theme.background_image -%}
+            <div class="bg-primary text-main font-bold text-center z-0"
+                 style="background-image: url('{{ theme.background_image }}')">
+            {% else -%}
+                <div class="bg-primary text-main font-bold text-center z-0">
+                {% endif -%}
+                <header class="p-8 md:p-10">
+                    <div class="text-4xl lg:text-5xl">
+                        <a href="/">{{ site.name }}</a>
+                    </div>
+                    <ul>
+                        {% for menu in site.menus -%}
+                            <li class="inline-block mt-6 mx-5 text-base hover:underline">
+                                <a href="{{ menu.url }}">{{ menu.name }}</a>
+                            </li>
+                        {% endfor -%}
+                    </ul>
+                </header>
+                <div class="w-full h-32 md:h-36 lg:h-44 xl:h-48 2xl:h-56"></div>
+            </div>
+            <main class="pb-10 -translate-y-32 md:-translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56 mx-auto sm:max-w-scree-md md:max-w-screen-lg">
+                {% block content -%}
+                {% endblock content -%}
+            </main>
+            <footer class="relative">
+                {% if theme.footer_template -%}
+                    {{ theme.footer_template }}
+                {% else -%}
+                    <footer class="bg-black text-white text-center p-16">
+                        <div>
+                            <a class="hover:underline" href="https://github.com/Folyd/zine">Zine</a>
+                            - a simple and opinionated tool to build your own magazine.
+                        </div>
+                    </footer>
+                {% endif -%}
+                <a href="https://github.com/zineland"
+                   class="absolute z-20 bottom-0 w-full text-center font-bold md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:bg-transparent bg-primary p-2 text-main">
+                    Proudly powered by Zine.
+                </a>
+            </div>
+        </footer>
+    </body>
+    <script src="/static/medium-zoom.min.js"></script>
+    <script src="/static/zine.js"></script>
 </html>
-
