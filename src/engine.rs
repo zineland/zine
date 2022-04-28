@@ -210,8 +210,8 @@ fn markdown_to_html_fn(
         let mut html = String::new();
 
         let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
-        let ss = SyntaxSet::load_defaults_newlines();
-        let ts = ThemeSet::load_defaults();
+        let syntax_set = SyntaxSet::load_defaults_newlines();
+        let theme_set = ThemeSet::load_defaults();
 
         let mut events = vec![];
         let mut code_block_fenced = None;
@@ -270,18 +270,20 @@ fn markdown_to_html_fn(
                                 events.push(Event::Html(html.into()));
                                 continue;
                             }
-                        } else if let Some(syntax) = ss.find_syntax_by_extension(fenced) {
+                        } else {
                             // Syntax highlight
+                            let syntax = syntax_set
+                                .find_syntax_by_token(fenced)
+                                // Fallback to plain text if code block not supported
+                                .unwrap_or_else(|| syntax_set.find_syntax_plain_text());
                             let html = highlighted_html_for_string(
                                 &text,
-                                &ss,
+                                &syntax_set,
                                 syntax,
-                                &ts.themes["InspiredGitHub"],
+                                &theme_set.themes["InspiredGitHub"],
                             );
+
                             events.push(Event::Html(html.into()));
-                            continue;
-                        } else {
-                            events.push(Event::Html(format!("<pre>{}</pre>", text).into()));
                             continue;
                         }
                     }
