@@ -3,7 +3,7 @@ use std::{borrow::Cow, path::Path};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{markdown, meta::Meta, Entity, Render};
+use crate::{engine, markdown, meta::Meta, Entity};
 
 /// The author of an article. Declared in the root `zine.toml`'s **[authors]** table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,7 +69,7 @@ impl Entity for Author {
             },
         );
         context.insert("author", &self);
-        Render::render("author.jinja", &context, dest.join(slug))?;
+        engine::render("author.jinja", &context, dest.join(slug))?;
         Ok(())
     }
 }
@@ -78,7 +78,7 @@ impl<'a> Entity for AuthorList<'a> {
     fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
         // TODO: open graph
         context.insert("authors", &self.authors);
-        Render::render("author-list.jinja", &context, dest.join("authors"))?;
+        engine::render("author-list.jinja", &context, dest.join("authors"))?;
         Ok(())
     }
 }

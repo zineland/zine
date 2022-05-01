@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{current_mode, markdown, meta::Meta, Mode, Render};
+use crate::{current_mode, engine, markdown, meta::Meta, Mode};
 
 use super::{EndMatter, Entity};
 
@@ -115,7 +115,7 @@ impl Entity for Article {
         context.insert("page_type", "article");
         context.insert("article", &self);
         context.insert("end_matter", &self.end_matter);
-        Render::render("article.jinja", &context, dest)?;
+        engine::render("article.jinja", &context, dest)?;
         Ok(())
     }
 }

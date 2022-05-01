@@ -12,7 +12,7 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, feed::FeedEntry, Entity, Render};
+use crate::{data, engine, feed::FeedEntry, Entity};
 
 use super::{Author, AuthorList, Issue, MetaArticle, Page, Site, Theme};
 
@@ -234,7 +234,7 @@ impl Entity for Zine {
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
-        Render::render("index.jinja", &context, dest)?;
+        engine::render("index.jinja", &context, dest)?;
         Ok(())
     }
 }

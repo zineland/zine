@@ -20,7 +20,6 @@ mod meta;
 mod new;
 mod serve;
 
-pub use self::engine::Render;
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
 

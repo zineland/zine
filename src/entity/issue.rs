@@ -5,7 +5,7 @@ use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{markdown, meta::Meta, Render};
+use crate::{engine, markdown, meta::Meta};
 
 use super::{article::Article, Entity};
 
@@ -136,7 +136,7 @@ impl Entity for Issue {
                 image: self.cover.as_deref().map(Cow::Borrowed),
             },
         );
-        Render::render("issue.jinja", &context, issue_dir)?;
+        engine::render("issue.jinja", &context, issue_dir)?;
         Ok(())
     }
 }
