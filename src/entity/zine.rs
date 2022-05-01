@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{data, engine, feed::FeedEntry, Entity};
 
-use super::{Author, AuthorList, Issue, MetaArticle, Page, Site, Theme};
+use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme};
 
 /// The root zine entity config.
 ///
@@ -32,6 +32,9 @@ pub struct Zine {
     #[serde(rename = "page")]
     #[serde(default)]
     pub pages: Vec<Page>,
+    #[serde(default)]
+    #[serde(rename = "markdown")]
+    pub markdown_config: MarkdownConfig,
 }
 
 impl std::fmt::Debug for Zine {
