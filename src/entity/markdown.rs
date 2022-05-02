@@ -3,6 +3,8 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct MarkdownConfig {
+    #[serde(default = "MarkdownConfig::default_highlight_code")]
+    pub highlight_code: bool,
     #[serde(default = "MarkdownConfig::default_highlight_theme")]
     pub highlight_theme: String,
 }
@@ -10,6 +12,7 @@ pub struct MarkdownConfig {
 impl Default for MarkdownConfig {
     fn default() -> Self {
         Self {
+            highlight_code: true,
             highlight_theme: Self::default_highlight_theme(),
         }
     }
@@ -20,5 +23,9 @@ impl MarkdownConfig {
 
     fn default_highlight_theme() -> String {
         Self::DEFAULT_HIGHLIGHT_THEME.to_string()
+    }
+
+    fn default_highlight_code() -> bool {
+        true
     }
 }

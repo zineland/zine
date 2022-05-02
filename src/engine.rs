@@ -316,10 +316,13 @@ impl Function for Render {
                                     events.push(Event::Html(html.into()));
                                     continue;
                                 }
-                            } else {
+                            } else if self.markdown_config.highlight_code {
                                 // Syntax highlight
                                 let html = self.highlight_syntax(fenced, &text);
                                 events.push(Event::Html(html.into()));
+                                continue;
+                            } else {
+                                events.push(Event::Html(format!("<pre>{}</pre>", text).into()));
                                 continue;
                             }
                         }
