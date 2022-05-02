@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use super::Entity;
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all(deserialize = "kebab-case"))]
+#[serde(rename_all(deserialize = "snake_case"))]
 pub struct Theme {
     // The primary color.
     #[serde(default = "Theme::default_primary_color")]
