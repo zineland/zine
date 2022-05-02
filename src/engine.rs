@@ -19,14 +19,8 @@ use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
 use serde_json::Value;
 use syntect::{
-    dumps::from_binary,
-    easy::HighlightLines,
-    highlighting::ThemeSet,
-    html::{
-        append_highlighted_html_for_styled_line, start_highlighted_html_snippet, IncludeBackground,
-    },
+    dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
     parsing::SyntaxSet,
-    util::LinesWithEndings,
 };
 use tera::{Context, Function, Tera};
 use tokio::{runtime::Handle, task};
@@ -76,7 +70,7 @@ fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
         ])
         .unwrap();
-        tera.register_function("markdown_to_html", Render { markdown_config });
+        tera.register_function("markdown_to_html", MarkdownRender { markdown_config });
         tera.register_function("get_author", get_author_fn);
         tera.register_function("fluent", FluentLoader::new(source, locale));
 
@@ -112,11 +106,11 @@ pub struct ZineEngine {
     dest: PathBuf,
 }
 
-struct Render {
+struct MarkdownRender {
     markdown_config: MarkdownConfig,
 }
 
-impl Render {
+impl MarkdownRender {
     fn highlight_syntax(&self, lang: &str, text: &str) -> String {
         let theme = match THEME_SET.themes.get(&self.markdown_config.highlight_theme) {
             Some(theme) => theme,
@@ -130,19 +124,7 @@ impl Render {
             .find_syntax_by_token(lang)
             // Fallback to plain text if code block not supported
             .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-        let mut highlighter = HighlightLines::new(syntax, theme);
-        let (mut output, bg) = start_highlighted_html_snippet(theme);
-
-        for line in LinesWithEndings::from(text) {
-            let regions = highlighter.highlight(line, &SYNTAX_SET);
-            append_highlighted_html_for_styled_line(
-                &regions[..],
-                IncludeBackground::IfDifferent(bg),
-                &mut output,
-            );
-        }
-        output.push_str("</pre>\n");
-        output
+        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme)
     }
 }
 
@@ -244,7 +226,7 @@ impl ZineEngine {
 }
 
 // A tera function to convert markdown into html.
-impl Function for Render {
+impl Function for MarkdownRender {
     fn call(&self, map: &HashMap<String, Value>) -> tera::Result<Value> {
         use pulldown_cmark::*;
 
