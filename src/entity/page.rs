@@ -7,7 +7,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{markdown, meta::Meta, Render};
+use crate::{engine, markdown, meta::Meta};
 
 use super::Entity;
 
@@ -51,7 +51,7 @@ impl Entity for Page {
             },
         );
         context.insert("markdown", &self.markdown);
-        Render::render("page.jinja", &context, dest.join(self.slug()))?;
+        engine::render("page.jinja", &context, dest.join(self.slug()))?;
         Ok(())
     }
 }
