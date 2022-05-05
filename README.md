@@ -111,6 +111,14 @@ head-template = "templates/head.html"
 # you can customize your footer here
 footer-template = "templates/footer.html"
 
+# You can customize some markdown styles in this section.
+# All of those elements are optional.
+[markdown]
+# enable the code highlighting. default is true
+highlight_code = true
+# custom highligh theme
+highlight_theme = "ayu-light"
+
 # Issue 1
 [[issue]]
 # the slug of this issue: https://your-domain.com/s1
@@ -252,9 +260,9 @@ https://github.com/zineland/zine
 
 - [x] Support sitemap.xml
 
-- [ ] Support table of content
+- [x] Support code syntax highlight
 
-- [ ] Support code syntax highlight
+- [ ] Support table of content
 
 - [ ] Support i18n
 

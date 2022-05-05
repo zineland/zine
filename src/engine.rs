@@ -7,7 +7,7 @@ use std::{
 use crate::{
     code_blocks::{is_custom_code_block, render_code_block, AuthorCode, CodeBlock},
     current_mode, data,
-    entity::{Entity, Zine},
+    entity::{Entity, MarkdownConfig, Zine},
     html::rewrite_html_base_url,
     locales::FluentLoader,
     Mode,
@@ -15,18 +15,31 @@ use crate::{
 
 use anyhow::{Context as _, Result};
 use hyper::Uri;
+use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
 use serde_json::Value;
-use syntect::{highlighting::ThemeSet, html::highlighted_html_for_string, parsing::SyntaxSet};
+use syntect::{
+    dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
+    parsing::SyntaxSet,
+};
 use tera::{Context, Function, Tera};
 use tokio::{runtime::Handle, task};
 
+static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
+    let syntax_set: SyntaxSet =
+        from_binary(include_bytes!("../sublime/syntaxes/newlines.packdump"));
+    syntax_set
+});
+static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
+    let theme_set: ThemeSet = from_binary(include_bytes!("../sublime/themes/all.themedump"));
+    theme_set
+});
 #[cfg(not(debug_assertions))]
 static TERA: OnceCell<std::sync::Arc<Tera>> = OnceCell::new();
 #[cfg(debug_assertions)]
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
-fn init_tera(source: &Path, locale: &str) {
+fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
     TERA.get_or_init(|| {
         // Debug version tera which need to reload templates.
         #[cfg(debug_assertions)]
@@ -57,7 +70,7 @@ fn init_tera(source: &Path, locale: &str) {
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
         ])
         .unwrap();
-        tera.register_function("markdown_to_html", Render);
+        tera.register_function("markdown_to_html", MarkdownRender { markdown_config });
         tera.register_function("get_author", get_author_fn);
         tera.register_function("fluent", FluentLoader::new(source, locale));
 
@@ -93,8 +106,27 @@ pub struct ZineEngine {
     dest: PathBuf,
 }
 
-#[derive(Debug, Clone, Copy)]
-struct Render;
+struct MarkdownRender {
+    markdown_config: MarkdownConfig,
+}
+
+impl MarkdownRender {
+    fn highlight_syntax(&self, lang: &str, text: &str) -> String {
+        let theme = match THEME_SET.themes.get(&self.markdown_config.highlight_theme) {
+            Some(theme) => theme,
+            None => panic!(
+                "No theme: `{}` founded",
+                self.markdown_config.highlight_theme
+            ),
+        };
+
+        let syntax = SYNTAX_SET
+            .find_syntax_by_token(lang)
+            // Fallback to plain text if code block not supported
+            .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme)
+    }
+}
 
 pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Result<()> {
     let mut buf = vec![];
@@ -172,7 +204,7 @@ impl ZineEngine {
 
         // Init tera with parsed locale.
         let locale = zine.site.locale.as_deref().unwrap_or("en");
-        init_tera(&self.source, locale);
+        init_tera(&self.source, locale, zine.markdown_config.clone());
 
         zine.render(Context::new(), &self.dest)?;
         #[cfg(debug_assertions)]
@@ -194,7 +226,7 @@ impl ZineEngine {
 }
 
 // A tera function to convert markdown into html.
-impl Function for Render {
+impl Function for MarkdownRender {
     fn call(&self, map: &HashMap<String, Value>) -> tera::Result<Value> {
         use pulldown_cmark::*;
 
@@ -207,8 +239,6 @@ impl Function for Render {
             let mut html = String::new();
 
             let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
-            let syntax_set = SyntaxSet::load_defaults_newlines();
-            let theme_set = ThemeSet::load_defaults();
 
             let mut events = vec![];
             let mut code_block_fenced = None;
@@ -268,20 +298,13 @@ impl Function for Render {
                                     events.push(Event::Html(html.into()));
                                     continue;
                                 }
-                            } else {
+                            } else if self.markdown_config.highlight_code {
                                 // Syntax highlight
-                                let syntax = syntax_set
-                                    .find_syntax_by_token(fenced)
-                                    // Fallback to plain text if code block not supported
-                                    .unwrap_or_else(|| syntax_set.find_syntax_plain_text());
-                                let html = highlighted_html_for_string(
-                                    &text,
-                                    &syntax_set,
-                                    syntax,
-                                    &theme_set.themes["InspiredGitHub"],
-                                );
-
+                                let html = self.highlight_syntax(fenced, &text);
                                 events.push(Event::Html(html.into()));
+                                continue;
+                            } else {
+                                events.push(Event::Html(format!("<pre>{}</pre>", text).into()));
                                 continue;
                             }
                         }
