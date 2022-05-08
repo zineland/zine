@@ -34,9 +34,6 @@ static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
     let theme_set: ThemeSet = from_binary(include_bytes!("../sublime/themes/all.themedump"));
     theme_set
 });
-#[cfg(not(debug_assertions))]
-static TERA: OnceCell<std::sync::Arc<Tera>> = OnceCell::new();
-#[cfg(debug_assertions)]
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
 fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
@@ -70,32 +67,21 @@ fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
         ])
         .unwrap();
-        tera.register_function("markdown_to_html", MarkdownRender { markdown_config });
         tera.register_function("get_author", get_author_fn);
-        tera.register_function("fluent", FluentLoader::new(source, locale));
 
-        #[cfg(debug_assertions)]
-        return parking_lot::RwLock::new(tera);
-        #[cfg(not(debug_assertions))]
-        return std::sync::Arc::new(tera);
+        parking_lot::RwLock::new(tera)
     });
+
+    let mut tera = TERA.get().expect("Tera haven't initialized").write();
+    //  Dynamically register functions that need dynamic configuration.
+    tera.register_function("markdown_to_html", MarkdownRender { markdown_config });
+    tera.register_function("fluent", FluentLoader::new(source, locale));
+
+    // Full realod tera templates in debug mode.
     #[cfg(debug_assertions)]
-    {
-        // Full realod tera templates.
-        TERA.get()
-            .expect("Tera haven't initialized")
-            .write()
-            .full_reload()
-            .expect("reload tera template failed");
-    }
+    tera.full_reload().expect("reload tera template failed");
 }
 
-#[cfg(not(debug_assertions))]
-fn get_tera() -> &'static std::sync::Arc<Tera> {
-    TERA.get().expect("Tera haven't initialized")
-}
-
-#[cfg(debug_assertions)]
 fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
     TERA.get().expect("Tera haven't initialized").read()
 }
