@@ -77,7 +77,8 @@ fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
     tera.register_function("markdown_to_html", MarkdownRender { markdown_config });
     tera.register_function("fluent", FluentLoader::new(source, locale));
 
-    // Full realod tera templates.
+    // Full realod tera templates in debug mode.
+    #[cfg(debug_assertions)]
     tera.full_reload().expect("reload tera template failed");
 }
 
