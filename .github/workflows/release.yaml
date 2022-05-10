@@ -55,7 +55,7 @@ jobs:
           toolchain: stable
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          bin: cargo-hack
+          bin: zine
           target: ${{ matrix.target }}
           tar: all
           zip: windows
