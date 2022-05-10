@@ -22,6 +22,10 @@ Zine - a simple and opinionated tool to build your own magazine.
 
 `cargo install zine`
 
+or `brew install zineland/tap/zine`
+
+or `brew tap zineland/tap`, then `brew install zine`
+
 ## Get Started
 
 Run `zine new your-zine-site`, you'll get following directory:
