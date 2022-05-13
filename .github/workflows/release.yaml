@@ -63,3 +63,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           CARGO_PROFILE_RELEASE_LTO: true
+      - name: Update zine homebrew formula
+        run: |
+          export RELEASE_VERSION=${GITHUB_REF#refs/*/}
+          curl -X POST -H "Accept: application/vnd.github.v3+json" \
+               -H "Authorization: token ${{ secrets.TOKEN }}" \
+               -d '{"event_type":"version-updated","client_payload":{"version":"${{ RELEASE_VERSION }}"}}' \
+               https://api.github.com/repos/zineland/homebrew-tap/dispatches
