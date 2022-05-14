@@ -6,14 +6,14 @@
               content="width=device-width, initial-scale=1, shrink-to-fit=no">
         {% include "_meta.jinja" -%}
         <link rel="icon" type="image/png" href="/favicon.ico">
+        {% if theme.head_template -%}
+            {{ theme.head_template }}
+        {% endif -%}
         <link rel="stylesheet" href="/static/zine.css">
         <link rel="alternate"
               type="application/atom+xml"
               title="{{ site.name }} RSS"
               href="/feed.xml">
-        {% if theme.head_template -%}
-            {{ theme.head_template }}
-        {% endif -%}
         <style>
             :root {
                 --primary-color: {{ theme.primary_color }};
