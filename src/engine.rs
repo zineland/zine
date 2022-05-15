@@ -85,7 +85,7 @@ fn init_tera(source: &Path, zine: &Zine) {
         tera.add_raw_template("head_template.jinja", head_template)
             .expect("Cannot add head_template");
     }
-    if let Some(footer_template) = dbg!(zine.theme.footer_template.as_ref()) {
+    if let Some(footer_template) = zine.theme.footer_template.as_ref() {
         tera.add_raw_template("footer_template.jinja", footer_template)
             .expect("Cannot add footer_template");
     }
