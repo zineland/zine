@@ -253,6 +253,7 @@ https://github.com/zineland/zine
 ## Some cool magazines powered by Zine
 
 - [https://2d2d.io](https://2d2d.io)
+- [https://o11y.cn](https://o11y.cn)
 
 ## TODO
 
