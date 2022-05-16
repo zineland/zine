@@ -36,7 +36,7 @@ static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
 });
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
-fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
+fn init_tera(source: &Path, zine: &Zine) {
     TERA.get_or_init(|| {
         // Debug version tera which need to reload templates.
         #[cfg(debug_assertions)]
@@ -72,14 +72,32 @@ fn init_tera(source: &Path, locale: &str, markdown_config: MarkdownConfig) {
         parking_lot::RwLock::new(tera)
     });
 
+    let locale = zine.site.locale.as_deref().unwrap_or("en");
     let mut tera = TERA.get().expect("Tera haven't initialized").write();
-    //  Dynamically register functions that need dynamic configuration.
-    tera.register_function("markdown_to_html", MarkdownRender { markdown_config });
-    tera.register_function("fluent", FluentLoader::new(source, locale));
 
     // Full realod tera templates in debug mode.
+    // Notice: the full reloading should take place before adding dynamic templates.
     #[cfg(debug_assertions)]
     tera.full_reload().expect("reload tera template failed");
+
+    // Dynamically add templates.
+    if let Some(head_template) = zine.theme.head_template.as_ref() {
+        tera.add_raw_template("head_template.jinja", head_template)
+            .expect("Cannot add head_template");
+    }
+    if let Some(footer_template) = zine.theme.footer_template.as_ref() {
+        tera.add_raw_template("footer_template.jinja", footer_template)
+            .expect("Cannot add footer_template");
+    }
+
+    // Dynamically register functions that need dynamic configuration.
+    tera.register_function(
+        "markdown_to_html",
+        MarkdownRender {
+            markdown_config: zine.markdown_config.clone(),
+        },
+    );
+    tera.register_function("fluent", FluentLoader::new(source, locale));
 }
 
 fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
@@ -188,9 +206,7 @@ impl ZineEngine {
 
         zine.parse(&self.source)?;
 
-        // Init tera with parsed locale.
-        let locale = zine.site.locale.as_deref().unwrap_or("en");
-        init_tera(&self.source, locale, zine.markdown_config.clone());
+        init_tera(&self.source, &zine);
 
         zine.render(Context::new(), &self.dest)?;
         #[cfg(debug_assertions)]

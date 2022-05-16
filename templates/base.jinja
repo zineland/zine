@@ -7,7 +7,7 @@
         {% include "_meta.jinja" -%}
         <link rel="icon" type="image/png" href="/favicon.ico">
         {% if theme.head_template -%}
-            {{ theme.head_template }}
+            {% include "head_template.jinja" -%}
         {% endif -%}
         <link rel="stylesheet" href="/static/zine.css">
         <link rel="alternate"
@@ -50,7 +50,7 @@
             </main>
             <footer class="relative">
                 {% if theme.footer_template -%}
-                    {{ theme.footer_template }}
+                    {% include "footer_template.jinja" -%}
                 {% else -%}
                     <footer class="bg-black text-white text-center p-16">
                         <div>
