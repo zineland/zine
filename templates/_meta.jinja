@@ -20,7 +20,7 @@
 {% if site.logo -%}
     <link rel="shortcut icon" href="{{ site.logo }}">
 {% endif -%}
-{% if meta -%}
+{% if meta and meta.url -%}
     {% if page_type and page_type == "article" -%}
         {% set path = issue.slug ~ "/" ~ meta.url -%}
     {% else -%}
