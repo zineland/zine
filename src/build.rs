@@ -15,7 +15,11 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
         std::process::exit(0);
     });
 
-    if let Err(err) = _watch_build(source.as_ref(), dest.as_ref(), watch).await {
+    let build_result = _watch_build(source.as_ref(), dest.as_ref(), watch).await;
+    if cfg!(debug_assertions) {
+        // Explicitly panic build result in debug mode
+        build_result.unwrap();
+    } else if let Err(err) = build_result {
         println!("Error: {}", &err);
         std::process::exit(1);
     }
