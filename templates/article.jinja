@@ -65,4 +65,7 @@
             </div>
         {% endif -%}
     </div>
+    {% if theme.article_extend_template -%}
+        {% include "article_extend_template.jinja" -%}
+    {% endif -%}
 {% endblock content -%}

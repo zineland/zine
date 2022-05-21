@@ -27,6 +27,9 @@ pub struct Theme {
     pub head_template: Option<String>,
     // The custom footer template path, will be parsed to html.
     pub footer_template: Option<String>,
+    // The extend template path for article page, will be parsed to html.
+    // Normally, this template can be a comment widget, such as https://giscus.app.
+    pub article_extend_template: Option<String>,
 }
 
 impl Default for Theme {
@@ -39,6 +42,7 @@ impl Default for Theme {
             background_image: None,
             head_template: None,
             footer_template: None,
+            article_extend_template: None,
         }
     }
 }
@@ -53,6 +57,10 @@ impl std::fmt::Debug for Theme {
             .field("background_image", &self.background_image)
             .field("head_template", &self.head_template.is_some())
             .field("footer_template", &self.footer_template.is_some())
+            .field(
+                "article_extend_template",
+                &self.article_extend_template.is_some(),
+            )
             .finish()
     }
 }
@@ -100,6 +108,17 @@ impl Entity for Theme {
                     format!(
                         "Failed to parse the footer template: `{}`",
                         source.join(footer_template).display(),
+                    )
+                })?,
+            );
+        }
+        if let Some(article_extend_template) = self.article_extend_template.as_ref() {
+            // Read article extend template from path to html.
+            self.article_extend_template = Some(
+                fs::read_to_string(source.join(&article_extend_template)).with_context(|| {
+                    format!(
+                        "Failed to parse the article extend template: `{}`",
+                        source.join(article_extend_template).display(),
                     )
                 })?,
             );
