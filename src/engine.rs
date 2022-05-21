@@ -89,6 +89,10 @@ fn init_tera(source: &Path, zine: &Zine) {
         tera.add_raw_template("footer_template.jinja", footer_template)
             .expect("Cannot add footer_template");
     }
+    if let Some(article_extend_template) = zine.theme.article_extend_template.as_ref() {
+        tera.add_raw_template("article_extend_template.jinja", article_extend_template)
+            .expect("Cannot add article_extend_template");
+    }
 
     // Dynamically register functions that need dynamic configuration.
     tera.register_function(
