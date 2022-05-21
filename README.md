@@ -110,10 +110,12 @@ main_color = "#000"
 link_color = "#e07312"
 # the background image
 background_image = "/static/background.png"
-# you can customize your head here, such as your css, js.
+# you can customize your head here, such as your css, js
 head_template = "templates/head.html"
 # you can customize your footer here
 footer_template = "templates/footer.html"
+# you can extend the article page, for example adding comment widget
+article_extend_template = "templates/article-extend.html"
 
 # You can customize some markdown styles in this section.
 # All of those elements are optional.
