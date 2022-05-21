@@ -96,24 +96,24 @@ menu = [
 # Declare authors of this magazine.
 [authors]
 # set editor to true will show the Editor badge on the author profile page
-zine-team = { name = "Zine Team", editor = true, bio = "The Zine Team." }
+zine_team = { name = "Zine Team", editor = true, bio = "The Zine Team." }
 
 # You can customize some theme elements in this section.
 # All of those elements are optional.
 [theme]
 # the primary color
-primary-color = "#abcdef"
-secondary-color = "#fff"
+primary_color = "#abcdef"
+secondary_color = "#fff"
 # the main text color
-main-color = "#000"
+main_color = "#000"
 # the link color in article content
-link-color = "#e07312"
+link_color = "#e07312"
 # the background image
-background-image = "/static/background.png"
+background_image = "/static/background.png"
 # you can customize your head here, such as your css, js.
-head-template = "templates/head.html"
+head_template = "templates/head.html"
 # you can customize your footer here
-footer-template = "templates/footer.html"
+footer_template = "templates/footer.html"
 
 # You can customize some markdown styles in this section.
 # All of those elements are optional.
