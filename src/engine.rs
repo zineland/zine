@@ -280,7 +280,7 @@ impl Function for MarkdownRender {
                     }
                     Event::Code(code) if code.starts_with('@') => {
                         if let Some(maybe_author_id) = code.strip_prefix('@') {
-                            let data = data::get();
+                            let data = data::read();
                             if let Some(author) = data.get_author_by_id(maybe_author_id) {
                                 // Render author code UI.
                                 let html = AuthorCode(author)
@@ -349,7 +349,7 @@ impl Function for MarkdownRender {
 
 fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Some(Value::String(author_id)) = map.get("id") {
-        let data = data::get();
+        let data = data::read();
         let author = data.get_author_by_id(author_id);
         Ok(serde_json::to_value(&author)?)
     } else {

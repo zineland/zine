@@ -2,7 +2,7 @@ use std::{fs, path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, helpers::copy_dir, ZineEngine};
 use anyhow::Result;
-use notify::Watcher;
+use notify::{Watcher, RecursiveMode, watcher};
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
     data::load(&source);
@@ -37,14 +37,14 @@ async fn _watch_build(source: &Path, dest: &Path, watch: bool) -> Result<()> {
         if watch {
             println!("Watching...");
             let (tx, rx) = mpsc::channel();
-            let mut watcher = notify::watcher(tx, Duration::from_secs(1))?;
-            watcher.watch(&source, notify::RecursiveMode::Recursive)?;
+            let mut watcher = watcher(tx, Duration::from_secs(1))?;
+            watcher.watch(&source, RecursiveMode::Recursive)?;
 
             // Watch zine's templates and static directory in debug mode to support reload.
             #[cfg(debug_assertions)]
             {
-                watcher.watch("templates", notify::RecursiveMode::Recursive)?;
-                watcher.watch("static", notify::RecursiveMode::Recursive)?;
+                watcher.watch("templates", RecursiveMode::Recursive)?;
+                watcher.watch("static", RecursiveMode::Recursive)?;
             }
 
             loop {

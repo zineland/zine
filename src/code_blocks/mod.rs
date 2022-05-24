@@ -28,8 +28,8 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
     match fenced {
         URL_PREVIEW => {
             let url = block.trim();
-            let mut data = data::get();
-            if let Some((title, description)) = data.url_previews().get(url) {
+
+            if let Some((title, description)) = data::read().url_previews().get(url) {
                 Some(UrlPreviewBlock(url, title, description).render().unwrap())
             } else {
                 println!("Preview new url: {}", url);
@@ -39,7 +39,7 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
                         let html = UrlPreviewBlock(url, &meta.title, &meta.description)
                             .render()
                             .unwrap();
-                        data.insert_url_preview(
+                        data::write().insert_url_preview(
                             url,
                             (meta.title.into_owned(), meta.description.into_owned()),
                         );
