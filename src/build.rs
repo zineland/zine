@@ -2,7 +2,7 @@ use std::{fs, path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, helpers::copy_dir, ZineEngine};
 use anyhow::Result;
-use notify::{Watcher, RecursiveMode, watcher};
+use notify::{watcher, RecursiveMode, Watcher};
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
     data::load(&source);

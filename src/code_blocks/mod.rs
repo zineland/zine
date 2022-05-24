@@ -29,25 +29,30 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
         URL_PREVIEW => {
             let url = block.trim();
 
-            if let Some((title, description)) = data::read().url_previews().get(url) {
-                Some(UrlPreviewBlock(url, title, description).render().unwrap())
-            } else {
-                println!("Preview new url: {}", url);
-                match helpers::fetch_url(url).await {
-                    Ok(html) => {
-                        let meta = html::parse_html_meta(html);
-                        let html = UrlPreviewBlock(url, &meta.title, &meta.description)
-                            .render()
-                            .unwrap();
-                        data::write().insert_url_preview(
-                            url,
-                            (meta.title.into_owned(), meta.description.into_owned()),
-                        );
-                        Some(html)
-                    }
-                    // Return a preview error block.
-                    Err(err) => Some(UrlPreviewError(url, &err.to_string()).render().unwrap()),
+            {
+                // parking_lot Mutex guard isn't async-aware,
+                // we should keep this guard drop in this scope.
+                let data = data::read();
+                if let Some((title, description)) = data.url_previews().get(url) {
+                    return Some(UrlPreviewBlock(url, title, description).render().unwrap());
                 }
+            }
+
+            println!("Preview new url: {}", url);
+            match helpers::fetch_url(url).await {
+                Ok(html) => {
+                    let meta = html::parse_html_meta(html);
+                    let html = UrlPreviewBlock(url, &meta.title, &meta.description)
+                        .render()
+                        .unwrap();
+                    data::write().insert_url_preview(
+                        url,
+                        (meta.title.into_owned(), meta.description.into_owned()),
+                    );
+                    Some(html)
+                }
+                // Return a preview error block.
+                Err(err) => Some(UrlPreviewError(url, &err.to_string()).render().unwrap()),
             }
         }
         _ => None,
