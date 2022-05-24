@@ -30,7 +30,7 @@ pub fn write() -> RwLockWriteGuard<'static, ZineData> {
 /// If the data is empty, we never create the `zine-data.json` file.
 pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
     let data = read();
-    if !data.is_empty() {
+    if !data.url_previews.is_empty() {
         let mut file = File::create(path.as_ref().join("zine-data.json"))?;
         file.write_all(data.export_to_json()?.as_bytes())?;
     }
@@ -57,10 +57,6 @@ impl ZineData {
                 authors: Vec::default(),
             })
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.url_previews.is_empty()
     }
 
     pub fn url_previews(&self) -> &BTreeMap<String, (String, String)> {
