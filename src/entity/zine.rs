@@ -220,7 +220,7 @@ impl Entity for Zine {
 
         // Render author list page.
         author_list.render(context.clone(), dest)?;
-        data::get().set_authors(authors);
+        data::write().set_authors(authors);
 
         // Render all issues pages.
         self.issues.render(context.clone(), dest)?;

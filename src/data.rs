@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Result;
 use once_cell::sync::OnceCell;
-use parking_lot::{RwLock, RwLockWriteGuard};
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 
 use crate::entity::Author;
@@ -18,15 +18,19 @@ pub fn load<P: AsRef<Path>>(path: P) {
     ZINE_DATA.get_or_init(|| RwLock::new(ZineData::new(path.as_ref()).unwrap()));
 }
 
-pub fn get() -> RwLockWriteGuard<'static, ZineData> {
+pub fn read() -> RwLockReadGuard<'static, ZineData> {
+    ZINE_DATA.get().unwrap().read()
+}
+
+pub fn write() -> RwLockWriteGuard<'static, ZineData> {
     ZINE_DATA.get().unwrap().write()
 }
 
 /// Export all data into the `zine-data.json` file.
 /// If the data is empty, we never create the `zine-data.json` file.
 pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
-    let data = get();
-    if !data.is_empty() {
+    let data = read();
+    if !data.url_previews.is_empty() {
         let mut file = File::create(path.as_ref().join("zine-data.json"))?;
         file.write_all(data.export_to_json()?.as_bytes())?;
     }
@@ -53,10 +57,6 @@ impl ZineData {
                 authors: Vec::default(),
             })
         }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.url_previews.is_empty()
     }
 
     pub fn url_previews(&self) -> &BTreeMap<String, (String, String)> {
