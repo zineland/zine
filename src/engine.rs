@@ -167,6 +167,13 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     Ok(())
 }
 
+/// Render raw template.
+pub fn render_str(raw_template: &str, context: &Context) -> Result<String> {
+    let mut tera = TERA.get().expect("Tera haven't initialized").write();
+    let r = tera.render_str(raw_template, context)?;
+    Ok(r)
+}
+
 // Render Atom feed
 fn render_atom_feed(context: Context, dest: impl AsRef<Path>) -> Result<()> {
     let mut buf = vec![];
