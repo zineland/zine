@@ -30,6 +30,11 @@ module.exports = {
                         strong: {
                             fontWeight: '500',
                         },
+                        pre: {
+                            borderRadius: 0,
+                            color: 'var(--pre-code-color)',
+                            backgroundColor: 'var(--pre-bg-color)',
+                        },
                         blockquote: {
                             color: "#7c8088",
                             borderLeftWidth: '2px',
