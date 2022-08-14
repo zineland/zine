@@ -38,4 +38,7 @@ jobs:
         cd demo; zine build
         # Test new empty project then build
         zine new test; cd test; zine build
-    
+    - uses: actions/upload-artifact@v3
+      with:
+        name: zine
+        path: ./target/release/zine
