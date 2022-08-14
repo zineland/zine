@@ -24,7 +24,11 @@
         </content>
 
         <author>
+            {% if entry.author is iterable -%}
+            <name>{{ entry.author | join(sep=", ")}}</name>
+            {% else -%}
             <name>{{ entry.author }}</name>
+            {% endif -%}
         </author>
     </entry>
     {% endfor -%}

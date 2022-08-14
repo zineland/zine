@@ -53,6 +53,7 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
         })?;
     Ok(())
 }
+
 /// A serde module to serialize and deserialize [`time::Date`] type.
 pub mod serde_date {
     use serde::{de, Serialize, Serializer};

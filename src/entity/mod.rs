@@ -15,7 +15,7 @@ mod zine;
 
 pub use self::zine::Zine;
 pub use article::{Article, MetaArticle};
-pub use author::{Author, AuthorList};
+pub use author::{Author, AuthorList, AuthorName};
 pub use end_matter::EndMatter;
 pub use issue::Issue;
 pub use markdown::MarkdownConfig;
