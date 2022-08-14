@@ -51,10 +51,7 @@ impl AuthorName {
     pub fn is_author(&self, name: &str) -> bool {
         match self {
             Self::One(author) => author.eq_ignore_ascii_case(name),
-            Self::List(authors) => authors
-                .iter()
-                .find(|a| a.eq_ignore_ascii_case(name))
-                .is_some(),
+            Self::List(authors) => authors.iter().any(|a| a.eq_ignore_ascii_case(name)),
         }
     }
 }
