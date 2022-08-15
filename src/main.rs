@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
         Commands::New { name } => new_zine_project(name)?,
         Commands::Version => {
             let version = env!("ZINE_VERSION");
-            let data = env!("LAST_COMMIT_DATE");
+            let data = option_env!("LAST_COMMIT_DATE").unwrap_or("");
             let build_info = env!("BUILD_INFO");
             println!("{}", ZINE_BANNER);
             println!("Zine version {} {}", version, data);

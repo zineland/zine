@@ -9,7 +9,7 @@ fn main() {
 
     // Obtain build infomation from Git.
     let build_info: String =
-        from_git().unwrap_or_else(|_| "(Build info from Git not present)".into());
+        from_git().unwrap_or_else(|_| "Build info from Git not present".into());
 
     println!("cargo:rustc-env=ZINE_VERSION={}", package_version);
     println!("cargo:rustc-env=BUILD_INFO={}", build_info);
@@ -40,7 +40,7 @@ fn from_git() -> Result<String, std::io::Error> {
 
     // Combined
     Ok(format!(
-        "build branch in \"{}\", lasted commit id: {}",
+        "build branch in \"{}\", last commit id: {}",
         branch, rev
     ))
 }
