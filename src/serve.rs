@@ -7,7 +7,7 @@ use hyper::{body::HttpBody, Response, StatusCode};
 use tower::ServiceBuilder;
 use tower_http::services::{fs::ServeFileSystemResponseBody, ServeDir};
 
-static ZINE_BANNER: &str = r"
+pub static ZINE_BANNER: &str = r"
 
 ███████╗██╗███╗   ██╗███████╗
 ╚══███╔╝██║████╗  ██║██╔════╝

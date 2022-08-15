@@ -22,6 +22,7 @@ mod serve;
 
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
+pub use self::serve::ZINE_BANNER;
 
 pub static ZINE_FILE: &str = "zine.toml";
 
@@ -75,6 +76,8 @@ enum Commands {
         /// The project name.
         name: Option<String>,
     },
+    /// Prints the app version.
+    Version,
 }
 
 #[tokio::main]
@@ -95,7 +98,14 @@ async fn main() -> Result<()> {
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
         Commands::New { name } => new_zine_project(name)?,
+        Commands::Version => {
+            let version = env!("ZINE_VERSION");
+            let data = option_env!("LAST_COMMIT_DATE").unwrap_or("");
+            let build_info = env!("BUILD_INFO");
+            println!("{}", ZINE_BANNER);
+            println!("Zine version {} {}", version, data);
+            println!("({})", build_info);
+        }
     }
-
     Ok(())
 }
