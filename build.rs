@@ -2,16 +2,10 @@ use std::io::{Error, ErrorKind};
 use std::process::Command;
 
 fn main() {
-    // Obtain cargo pkg version as app version.
-    let package_version: String = option_env!("CARGO_PKG_VERSION")
-        .unwrap_or("(Unknown Cargo package version)")
-        .to_string();
-
     // Obtain build infomation from Git.
     let build_info: String =
         from_git().unwrap_or_else(|_| "Build info from Git not present".into());
 
-    println!("cargo:rustc-env=ZINE_VERSION={}", package_version);
     println!("cargo:rustc-env=BUILD_INFO={}", build_info);
 }
 
@@ -33,10 +27,12 @@ fn from_git() -> Result<String, std::io::Error> {
     println!("cargo:rustc-env=GIT_BRANCH={}", branch);
 
     // Read date from current build branch.
-    let date_binding = run(&["git", "show", &branch, "--pretty=format:\"%ci %cr\""]).unwrap();
-    let mut date = date_binding.split_once(' ').unwrap().0.chars();
-    date.next();
-    println!("cargo:rustc-env=LAST_COMMIT_DATE={}", date.as_str());
+    // Here is a example output:
+    //
+    // 2022-8-16
+    //
+    let date = run(&["git", "show", &branch, "--pretty=format:%ci"])?;
+    println!("cargo:rustc-env=LAST_COMMIT_DATE={}", &date[..10]);
 
     // Combined
     Ok(format!(

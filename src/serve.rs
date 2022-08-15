@@ -1,22 +1,11 @@
 use std::{env, io, net::SocketAddr, path::Path};
 
-use crate::build::watch_build;
+use crate::{build::watch_build, ZINE_BANNER};
 use anyhow::Result;
 use http_body::Full;
 use hyper::{body::HttpBody, Response, StatusCode};
 use tower::ServiceBuilder;
 use tower_http::services::{fs::ServeFileSystemResponseBody, ServeDir};
-
-pub static ZINE_BANNER: &str = r"
-
-███████╗██╗███╗   ██╗███████╗
-╚══███╔╝██║████╗  ██║██╔════╝
-  ███╔╝ ██║██╔██╗ ██║█████╗  
- ███╔╝  ██║██║╚██╗██║██╔══╝  
-███████╗██║██║ ╚████║███████╗
-╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
-                             
-";
 
 // The temporal build dir, mainly for `zine serve` command.
 static TEMP_ZINE_BUILD_DIR: &str = "__zine_build";

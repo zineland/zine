@@ -22,9 +22,18 @@ mod serve;
 
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
-pub use self::serve::ZINE_BANNER;
 
 pub static ZINE_FILE: &str = "zine.toml";
+pub static ZINE_BANNER: &str = r"
+
+███████╗██╗███╗   ██╗███████╗
+╚══███╔╝██║████╗  ██║██╔════╝
+  ███╔╝ ██║██╔██╗ ██║█████╗  
+ ███╔╝  ██║██║╚██╗██║██╔══╝  
+███████╗██║██║ ╚████║███████╗
+╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
+                             
+";
 
 pub static MODE: Lazy<RwLock<Option<Mode>>> = Lazy::new(|| RwLock::new(None));
 
@@ -99,11 +108,12 @@ async fn main() -> Result<()> {
         }
         Commands::New { name } => new_zine_project(name)?,
         Commands::Version => {
-            let version = env!("ZINE_VERSION");
-            let data = option_env!("LAST_COMMIT_DATE").unwrap_or("");
+            let version =
+                option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)");
+            let date = option_env!("LAST_COMMIT_DATE").unwrap_or("");
             let build_info = env!("BUILD_INFO");
             println!("{}", ZINE_BANNER);
-            println!("Zine version {} {}", version, data);
+            println!("Zine version {} {}", version, date);
             println!("({})", build_info);
         }
     }
