@@ -24,6 +24,16 @@ pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
 
 pub static ZINE_FILE: &str = "zine.toml";
+pub static ZINE_BANNER: &str = r"
+
+███████╗██╗███╗   ██╗███████╗
+╚══███╔╝██║████╗  ██║██╔════╝
+  ███╔╝ ██║██╔██╗ ██║█████╗  
+ ███╔╝  ██║██║╚██╗██║██╔══╝  
+███████╗██║██║ ╚████║███████╗
+╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
+                             
+";
 
 pub static MODE: Lazy<RwLock<Option<Mode>>> = Lazy::new(|| RwLock::new(None));
 
@@ -75,6 +85,8 @@ enum Commands {
         /// The project name.
         name: Option<String>,
     },
+    /// Prints the app version.
+    Version,
 }
 
 #[tokio::main]
@@ -95,7 +107,15 @@ async fn main() -> Result<()> {
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
         Commands::New { name } => new_zine_project(name)?,
+        Commands::Version => {
+            let version =
+                option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)");
+            let date = option_env!("LAST_COMMIT_DATE").unwrap_or("");
+            let build_info = env!("BUILD_INFO");
+            println!("{}", ZINE_BANNER);
+            println!("Zine version {} {}", version, date);
+            println!("({})", build_info);
+        }
     }
-
     Ok(())
 }
