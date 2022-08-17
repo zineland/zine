@@ -150,7 +150,7 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     // Rewrite root path links with site url if and only if:
     // 1. in build run mode
     // 2. site url has a path
-    if matches!(current_mode(), Some(Mode::Build)) {
+    if matches!(current_mode(), Mode::Build) {
         if let Some(Value::String(site_url)) = context.get("site").and_then(|site| site.get("url"))
         {
             let uri = site_url.parse::<Uri>().expect("Invalid site url.");

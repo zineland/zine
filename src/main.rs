@@ -2,7 +2,6 @@ use anyhow::Result;
 use build::watch_build;
 use clap::StructOpt;
 use new::new_zine_project;
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serve::run_serve;
 
@@ -35,21 +34,22 @@ pub static ZINE_BANNER: &str = r"
                              
 ";
 
-pub static MODE: Lazy<RwLock<Option<Mode>>> = Lazy::new(|| RwLock::new(None));
+static MODE: RwLock<Mode> = parking_lot::const_rwlock(Mode::Unknown);
 
 #[derive(Copy, Clone)]
 pub enum Mode {
     Build,
     Serve,
+    Unknown,
 }
 
 /// Get current run mode.
-pub fn current_mode() -> Option<Mode> {
+pub fn current_mode() -> Mode {
     *MODE.read()
 }
 
 fn set_current_mode(mode: Mode) {
-    *MODE.write() = Some(mode);
+    *MODE.write() = mode;
 }
 
 #[derive(Debug, clap::Parser)]
