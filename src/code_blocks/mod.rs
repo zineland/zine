@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 mod author;
+mod fenced;
 mod url_preview;
 
 use crate::{data, helpers, html};
