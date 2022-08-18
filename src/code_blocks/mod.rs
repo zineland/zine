@@ -2,20 +2,24 @@ use anyhow::Result;
 
 mod author;
 mod fenced;
+mod highlight;
 mod url_preview;
 
 use crate::{data, helpers, html};
 pub use author::AuthorCode;
-
+use fenced::Fenced;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
+
+use self::highlight::HighlightBlock;
 
 pub trait CodeBlock {
     fn render(&self) -> Result<String>;
 }
 
+const HIGHTLIGHT: &str = "highlight";
 const URL_PREVIEW: &str = "urlpreview";
 
-const ALL_CODE_BLOCKS: &[&str] = &[URL_PREVIEW];
+const ALL_CODE_BLOCKS: &[&str] = &[HIGHTLIGHT, URL_PREVIEW];
 
 pub fn is_custom_code_block(fenced: &str) -> bool {
     ALL_CODE_BLOCKS.contains(&fenced)
@@ -26,7 +30,8 @@ pub fn is_custom_code_block(fenced: &str) -> bool {
 ///
 /// If the fenced is unsupported, we simply return `None`.
 pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
-    match fenced {
+    let fenced = Fenced::parse(fenced).ok()?;
+    match fenced.name {
         URL_PREVIEW => {
             let url = block.trim();
 
@@ -55,6 +60,12 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
                 // Return a preview error block.
                 Err(err) => Some(UrlPreviewError(url, &err.to_string()).render().unwrap()),
             }
+        }
+        HIGHTLIGHT => {
+            let html = HighlightBlock::new(&fenced.options, block)
+                .render()
+                .unwrap();
+            Some(html)
         }
         _ => None,
     }

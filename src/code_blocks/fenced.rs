@@ -4,8 +4,8 @@ use anyhow::{bail, Result};
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct Fenced<'a> {
-    name: &'a str,
-    options: HashMap<&'a str, &'a str>,
+    pub name: &'a str,
+    pub options: HashMap<&'a str, &'a str>,
 }
 
 impl<'a> Fenced<'a> {
@@ -24,8 +24,7 @@ impl<'a> Fenced<'a> {
 
         match raw.next() {
             Some(name) if !name.is_empty() => {
-                let pairs = raw.collect::<Vec<&str>>();
-                let options = pairs
+                let options = raw
                     .into_iter()
                     .filter_map(|pair| {
                         let mut v = pair.split(':').take(2);
@@ -38,7 +37,7 @@ impl<'a> Fenced<'a> {
                         }
                     })
                     .collect::<HashMap<_, _>>();
-                return Ok(Fenced { name, options });
+                Ok(Fenced { name, options })
             }
             _ => {
                 bail!("Invalid fenced: {}", input)
