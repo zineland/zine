@@ -71,7 +71,7 @@ impl Article {
     /// - the publish property is true
     /// - in `zine serve` mode
     pub fn need_publish(&self) -> bool {
-        self.publish || matches!(current_mode(), Some(Mode::Serve))
+        self.publish || matches!(current_mode(), Mode::Serve)
     }
 
     pub fn slug(&self) -> String {
