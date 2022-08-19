@@ -1,7 +1,34 @@
-// A fork from https://github.com/arranf/strip-markdown
+use pulldown_cmark::Event::{self, Code, End, HardBreak, Rule, SoftBreak, Start, Text};
+use pulldown_cmark::{html, CowStr, Options, Parser, Tag};
 
-use pulldown_cmark::Event::{Code, End, HardBreak, Rule, SoftBreak, Start, Text};
-use pulldown_cmark::{Options, Parser, Tag};
+pub trait MarkdownVistor<'a> {
+    fn visit_start_tag(&mut self, tag: Tag<'a>) -> Option<Event<'static>>;
+    fn visit_end_tag(&mut self, tag: Tag<'a>) -> Option<Event<'static>>;
+    fn visit_text(&mut self, text: &CowStr<'a>) -> Option<Event<'static>>;
+    fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>>;
+}
+
+/// Render markdown to HTML.
+pub fn markdown_to_html<'a>(markdown: &'a str, mut visitor: impl MarkdownVistor<'a>) -> String {
+    let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
+    let events = parser_events_iter
+        .into_iter()
+        .filter_map(|(event, _)| match event {
+            Event::Start(tag) => visitor.visit_start_tag(tag),
+            Event::End(tag) => visitor.visit_end_tag(tag),
+            Event::Code(code) => visitor.visit_code(&code).or(Some(Event::Code(code))),
+            Event::Text(text) => visitor
+                .visit_text(&text)
+                // Not a code block inside text, or the code block's fenced is unsupported.
+                // We still need record this text event.
+                .or(Some(Event::Text(text))),
+            _ => Some(event),
+        });
+
+    let mut html = String::new();
+    html::push_html(&mut html, events);
+    html
+}
 
 /// Extract the description from markdown content.
 ///
