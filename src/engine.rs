@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{is_custom_code_block, render_code_block, AuthorCode, CodeBlock},
+    code_blocks::{AuthorCode, CodeBlock, Fenced},
     current_mode, data,
     entity::{Entity, MarkdownConfig, Zine},
     html::rewrite_html_base_url,
@@ -302,11 +302,12 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
     }
 
     fn visit_text(&mut self, text: &CowStr<'b>) -> Visiting {
-        if let Some(fenced) = self.code_block_fenced.as_ref() {
-            if is_custom_code_block(fenced.as_ref()) {
+        if let Some(input) = self.code_block_fenced.as_ref() {
+            let fenced = Fenced::parse(input).unwrap();
+            if fenced.is_custom_code_block() {
                 // Block in place to execute async task
                 let rendered_html = task::block_in_place(|| {
-                    Handle::current().block_on(async { render_code_block(fenced, text).await })
+                    Handle::current().block_on(async { fenced.render_code_block(text).await })
                 });
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));
