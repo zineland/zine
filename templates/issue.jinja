@@ -30,7 +30,7 @@
                             </div>
                             <div class="flex items-center justify-between text-base text-gray-500">
                                 <span>{{ article.pub_date }}</span>
-                                {{ macros::article_author_link(article = article) }}
+                                {{ macros::author_link(author = article.author) }}
                             </div>
                         </div>
                     </a>

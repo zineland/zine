@@ -9,7 +9,7 @@ use time::Date;
 
 use crate::{current_mode, engine, markdown, meta::Meta, Mode};
 
-use super::{EndMatter, Entity};
+use super::{AuthorName, EndMatter, Entity};
 
 /// The Meta info of Article.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +18,7 @@ pub struct MetaArticle {
     /// Default to file name if no slug specified.
     pub slug: Option<String>,
     pub title: String,
-    pub author: Option<String>,
+    pub author: Option<AuthorName>,
     pub cover: Option<String>,
     /// The publish date. Format like YYYY-MM-dd.
     #[serde(with = "crate::helpers::serde_date")]
@@ -61,7 +61,7 @@ impl Article {
         self.meta
             .author
             .as_ref()
-            .map(|inner| inner.eq_ignore_ascii_case(author))
+            .map(|inner| inner.is_author(author))
             .unwrap_or_default()
     }
 

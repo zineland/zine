@@ -14,7 +14,7 @@
             <h1 class="text-center">{{ article.title }}</h1>
             <div class="flex items-center justify-between text-gray-500">
                 <span>{{ article.pub_date }}</span>
-                {{ macros::article_author_link(article = article) }}
+                {{ macros::author_link(author = article.author) }}
             </div>
         </div>
         <article class="prose mx-auto my-12">
