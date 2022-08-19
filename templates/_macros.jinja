@@ -4,10 +4,11 @@
     {% else -%}
         {% set author_names = [author] -%}
     {% endif -%}
+    <div>
     {% for name in author_names -%}
         {% set author = get_author(id = name) -%}
         {% if author -%}
-            <a class="flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline"
+            <a class="inline-flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline"
                href="/@{{ author.id | lower }}">
                 <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover"
                      src="{{ author.avatar }}"
@@ -25,4 +26,5 @@
             <span>{{ article.author }}</span>
         {% endif -%}
     {% endfor -%}
+    </div>
 {% endmacro input -%}
