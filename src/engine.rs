@@ -10,6 +10,7 @@ use crate::{
     entity::{Entity, MarkdownConfig, Zine},
     html::rewrite_html_base_url,
     locales::FluentLoader,
+    markdown::{markdown_to_html, MarkdownVistor},
     Mode,
 };
 
@@ -17,6 +18,7 @@ use anyhow::{Context as _, Result};
 use hyper::Uri;
 use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
+use pulldown_cmark::*;
 use serde_json::Value;
 use syntect::{
     dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
@@ -116,24 +118,6 @@ pub struct ZineEngine {
 
 struct MarkdownRender {
     markdown_config: MarkdownConfig,
-}
-
-impl MarkdownRender {
-    fn highlight_syntax(&self, lang: &str, text: &str) -> String {
-        let theme = match THEME_SET.themes.get(&self.markdown_config.highlight_theme) {
-            Some(theme) => theme,
-            None => panic!(
-                "No theme: `{}` founded",
-                self.markdown_config.highlight_theme
-            ),
-        };
-
-        let syntax = SYNTAX_SET
-            .find_syntax_by_token(lang)
-            // Fallback to plain text if code block not supported
-            .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme)
-    }
 }
 
 pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Result<()> {
@@ -238,115 +222,139 @@ impl ZineEngine {
     }
 }
 
+struct HeadingRef<'a> {
+    level: usize,
+    id: Option<&'a str>,
+}
+
+struct Vistor<'a> {
+    markdown_config: &'a MarkdownConfig,
+    code_block_fenced: Option<CowStr<'a>>,
+    heading_ref: Option<HeadingRef<'a>>,
+}
+
+impl<'a> Vistor<'a> {
+    fn new(markdown_config: &'a MarkdownConfig) -> Self {
+        Vistor {
+            markdown_config,
+            code_block_fenced: None,
+            heading_ref: None,
+        }
+    }
+
+    fn highlight_syntax(&self, lang: &str, text: &str) -> String {
+        let theme = match THEME_SET.themes.get(&self.markdown_config.highlight_theme) {
+            Some(theme) => theme,
+            None => panic!(
+                "No theme: `{}` founded",
+                self.markdown_config.highlight_theme
+            ),
+        };
+
+        let syntax = SYNTAX_SET
+            .find_syntax_by_token(lang)
+            // Fallback to plain text if code block not supported
+            .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme)
+    }
+}
+
+impl<'a, 'b: 'a> MarkdownVistor<'b> for Vistor<'a> {
+    fn visit_start_tag(&mut self, tag: Tag<'b>) -> Option<Event<'static>> {
+        match tag {
+            Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
+                self.code_block_fenced = Some(name);
+            }
+            Tag::Image(_, src, title) => {
+                // Add loading="lazy" attribute for markdown image.
+                return Some(Event::Html(
+                    format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title).into(),
+                ));
+            }
+            Tag::Heading(level, id, _) => {
+                self.heading_ref = Some(HeadingRef {
+                    level: level as usize,
+                    // This id is parsed from the markdow heading part.
+                    // Here is the syntax:
+                    // `# Long title {#title}` parse the id: title
+                    // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
+                    id,
+                });
+            }
+            _ => {}
+        }
+        None
+    }
+
+    fn visit_end_tag(&mut self, tag: Tag<'_>) -> Option<Event<'static>> {
+        match tag {
+            Tag::CodeBlock(_) => {
+                self.code_block_fenced = None;
+            }
+            Tag::Heading(..) => {
+                self.heading_ref = None;
+            }
+            _ => {}
+        }
+        None
+    }
+
+    fn visit_text(&mut self, text: &CowStr<'b>) -> Option<Event<'static>> {
+        if let Some(fenced) = self.code_block_fenced.as_ref() {
+            if is_custom_code_block(fenced.as_ref()) {
+                // Block in place to execute async task
+                let rendered_html = task::block_in_place(|| {
+                    Handle::current().block_on(async { render_code_block(fenced, text).await })
+                });
+                if let Some(html) = rendered_html {
+                    return Some(Event::Html(html.into()));
+                }
+            } else if self.markdown_config.highlight_code {
+                // Syntax highlight
+                let html = self.highlight_syntax(fenced, text);
+                return Some(Event::Html(html.into()));
+            } else {
+                return Some(Event::Html(format!("<pre>{}</pre>", text).into()));
+            }
+        }
+
+        // Render heading anchor link.
+        if let Some(heading_ref) = self.heading_ref.as_ref() {
+            let mut context = Context::new();
+            context.insert("level", &heading_ref.level);
+            // Fallback to raw text as the anchor id if the user didn't specify an id.
+            context.insert("id", heading_ref.id.unwrap_or_else(|| text.as_ref()));
+            context.insert("text", &text.as_ref());
+            let html = get_tera()
+                .render("_anchor-link.jinja", &context)
+                .expect("Render anchor link failed.");
+
+            return Some(Event::Html(html.into()));
+        }
+
+        None
+    }
+
+    fn visit_code(&mut self, code: &CowStr<'b>) -> Option<Event<'static>> {
+        if let Some(maybe_author_id) = code.strip_prefix('@') {
+            let data = data::read();
+            if let Some(author) = data.get_author_by_id(maybe_author_id) {
+                // Render author code UI.
+                let html = AuthorCode(author)
+                    .render()
+                    .expect("Render author code failed.");
+                return Some(Event::Html(html.into()));
+            }
+        }
+        None
+    }
+}
+
 // A tera function to convert markdown into html.
 impl Function for MarkdownRender {
     fn call(&self, map: &HashMap<String, Value>) -> tera::Result<Value> {
-        use pulldown_cmark::*;
-
-        struct HeadingRef<'a> {
-            level: usize,
-            id: Option<&'a str>,
-        }
-
         if let Some(Value::String(markdown)) = map.get("markdown") {
-            let mut html = String::new();
-
-            let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
-
-            let mut events = vec![];
-            let mut code_block_fenced = None;
-
-            let mut heading_ref = None;
-            for (event, _range) in parser_events_iter {
-                match event {
-                    Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(name))) => {
-                        code_block_fenced = Some(name);
-                    }
-                    Event::End(Tag::CodeBlock(_)) => {
-                        code_block_fenced = None;
-                    }
-                    Event::Start(Tag::Image(_, src, title)) => {
-                        // Add loading="lazy" attribute for markdown image.
-                        events.push(Event::Html(
-                            format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title)
-                                .into(),
-                        ));
-                    }
-                    Event::Start(Tag::Heading(level, id, _)) => {
-                        heading_ref = Some(HeadingRef {
-                            level: level as usize,
-                            // This id is parsed from the markdow heading part.
-                            // Here is the syntax:
-                            // `# Long title {#title}` parse the id: title
-                            // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
-                            id,
-                        });
-                    }
-                    Event::End(Tag::Heading(..)) => {
-                        heading_ref = None;
-                    }
-                    Event::Code(code) if code.starts_with('@') => {
-                        if let Some(maybe_author_id) = code.strip_prefix('@') {
-                            let data = data::read();
-                            if let Some(author) = data.get_author_by_id(maybe_author_id) {
-                                // Render author code UI.
-                                let html = AuthorCode(author)
-                                    .render()
-                                    .expect("Render author code failed.");
-                                events.push(Event::Html(html.into()));
-                                continue;
-                            }
-                        }
-                        events.push(Event::Code(code))
-                    }
-                    Event::Text(text) => {
-                        if let Some(fenced) = code_block_fenced.as_ref() {
-                            if is_custom_code_block(fenced.as_ref()) {
-                                // Block in place to execute async task
-                                let rendered_html = task::block_in_place(|| {
-                                    Handle::current()
-                                        .block_on(async { render_code_block(fenced, &text).await })
-                                });
-                                if let Some(html) = rendered_html {
-                                    events.push(Event::Html(html.into()));
-                                    continue;
-                                }
-                            } else if self.markdown_config.highlight_code {
-                                // Syntax highlight
-                                let html = self.highlight_syntax(fenced, &text);
-                                events.push(Event::Html(html.into()));
-                                continue;
-                            } else {
-                                events.push(Event::Html(format!("<pre>{}</pre>", text).into()));
-                                continue;
-                            }
-                        }
-
-                        // Render heading anchor link.
-                        if let Some(heading_ref) = heading_ref.as_ref() {
-                            let mut context = Context::new();
-                            context.insert("level", &heading_ref.level);
-                            // Fallback to raw text as the anchor id if the user didn't specify an id.
-                            context.insert("id", heading_ref.id.unwrap_or_else(|| text.as_ref()));
-                            context.insert("text", &text.as_ref());
-                            let html = get_tera()
-                                .render("_anchor-link.jinja", &context)
-                                .expect("Render anchor link failed.");
-
-                            events.push(Event::Html(html.into()));
-                            continue;
-                        }
-
-                        // Not a code block inside text, or the code block's fenced is unsupported.
-                        // We still need record this text event.
-                        events.push(Event::Text(text))
-                    }
-                    _ => {
-                        events.push(event);
-                    }
-                }
-            }
-            html::push_html(&mut html, events.into_iter());
+            let html = markdown_to_html(markdown, Vistor::new(&self.markdown_config));
             Ok(Value::String(html))
         } else {
             Ok(Value::Array(vec![]))
