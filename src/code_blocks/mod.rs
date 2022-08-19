@@ -1,8 +1,8 @@
 use anyhow::Result;
 
 mod author;
+mod callout;
 mod fenced;
-mod highlight;
 mod url_preview;
 
 use crate::{data, helpers, html};
@@ -10,16 +10,16 @@ pub use author::AuthorCode;
 use fenced::Fenced;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
-use self::highlight::HighlightBlock;
+use self::callout::CalloutBlock;
 
 pub trait CodeBlock {
     fn render(&self) -> Result<String>;
 }
 
-const HIGHTLIGHT: &str = "highlight";
+const CALLOUT: &str = "callout";
 const URL_PREVIEW: &str = "urlpreview";
 
-const ALL_CODE_BLOCKS: &[&str] = &[HIGHTLIGHT, URL_PREVIEW];
+const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, URL_PREVIEW];
 
 pub fn is_custom_code_block(fenced: &str) -> bool {
     ALL_CODE_BLOCKS.contains(&fenced)
@@ -61,10 +61,8 @@ pub async fn render_code_block(fenced: &str, block: &str) -> Option<String> {
                 Err(err) => Some(UrlPreviewError(url, &err.to_string()).render().unwrap()),
             }
         }
-        HIGHTLIGHT => {
-            let html = HighlightBlock::new(&fenced.options, block)
-                .render()
-                .unwrap();
+        CALLOUT => {
+            let html = CalloutBlock::new(fenced.options, block).render().unwrap();
             Some(html)
         }
         _ => None,

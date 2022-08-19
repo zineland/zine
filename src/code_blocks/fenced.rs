@@ -55,22 +55,22 @@ mod tests {
         assert_eq!(Fenced::parse("").unwrap(), Fenced::empty());
         assert_eq!(Fenced::parse(",").unwrap(), Fenced::empty());
 
-        let fenced = Fenced::parse("highlight,").unwrap();
-        assert_eq!(fenced.name, "highlight");
+        let fenced = Fenced::parse("callout,").unwrap();
+        assert_eq!(fenced.name, "callout");
         assert_eq!(fenced.options, HashMap::default());
 
-        let fenced = Fenced::parse("highlight, bg_color: #123456, outline_color: #abcdef").unwrap();
-        assert_eq!(fenced.name, "highlight");
+        let fenced = Fenced::parse("callout, bg_color: #123456, border_color: #abcdef").unwrap();
+        assert_eq!(fenced.name, "callout");
 
         let options = fenced.options;
         assert_eq!(options["bg_color"], "#123456");
-        assert_eq!(options["outline_color"], "#abcdef");
+        assert_eq!(options["border_color"], "#abcdef");
 
-        let fenced = Fenced::parse("highlight, bg_color #123456, outline_color: #abcdef").unwrap();
-        assert_eq!(fenced.name, "highlight");
+        let fenced = Fenced::parse("callout, bg_color #123456, border_color: #abcdef").unwrap();
+        assert_eq!(fenced.name, "callout");
 
         let options = fenced.options;
         assert_eq!(options.get("bg_color"), None);
-        assert_eq!(options["outline_color"], "#abcdef");
+        assert_eq!(options["border_color"], "#abcdef");
     }
 }
