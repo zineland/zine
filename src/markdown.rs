@@ -1,23 +1,39 @@
 use pulldown_cmark::Event::{self, Code, End, HardBreak, Rule, SoftBreak, Start, Text};
 use pulldown_cmark::{html, CowStr, Options, Parser, Tag};
 
-pub trait MarkdownVistor<'a> {
-    fn visit_start_tag(&mut self, tag: Tag<'a>) -> Option<Event<'static>>;
-    fn visit_end_tag(&mut self, tag: Tag<'a>) -> Option<Event<'static>>;
-    fn visit_text(&mut self, text: &CowStr<'a>) -> Option<Event<'static>>;
-    fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>>;
+/// The visitor trait to allow customize html rendering.
+///
+/// All methods return a `Option<Event>>`, custom html event will
+/// be rendered if `Some()` returned, otherwise, will fallback to the original event.
+#[allow(unused_variables)]
+pub trait MarkdownVisitor<'a> {
+    fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Option<Event<'static>> {
+        None
+    }
+
+    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Option<Event<'static>> {
+        None
+    }
+
+    fn visit_text(&mut self, text: &CowStr<'a>) -> Option<Event<'static>> {
+        None
+    }
+
+    fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>> {
+        None
+    }
 }
 
 /// Render markdown to HTML.
-pub fn markdown_to_html<'a>(markdown: &'a str, mut visitor: impl MarkdownVistor<'a>) -> String {
+pub fn markdown_to_html<'a>(markdown: &'a str, mut v: impl MarkdownVisitor<'a>) -> String {
     let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
     let events = parser_events_iter
         .into_iter()
         .filter_map(|(event, _)| match event {
-            Event::Start(tag) => visitor.visit_start_tag(tag),
-            Event::End(tag) => visitor.visit_end_tag(tag),
-            Event::Code(code) => visitor.visit_code(&code).or(Some(Event::Code(code))),
-            Event::Text(text) => visitor
+            Event::Start(tag) => v.visit_start_tag(&tag).or(Some(Event::Start(tag))),
+            Event::End(tag) => v.visit_end_tag(&tag).or(Some(Event::End(tag))),
+            Event::Code(code) => v.visit_code(&code).or(Some(Event::Code(code))),
+            Event::Text(text) => v
                 .visit_text(&text)
                 // Not a code block inside text, or the code block's fenced is unsupported.
                 // We still need record this text event.
@@ -121,6 +137,34 @@ mod tests {
 
     use super::*;
     use test_case::test_case;
+
+    #[test]
+    fn test_markdown_visitor() {
+        struct NopVisitor;
+        impl<'a> MarkdownVisitor<'a> for NopVisitor {}
+
+        let html = markdown_to_html("![](image.png)", NopVisitor);
+        assert_eq!("<p><img src=\"image.png\" alt=\"\" /></p>\n", html);
+
+        struct DummyVisitor;
+        impl<'a> MarkdownVisitor<'a> for DummyVisitor {
+            fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>> {
+                if let Some(username) = code.strip_prefix('@') {
+                    return Some(Event::Html(
+                        format!("<a href=\"https://github.com/{username}\">{code}</a>").into(),
+                    ));
+                }
+                None
+            }
+        }
+        let html = markdown_to_html("`@zineland`", DummyVisitor);
+        assert_eq!(
+            "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
+            html
+        );
+        let html = markdown_to_html("`DummyVisitor`", DummyVisitor);
+        assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
+    }
 
     #[test_case("aaaa"; "case1")]
     fn test_extract_decription1(markdown: &str) {
