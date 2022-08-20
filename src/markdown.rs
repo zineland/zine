@@ -5,11 +5,23 @@ use pulldown_cmark::{html, CowStr, Options, Parser, Tag};
 ///
 /// All methods return a `Option<Event>>`, custom html event will
 /// be rendered if `Some()` returned, otherwise, will fallback to the original event.
+#[allow(unused_variables)]
 pub trait MarkdownVisitor<'a> {
-    fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Option<Event<'static>>;
-    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Option<Event<'static>>;
-    fn visit_text(&mut self, text: &CowStr<'a>) -> Option<Event<'static>>;
-    fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>>;
+    fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Option<Event<'static>> {
+        None
+    }
+
+    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Option<Event<'static>> {
+        None
+    }
+
+    fn visit_text(&mut self, text: &CowStr<'a>) -> Option<Event<'static>> {
+        None
+    }
+
+    fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>> {
+        None
+    }
 }
 
 /// Render markdown to HTML.
@@ -125,6 +137,34 @@ mod tests {
 
     use super::*;
     use test_case::test_case;
+
+    #[test]
+    fn test_markdown_visitor() {
+        struct NopVisitor;
+        impl<'a> MarkdownVisitor<'a> for NopVisitor {}
+
+        let html = markdown_to_html("![](image.png)", NopVisitor);
+        assert_eq!("<p><img src=\"image.png\" alt=\"\" /></p>\n", html);
+
+        struct DummyVisitor;
+        impl<'a> MarkdownVisitor<'a> for DummyVisitor {
+            fn visit_code(&mut self, code: &CowStr<'a>) -> Option<Event<'static>> {
+                if let Some(username) = code.strip_prefix('@') {
+                    return Some(Event::Html(
+                        format!("<a href=\"https://github.com/{username}\">{code}</a>").into(),
+                    ));
+                }
+                None
+            }
+        }
+        let html = markdown_to_html("`@zineland`", DummyVisitor);
+        assert_eq!(
+            "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
+            html
+        );
+        let html = markdown_to_html("`DummyVisitor`", DummyVisitor);
+        assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
+    }
 
     #[test_case("aaaa"; "case1")]
     fn test_extract_decription1(markdown: &str) {
