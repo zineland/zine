@@ -3,7 +3,7 @@
 slug = "first"
 file = "first.md"
 title = "First article"
-author = "zine-team"
+author = ["zine-team", "admin"]
 cover = "/static/duck.png"
 pub_date = "2022-02-25"
 publish = true
