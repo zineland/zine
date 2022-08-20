@@ -17,7 +17,7 @@ pub struct CalloutBlock<'a> {
 
 impl<'a> CalloutBlock<'a> {
     pub fn new(
-        options: HashMap<&str, &'a str>,
+        options: HashMap<String, &'a str>,
         block: &'a str,
         visitor: engine::Vistor<'a>,
     ) -> Self {

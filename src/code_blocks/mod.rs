@@ -24,7 +24,7 @@ const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, URL_PREVIEW];
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Fenced<'a> {
     pub name: &'a str,
-    pub options: HashMap<&'a str, &'a str>,
+    pub options: HashMap<String, &'a str>,
 }
 
 impl<'a> Fenced<'a> {
@@ -96,7 +96,10 @@ impl<'a> Fenced<'a> {
                     .filter_map(|pair| {
                         let mut v = pair.split(':').take(2);
                         match (v.next(), v.next()) {
-                            (Some(key), Some(value)) => Some((key.trim(), value.trim())),
+                            (Some(key), Some(value)) => {
+                                // Replace key's dash to underscore.
+                                Some((key.trim().replace('-', "_"), value.trim()))
+                            }
                             _ => {
                                 println!("Invalid fenced options: {}", pair);
                                 None
@@ -126,14 +129,14 @@ mod tests {
         assert_eq!(fenced.name, "callout");
         assert_eq!(fenced.options, HashMap::default());
 
-        let fenced = Fenced::parse("callout, bg_color: #123456, border_color: #abcdef").unwrap();
+        let fenced = Fenced::parse("callout, bg_color: #123456, border-color: #abcdef").unwrap();
         assert_eq!(fenced.name, "callout");
 
         let options = fenced.options;
         assert_eq!(options["bg_color"], "#123456");
         assert_eq!(options["border_color"], "#abcdef");
 
-        let fenced = Fenced::parse("callout, bg_color #123456, border_color: #abcdef").unwrap();
+        let fenced = Fenced::parse("callout, bg_color #123456, border-color: #abcdef").unwrap();
         assert!(fenced.is_custom_code_block());
         assert_eq!(fenced.name, "callout");
 

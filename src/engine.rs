@@ -243,6 +243,7 @@ impl<'a> Vistor<'a> {
         }
     }
 
+    /// Clone a brand-new Visitor only with markdown config.
     pub fn clone(&self) -> Self {
         Vistor {
             markdown_config: self.markdown_config,
