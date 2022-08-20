@@ -227,7 +227,8 @@ struct HeadingRef<'a> {
     id: Option<&'a str>,
 }
 
-struct Vistor<'a> {
+/// Markdown visitor.
+pub struct Vistor<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
     heading_ref: Option<HeadingRef<'a>>,
@@ -237,6 +238,14 @@ impl<'a> Vistor<'a> {
     fn new(markdown_config: &'a MarkdownConfig) -> Self {
         Vistor {
             markdown_config,
+            code_block_fenced: None,
+            heading_ref: None,
+        }
+    }
+
+    pub fn clone(&self) -> Self {
+        Vistor {
+            markdown_config: self.markdown_config,
             code_block_fenced: None,
             heading_ref: None,
         }
@@ -307,7 +316,8 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
             if fenced.is_custom_code_block() {
                 // Block in place to execute async task
                 let rendered_html = task::block_in_place(|| {
-                    Handle::current().block_on(async { fenced.render_code_block(text).await })
+                    Handle::current()
+                        .block_on(async { fenced.render_code_block(text, self.clone()).await })
                 });
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));
