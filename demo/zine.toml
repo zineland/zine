@@ -9,7 +9,8 @@ menu = [
 ]
 
 [authors]
-zine-team = { name = "Zine Team", bio = "The Zine Team." }
+zine-team = { name = "Zine Team", bio = "The Zine Team.", editor = true }
+admin = { name = "Admin" }
 
 [[issue]]
 slug = "cloud"

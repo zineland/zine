@@ -26,7 +26,7 @@ pub struct Author {
     /// The optional avatar url. Will fallback to default zine logo if missing.
     pub avatar: Option<String>,
     /// The bio of author (markdown format).
-    pub bio: String,
+    pub bio: Option<String>,
     /// Whether the author is an editor.
     #[serde(default)]
     #[serde(rename(deserialize = "editor"))]
@@ -86,7 +86,12 @@ impl Entity for Author {
             "meta",
             &Meta {
                 title: Cow::Borrowed(self.name.as_deref().unwrap_or(&self.id)),
-                description: Cow::Owned(markdown::extract_description(&self.bio)),
+                description: Cow::Owned(
+                    self.bio
+                        .as_ref()
+                        .map(|bio| markdown::extract_description(bio))
+                        .unwrap_or_default(),
+                ),
                 url: Some(Cow::Borrowed(&slug)),
                 image: None,
             },
