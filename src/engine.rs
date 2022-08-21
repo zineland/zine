@@ -10,7 +10,7 @@ use crate::{
     entity::{Entity, MarkdownConfig, Zine},
     html::rewrite_html_base_url,
     locales::FluentLoader,
-    markdown::{markdown_to_html, MarkdownVisitor},
+    markdown::{markdown_to_html, MarkdownVisitor, Visiting},
     Mode,
 };
 
@@ -260,14 +260,15 @@ impl<'a> Vistor<'a> {
 }
 
 impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
-    fn visit_start_tag(&mut self, tag: &Tag<'b>) -> Option<Event<'static>> {
+    fn visit_start_tag(&mut self, tag: &Tag<'b>) -> Visiting {
         match tag {
             Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
                 self.code_block_fenced = Some(name.clone());
+                return Visiting::Ignore;
             }
             Tag::Image(_, src, title) => {
                 // Add loading="lazy" attribute for markdown image.
-                return Some(Event::Html(
+                return Visiting::Event(Event::Html(
                     format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title).into(),
                 ));
             }
@@ -283,23 +284,24 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
             }
             _ => {}
         }
-        None
+        Visiting::NotChanged
     }
 
-    fn visit_end_tag(&mut self, tag: &Tag<'_>) -> Option<Event<'static>> {
+    fn visit_end_tag(&mut self, tag: &Tag<'_>) -> Visiting {
         match tag {
             Tag::CodeBlock(_) => {
                 self.code_block_fenced = None;
+                Visiting::Ignore
             }
             Tag::Heading(..) => {
                 self.heading_ref = None;
+                Visiting::Ignore
             }
-            _ => {}
+            _ => Visiting::NotChanged,
         }
-        None
     }
 
-    fn visit_text(&mut self, text: &CowStr<'b>) -> Option<Event<'static>> {
+    fn visit_text(&mut self, text: &CowStr<'b>) -> Visiting {
         if let Some(fenced) = self.code_block_fenced.as_ref() {
             if is_custom_code_block(fenced.as_ref()) {
                 // Block in place to execute async task
@@ -307,14 +309,14 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                     Handle::current().block_on(async { render_code_block(fenced, text).await })
                 });
                 if let Some(html) = rendered_html {
-                    return Some(Event::Html(html.into()));
+                    return Visiting::Event(Event::Html(html.into()));
                 }
             } else if self.markdown_config.highlight_code {
                 // Syntax highlight
                 let html = self.highlight_syntax(fenced, text);
-                return Some(Event::Html(html.into()));
+                return Visiting::Event(Event::Html(html.into()));
             } else {
-                return Some(Event::Html(format!("<pre>{}</pre>", text).into()));
+                return Visiting::Event(Event::Html(format!("<pre>{}</pre>", text).into()));
             }
         }
 
@@ -329,13 +331,13 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                 .render("_anchor-link.jinja", &context)
                 .expect("Render anchor link failed.");
 
-            return Some(Event::Html(html.into()));
+            return Visiting::Event(Event::Html(html.into()));
         }
 
-        None
+        Visiting::NotChanged
     }
 
-    fn visit_code(&mut self, code: &CowStr<'b>) -> Option<Event<'static>> {
+    fn visit_code(&mut self, code: &CowStr<'b>) -> Visiting {
         if let Some(maybe_author_id) = code.strip_prefix('@') {
             let data = data::read();
             if let Some(author) = data.get_author_by_id(maybe_author_id) {
@@ -343,10 +345,10 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                 let html = AuthorCode(author)
                     .render()
                     .expect("Render author code failed.");
-                return Some(Event::Html(html.into()));
+                return Visiting::Event(Event::Html(html.into()));
             }
         }
-        None
+        Visiting::NotChanged
     }
 }
 
