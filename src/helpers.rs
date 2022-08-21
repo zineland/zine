@@ -83,7 +83,7 @@ fn zine_file_existed(path: &PathBuf) -> bool {
 }
 
 /// Find recursively
-pub fn _find_root_path(path: PathBuf) -> Option<PathBuf> {
+fn _find_root_path(path: PathBuf) -> Option<PathBuf> {
     if zine_file_existed(&path) {
         return Some(path);
     }
