@@ -61,31 +61,28 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Find the root zine file in current dir
-fn zine_file_existed(path: &PathBuf) -> bool {
-    for entry in WalkDir::new(path).max_depth(1) {
-        let entry = entry.unwrap();
-        if entry.path().is_file() {
-            let root_file = entry.file_name().to_str().unwrap();
-            // Insure the name
-            if !root_file.eq(crate::ZINE_FILE) {
-                continue;
-            }
-            // Verify the content
-            let content = std::fs::read_to_string(path.join(root_file)).unwrap();
-            if toml::from_str::<Zine>(&content).is_err() {
-                continue;
-            }
-            return true;
+/// Find the root zine file in current dir and try to parse it
+fn try_to_parse_root_file<P: AsRef<Path>>(path: P) -> Option<Zine> {
+    // Find the name in current dir
+    if WalkDir::new(&path).max_depth(1).into_iter().any(|entry| {
+        let entry = entry.as_ref().unwrap();
+        entry.file_name().to_str().unwrap() == crate::ZINE_FILE
+    }) {
+        // Try to parse the root zine.toml as Zine instance
+        let root_file = path.as_ref().join(crate::ZINE_FILE);
+        let content =
+            std::fs::read_to_string(path.as_ref().join(root_file)).unwrap_or_else(|_| "".into());
+        if let Ok(zine) = toml::from_str::<Zine>(&content) {
+            return Some(zine);
         }
     }
-    false
+    None
 }
 
 /// Find recursively
-fn _find_zine_folder(path: PathBuf) -> Option<PathBuf> {
-    if zine_file_existed(&path) {
-        return Some(path);
+fn _find_zine_folder(path: PathBuf) -> Option<(PathBuf, Zine)> {
+    if let Some(zine) = try_to_parse_root_file(&path) {
+        return Some((path, zine));
     }
     match path.parent() {
         Some(parent_path) => _find_zine_folder(parent_path.to_path_buf()),
@@ -93,8 +90,8 @@ fn _find_zine_folder(path: PathBuf) -> Option<PathBuf> {
     }
 }
 
-/// Find folder contains `zine.toml` as root path
-pub fn find_zine_folder(path: &PathBuf) -> Option<PathBuf> {
+/// Find folder contains `zine.toml` as root path, and return path info and Zine instance
+pub fn find_zine_folder(path: impl AsRef<Path>) -> Option<(impl AsRef<Path>, Zine)> {
     _find_zine_folder(std::fs::canonicalize(path).unwrap())
 }
 

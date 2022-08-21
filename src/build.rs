@@ -5,21 +5,20 @@ use anyhow::{Context, Result};
 use notify::{watcher, RecursiveMode, Watcher};
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
-    // Use `zine.toml` to find root path
-    let source = find_zine_folder(&source.as_ref().to_path_buf())
-        .with_context(|| "Failed to find zine folder".to_string())?;
+    // Use zine.toml to find root path
+    let (source, _zine) = find_zine_folder(source)
+        .with_context(|| "Failed to find the root zine.toml file".to_string())?;
 
     // Also make the dest folder joined in root path
-    let dest = source.join(dest);
+    let dest = source.as_ref().to_path_buf().join(dest);
 
     data::load(&source);
 
-    // Clone for moving
-    let _source = source.clone();
+    let source_path = source.as_ref().to_path_buf();
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
         // Save zine data only when the process gonna exist
-        data::export(_source).unwrap();
+        data::export(source_path).unwrap();
         std::process::exit(0);
     });
 
