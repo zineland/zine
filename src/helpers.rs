@@ -5,7 +5,14 @@ use hyper::{
 };
 use hyper_tls::HttpsConnector;
 use rayon::iter::{ParallelBridge, ParallelIterator};
-use std::{fs, io::Read, path::Path};
+use std::{
+    fs,
+    io::Read,
+    path::{Path, PathBuf},
+};
+use walkdir::WalkDir;
+
+use crate::entity::Zine;
 
 pub fn capitalize(text: &str) -> String {
     let mut chars = text.chars();
@@ -52,6 +59,43 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
             anyhow::Ok(())
         })?;
     Ok(())
+}
+
+/// Find the root zine file in current dir
+fn zine_file_existed(path: &PathBuf) -> bool {
+    for entry in WalkDir::new(path).max_depth(1) {
+        let entry = entry.unwrap();
+        if entry.path().is_file() {
+            let root_file = entry.file_name().to_str().unwrap();
+            // Insure the name
+            if !root_file.starts_with(crate::ZINE_FILE) {
+                continue;
+            }
+            // Verify the content
+            let content = std::fs::read_to_string(path.join(root_file)).unwrap();
+            if toml::from_str::<Zine>(&content).is_err() {
+                continue;
+            }
+            return true;
+        }
+    }
+    false
+}
+
+/// Find recursively
+pub fn _find_root_path(path: PathBuf) -> Option<PathBuf> {
+    if zine_file_existed(&path) {
+        return Some(path);
+    }
+    match path.parent() {
+        Some(parent_path) => _find_root_path(parent_path.to_path_buf()),
+        None => None,
+    }
+}
+
+/// Find folder contains `zine.toml` as root path
+pub fn find_root_path(path: &PathBuf) -> Option<PathBuf> {
+    _find_root_path(std::fs::canonicalize(path).unwrap())
 }
 
 /// A serde module to serialize and deserialize [`time::Date`] type.

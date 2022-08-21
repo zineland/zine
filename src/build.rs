@@ -1,17 +1,25 @@
 use std::{fs, path::Path, sync::mpsc, time::Duration};
 
-use crate::{data, helpers::copy_dir, ZineEngine};
-use anyhow::Result;
+use crate::{data, helpers::copy_dir, helpers::find_root_path, ZineEngine};
+use anyhow::{Context, Result};
 use notify::{watcher, RecursiveMode, Watcher};
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
+    // Use `zine.toml` to find root path
+    let source = find_root_path(&source.as_ref().to_path_buf())
+        .with_context(|| "Failed to find root path".to_string())?;
+
+    // Also make the dest folder joined in root path
+    let dest = source.join(dest);
+
     data::load(&source);
 
-    let source_path = source.as_ref().to_path_buf();
+    // Clone for moving
+    let _source = source.clone();
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
         // Save zine data only when the process gonna exist
-        data::export(source_path).unwrap();
+        data::export(_source).unwrap();
         std::process::exit(0);
     });
 
