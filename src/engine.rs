@@ -325,7 +325,7 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                 }
             } else if self.markdown_config.highlight_code {
                 // Syntax highlight
-                let html = self.highlight_syntax(fenced, text);
+                let html = self.highlight_syntax(fenced.name, text);
                 return Visiting::Event(Event::Html(html.into()));
             } else {
                 return Visiting::Event(Event::Html(format!("<pre>{}</pre>", text).into()));
