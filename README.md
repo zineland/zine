@@ -160,6 +160,8 @@ file = "1-first.md"
 # the title of this article
 title = "First article"
 # the optional author id of this article.
+# also support multiple co-authors:
+# author = ["author1", "author2"]
 author = "zine-team"
 # the cover of this article
 cover = ""

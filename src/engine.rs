@@ -10,7 +10,7 @@ use crate::{
     entity::{Entity, MarkdownConfig, Zine},
     html::rewrite_html_base_url,
     locales::FluentLoader,
-    markdown::{markdown_to_html, MarkdownVistor},
+    markdown::{markdown_to_html, MarkdownVisitor},
     Mode,
 };
 
@@ -259,11 +259,11 @@ impl<'a> Vistor<'a> {
     }
 }
 
-impl<'a, 'b: 'a> MarkdownVistor<'b> for Vistor<'a> {
-    fn visit_start_tag(&mut self, tag: Tag<'b>) -> Option<Event<'static>> {
+impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
+    fn visit_start_tag(&mut self, tag: &Tag<'b>) -> Option<Event<'static>> {
         match tag {
             Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
-                self.code_block_fenced = Some(name);
+                self.code_block_fenced = Some(name.clone());
             }
             Tag::Image(_, src, title) => {
                 // Add loading="lazy" attribute for markdown image.
@@ -273,12 +273,12 @@ impl<'a, 'b: 'a> MarkdownVistor<'b> for Vistor<'a> {
             }
             Tag::Heading(level, id, _) => {
                 self.heading_ref = Some(HeadingRef {
-                    level: level as usize,
+                    level: *level as usize,
                     // This id is parsed from the markdow heading part.
                     // Here is the syntax:
                     // `# Long title {#title}` parse the id: title
                     // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
-                    id,
+                    id: *id,
                 });
             }
             _ => {}
@@ -286,7 +286,7 @@ impl<'a, 'b: 'a> MarkdownVistor<'b> for Vistor<'a> {
         None
     }
 
-    fn visit_end_tag(&mut self, tag: Tag<'_>) -> Option<Event<'static>> {
+    fn visit_end_tag(&mut self, tag: &Tag<'_>) -> Option<Event<'static>> {
         match tag {
             Tag::CodeBlock(_) => {
                 self.code_block_fenced = None;
