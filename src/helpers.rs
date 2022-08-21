@@ -68,7 +68,7 @@ fn zine_file_existed(path: &PathBuf) -> bool {
         if entry.path().is_file() {
             let root_file = entry.file_name().to_str().unwrap();
             // Insure the name
-            if !root_file.starts_with(crate::ZINE_FILE) {
+            if !root_file.eq(crate::ZINE_FILE) {
                 continue;
             }
             // Verify the content
