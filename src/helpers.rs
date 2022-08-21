@@ -83,19 +83,19 @@ fn zine_file_existed(path: &PathBuf) -> bool {
 }
 
 /// Find recursively
-fn _find_root_path(path: PathBuf) -> Option<PathBuf> {
+fn _find_zine_folder(path: PathBuf) -> Option<PathBuf> {
     if zine_file_existed(&path) {
         return Some(path);
     }
     match path.parent() {
-        Some(parent_path) => _find_root_path(parent_path.to_path_buf()),
+        Some(parent_path) => _find_zine_folder(parent_path.to_path_buf()),
         None => None,
     }
 }
 
 /// Find folder contains `zine.toml` as root path
-pub fn find_root_path(path: &PathBuf) -> Option<PathBuf> {
-    _find_root_path(std::fs::canonicalize(path).unwrap())
+pub fn find_zine_folder(path: &PathBuf) -> Option<PathBuf> {
+    _find_zine_folder(std::fs::canonicalize(path).unwrap())
 }
 
 /// A serde module to serialize and deserialize [`time::Date`] type.
