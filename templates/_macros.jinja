@@ -4,7 +4,7 @@
     {% else -%}
         {% set author_names = [author] -%}
     {% endif -%}
-    <div>
+    <div class="flex items-center">
     {% for name in author_names -%}
         {% set author = get_author(id = name) -%}
         {% if author -%}
@@ -23,7 +23,7 @@
                 </span>
             </a>
         {% else -%}
-            <span>{{ article.author }}</span>
+            <span>{{ name }}</span>
         {% endif -%}
     {% endfor -%}
     </div>
