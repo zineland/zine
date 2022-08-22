@@ -12,7 +12,7 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, feed::FeedEntry, Entity};
+use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
 
 use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme};
 
@@ -55,6 +55,23 @@ struct AuthorArticle<'a> {
 }
 
 impl Zine {
+    /// Parse Zine instance from the root zine.toml file.
+    pub fn parse_from_toml<P: AsRef<Path>>(source: P) -> Result<Zine> {
+        let source = source.as_ref();
+        let content = fs::read_to_string(source.join(crate::ZINE_FILE)).with_context(|| {
+            format!("Failed to parse root `zine.toml` of `{}`", source.display())
+        })?;
+
+        Ok(toml::from_str::<Zine>(&content).map_err(|err| {
+            let value = toml::from_str::<toml::Value>(&content).expect("This shouldn't happen.");
+            if value.get("site").is_some() {
+                ZineError::InvalidRootTomlFile(err)
+            } else {
+                ZineError::NotRootTomlFile
+            }
+        })?)
+    }
+
     // Query the article metadata list by author id, sorted by descending order of publishing date.
     fn query_articles_by_author(&self, author_id: &str) -> Vec<AuthorArticle> {
         let mut items = self

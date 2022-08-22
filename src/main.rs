@@ -10,6 +10,7 @@ mod code_blocks;
 mod data;
 mod engine;
 mod entity;
+mod error;
 mod feed;
 mod helpers;
 mod html;
