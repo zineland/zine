@@ -8,13 +8,14 @@ use crate::{
     code_blocks::{is_custom_code_block, render_code_block, AuthorCode, CodeBlock},
     current_mode, data,
     entity::{Entity, MarkdownConfig, Zine},
+    helpers::copy_dir,
     html::rewrite_html_base_url,
     locales::FluentLoader,
     markdown::{markdown_to_html, MarkdownVisitor, Visiting},
     Mode,
 };
 
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use hyper::Uri;
 use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
@@ -112,8 +113,9 @@ fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
 
 #[derive(Debug)]
 pub struct ZineEngine {
-    source: PathBuf,
-    dest: PathBuf,
+    pub source: PathBuf,
+    pub dest: PathBuf,
+    zine: Zine,
 }
 
 struct MarkdownRender {
@@ -178,7 +180,7 @@ fn render_sitemap(context: Context, dest: impl AsRef<Path>) -> Result<()> {
 }
 
 impl ZineEngine {
-    pub fn new<P: AsRef<Path>>(source: P, dest: P) -> Result<Self> {
+    pub fn new(source: impl AsRef<Path>, dest: impl AsRef<Path>, zine: Zine) -> Result<Self> {
         let dest = dest.as_ref().to_path_buf();
         if !dest.exists() {
             fs::create_dir_all(&dest)?;
@@ -186,39 +188,54 @@ impl ZineEngine {
         Ok(ZineEngine {
             source: source.as_ref().to_path_buf(),
             dest,
+            zine,
         })
     }
 
-    pub fn build(&self) -> Result<()> {
-        let content =
-            fs::read_to_string(&self.source.join(crate::ZINE_FILE)).with_context(|| {
-                format!(
-                    "Failed to parse root `zine.toml` of `{}`",
-                    self.source.display()
-                )
-            })?;
-        let mut zine = toml::from_str::<Zine>(&content)?;
+    fn copy_static_assets(&self) -> Result<()> {
+        let static_dir = self.source.join("static");
+        if static_dir.exists() {
+            copy_dir(&static_dir, &self.dest)?;
+        }
 
-        zine.parse(&self.source)?;
+        // Copy builtin static files into dest static dir.
+        let dest_static_dir = self.dest.join("static");
+        fs::create_dir_all(&dest_static_dir)?;
 
-        init_tera(&self.source, &zine);
-
-        zine.render(Context::new(), &self.dest)?;
+        #[cfg(not(debug_assertions))]
+        include_dir::include_dir!("static").extract(dest_static_dir)?;
+        // Alwasy copy static directory in debug mode.
         #[cfg(debug_assertions)]
-        println!("Zine engine: {:?}", zine);
+        copy_dir(Path::new("./static"), &self.dest)?;
+
+        Ok(())
+    }
+
+    pub fn build(&mut self, reload: bool) -> Result<()> {
+        if reload {
+            self.zine = Zine::parse_from_toml(&self.source)?;
+        }
+
+        self.zine.parse(&self.source)?;
+
+        init_tera(&self.source, &self.zine);
+
+        self.zine.render(Context::new(), &self.dest)?;
+        #[cfg(debug_assertions)]
+        println!("Zine engine: {:?}", self.zine);
 
         let mut feed_context = Context::new();
-        feed_context.insert("site", &zine.site);
-        feed_context.insert("entries", &zine.latest_feed_entries(20));
+        feed_context.insert("site", &self.zine.site);
+        feed_context.insert("entries", &self.zine.latest_feed_entries(20));
         feed_context.insert("generator_version", env!("CARGO_PKG_VERSION"));
         render_atom_feed(feed_context, &self.dest)?;
 
         let mut sitemap_context = Context::new();
-        sitemap_context.insert("site", &zine.site);
-        sitemap_context.insert("entries", &zine.sitemap_entries());
+        sitemap_context.insert("site", &self.zine.site);
+        sitemap_context.insert("entries", &self.zine.sitemap_entries());
         render_sitemap(sitemap_context, &self.dest)?;
 
-        Ok(())
+        self.copy_static_assets()
     }
 }
 

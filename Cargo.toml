@@ -42,6 +42,7 @@ syntect = { version = "4.6", default-features = false, features = [
     "default-fancy",
 ] }
 tera = "1"
+thiserror = "1"
 time = { version = "0.3", features = ["serde", "serde-well-known"] }
 tokio = { version = "1.18", features = [
     "rt-multi-thread",

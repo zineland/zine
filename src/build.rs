@@ -1,20 +1,25 @@
-use std::{fs, path::Path, sync::mpsc, time::Duration};
+use std::{
+    path::{Path, PathBuf},
+    sync::mpsc,
+    time::Duration,
+};
 
-use crate::{data, helpers::copy_dir, helpers::find_zine_folder, ZineEngine};
-use anyhow::{Context, Result};
+use crate::{data, entity::Zine, error::ZineError, ZineEngine};
+use anyhow::{anyhow, Context, Result};
 use notify::{watcher, RecursiveMode, Watcher};
+use walkdir::WalkDir;
 
 pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
     // Use zine.toml to find root path
-    let (source, _zine) = find_zine_folder(source)
+    let (source, zine) = locate_root_zine_folder(std::fs::canonicalize(source)?)?
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
 
-    // Also make the dest folder joined in root path
-    let dest = source.as_ref().to_path_buf().join(dest);
+    // Also make the dest folder joined in root path?
+    // let dest = source.join(dest);
 
     data::load(&source);
 
-    let source_path = source.as_ref().to_path_buf();
+    let source_path = source.clone();
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
         // Save zine data only when the process gonna exist
@@ -22,30 +27,16 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
         std::process::exit(0);
     });
 
-    let build_result = _watch_build(source.as_ref(), dest.as_ref(), watch).await;
-    if cfg!(debug_assertions) {
-        // Explicitly panic build result in debug mode
-        build_result.unwrap();
-    } else if let Err(err) = build_result {
-        println!("Error: {}", &err);
-        std::process::exit(1);
-    }
-    Ok(())
-}
-
-async fn _watch_build(source: &Path, dest: &Path, watch: bool) -> Result<()> {
-    let source = source.to_path_buf();
-    let dest = dest.to_path_buf();
-
+    let mut engine = ZineEngine::new(source, dest, zine)?;
     // Spawn the build process as a blocking task, avoid starving other tasks.
-    tokio::task::spawn_blocking(move || {
-        build(&source, &dest)?;
+    let build_result = tokio::task::spawn_blocking(move || {
+        build(&mut engine, false)?;
 
         if watch {
             println!("Watching...");
             let (tx, rx) = mpsc::channel();
             let mut watcher = watcher(tx, Duration::from_secs(1))?;
-            watcher.watch(&source, RecursiveMode::Recursive)?;
+            watcher.watch(&engine.source, RecursiveMode::Recursive)?;
 
             // Watch zine's templates and static directory in debug mode to support reload.
             #[cfg(debug_assertions)]
@@ -56,35 +47,63 @@ async fn _watch_build(source: &Path, dest: &Path, watch: bool) -> Result<()> {
 
             loop {
                 match rx.recv() {
-                    Ok(_) => build(&source, &dest)?,
+                    Ok(_) => build(&mut engine, true)?,
                     Err(err) => println!("watch error: {:?}", &err),
                 }
             }
         }
         anyhow::Ok(())
     })
-    .await?
+    .await?;
+
+    if cfg!(debug_assertions) {
+        // Explicitly panic build result in debug mode
+        build_result.unwrap();
+    } else if let Err(err) = build_result {
+        println!("Error: {}", &err);
+        std::process::exit(1);
+    }
+    Ok(())
 }
 
-fn build(source: &Path, dest: &Path) -> Result<()> {
+fn build(engine: &mut ZineEngine, reload: bool) -> Result<()> {
     let instant = std::time::Instant::now();
-    ZineEngine::new(source, dest)?.build()?;
-
-    let static_dir = source.join("static");
-    if static_dir.exists() {
-        copy_dir(&static_dir, dest)?;
-    }
-
-    // Copy builtin static files into dest static dir.
-    let dest_static_dir = dest.join("static");
-    fs::create_dir_all(&dest_static_dir)?;
-
-    #[cfg(not(debug_assertions))]
-    include_dir::include_dir!("static").extract(dest_static_dir)?;
-    // Alwasy copy static directory in debug mode.
-    #[cfg(debug_assertions)]
-    copy_dir(Path::new("./static"), dest)?;
-
+    engine.build(reload)?;
     println!("Build cost: {}ms", instant.elapsed().as_millis());
     Ok(())
+}
+
+/// Find the root zine file in current dir and try to parse it
+fn parse_root_zine_file<P: AsRef<Path>>(path: P) -> Result<Option<Zine>> {
+    // Find the name in current dir
+    if WalkDir::new(&path).max_depth(1).into_iter().any(|entry| {
+        let entry = entry.as_ref().unwrap();
+        entry.file_name() == crate::ZINE_FILE
+    }) {
+        // Try to parse the root zine.toml as Zine instance
+        return Ok(Some(Zine::parse_from_toml(path)?));
+    }
+
+    Ok(None)
+}
+
+// Locate folder contains the root `zine.toml`, and return path info and Zine instance.
+fn locate_root_zine_folder(path: PathBuf) -> Result<Option<(PathBuf, Zine)>> {
+    match parse_root_zine_file(&path) {
+        Ok(Some(zine)) => return Ok(Some((path, zine))),
+        Err(err) => match err.downcast::<ZineError>() {
+            // Found a root zine.toml, but it has invalid format
+            Ok(inner_err @ ZineError::InvalidRootTomlFile(_)) => return Err(anyhow!(inner_err)),
+            // Found a zine.toml, but it isn't a root zine.toml
+            Ok(ZineError::NotRootTomlFile) => {}
+            // No zine.toml file found
+            _ => {}
+        },
+        _ => {}
+    }
+
+    match path.parent() {
+        Some(parent_path) => locate_root_zine_folder(parent_path.to_path_buf()),
+        None => Ok(None),
+    }
 }
