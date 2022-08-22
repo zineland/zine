@@ -101,13 +101,7 @@ impl Zine {
 
     // Get author list.
     fn authors(&self) -> Vec<Author> {
-        self.authors
-            .iter()
-            .map(|(id, author)| Author {
-                id: id.to_owned(),
-                ..author.to_owned()
-            })
-            .collect()
+        self.authors.values().cloned().collect()
     }
 
     /// Get latest `limit` number of articles in all issues.
@@ -178,9 +172,10 @@ impl Entity for Zine {
         if self.authors.is_empty() {
             println!("Warn: no author specified in [authors] of root `zine.toml`.");
         } else {
-            self.authors
-                .values_mut()
-                .try_for_each(|author| author.parse(source))?;
+            self.authors.iter_mut().try_for_each(|(id, author)| {
+                author.id = id.clone();
+                author.parse(source)
+            })?;
         }
 
         self.theme.parse(source)?;

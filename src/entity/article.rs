@@ -9,7 +9,7 @@ use time::Date;
 
 use crate::{current_mode, engine, markdown, meta::Meta, Mode};
 
-use super::{AuthorName, EndMatter, Entity};
+use super::{AuthorId, EndMatter, Entity};
 
 /// The Meta info of Article.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +18,9 @@ pub struct MetaArticle {
     /// Default to file name if no slug specified.
     pub slug: Option<String>,
     pub title: String,
-    pub author: Option<AuthorName>,
+    /// The author id of this article.
+    /// An article can has zero, one or multiple authors.
+    pub author: Option<AuthorId>,
     pub cover: Option<String>,
     /// The publish date. Format like YYYY-MM-dd.
     #[serde(with = "crate::helpers::serde_date")]

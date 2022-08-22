@@ -6,9 +6,10 @@ use tera::Context;
 
 use crate::{engine, markdown, meta::Meta, Entity};
 
-/// AuthorName represents a single author or multiple co-authors.
+/// AuthorId represents a single author or multiple co-authors.
+/// Declared in `[[article]]` table.
 #[derive(Debug, Clone)]
-pub enum AuthorName {
+pub enum AuthorId {
     // Single author.
     One(String),
     // Co-authors.
@@ -18,7 +19,7 @@ pub enum AuthorName {
 /// The author of an article. Declared in the root `zine.toml`'s **[authors]** table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Author {
-    /// The author id.
+    /// The author id, which is the key declared in `[authors]` table.
     #[serde(skip_deserializing, default)]
     pub id: String,
     /// The author's name. Will fallback to capitalized id if missing.
@@ -47,11 +48,13 @@ pub struct AuthorList<'a> {
     authors: Vec<AuthorExt<'a>>,
 }
 
-impl AuthorName {
-    pub fn is_author(&self, name: &str) -> bool {
+impl AuthorId {
+    pub fn is_author(&self, id: &str) -> bool {
         match self {
-            Self::One(author) => author.eq_ignore_ascii_case(name),
-            Self::List(authors) => authors.iter().any(|a| a.eq_ignore_ascii_case(name)),
+            Self::One(author_id) => author_id.eq_ignore_ascii_case(id),
+            Self::List(authors) => authors
+                .iter()
+                .any(|author_id| author_id.eq_ignore_ascii_case(id)),
         }
     }
 }
@@ -119,7 +122,7 @@ impl<'a> Entity for AuthorList<'a> {
     }
 }
 
-impl<'de> Deserialize<'de> for AuthorName {
+impl<'de> Deserialize<'de> for AuthorId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -128,14 +131,14 @@ impl<'de> Deserialize<'de> for AuthorName {
     }
 }
 
-impl Serialize for AuthorName {
+impl Serialize for AuthorId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         match self {
-            AuthorName::One(author) => serializer.serialize_str(author),
-            AuthorName::List(authors) => {
+            AuthorId::One(author) => serializer.serialize_str(author),
+            AuthorId::List(authors) => {
                 let mut seq = serializer.serialize_seq(Some(authors.len()))?;
                 for author in authors {
                     seq.serialize_element(author)?;
@@ -149,7 +152,7 @@ impl Serialize for AuthorName {
 struct AuthorNameVisitor;
 
 impl<'de> de::Visitor<'de> for AuthorNameVisitor {
-    type Value = AuthorName;
+    type Value = AuthorId;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         formatter.write_str("plain string or string list")
@@ -159,7 +162,7 @@ impl<'de> de::Visitor<'de> for AuthorNameVisitor {
     where
         E: de::Error,
     {
-        Ok(AuthorName::One(v.to_string()))
+        Ok(AuthorId::One(v.to_string()))
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -173,44 +176,44 @@ impl<'de> de::Visitor<'de> for AuthorNameVisitor {
                 authors.push(author);
             }
         }
-        Ok(AuthorName::List(authors))
+        Ok(AuthorId::List(authors))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::AuthorId;
 
-    use super::AuthorName;
     #[test]
     fn test_author_name() {
         assert!(matches!(
-            serde_json::from_str::<AuthorName>("\"Alice\"").unwrap(),
-            AuthorName::One(name) if name == String::from("Alice"),
+            serde_json::from_str::<AuthorId>("\"Alice\"").unwrap(),
+            AuthorId::One(name) if name == String::from("Alice"),
         ));
         assert!(matches!(
-            serde_json::from_str::<AuthorName>("[\"Alice\",\"Bob\"]").unwrap(),
-            AuthorName::List(names) if names == vec![String::from("Alice"), String::from("Bob")],
+            serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\"]").unwrap(),
+            AuthorId::List(names) if names == vec![String::from("Alice"), String::from("Bob")],
         ));
         assert!(matches!(
-            serde_json::from_str::<AuthorName>("[\"Alice\",\"Bob\", \"Alice\"]").unwrap(),
-            AuthorName::List(names) if names == vec![String::from("Alice"), String::from("Bob")],
+            serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\", \"Alice\"]").unwrap(),
+            AuthorId::List(names) if names == vec![String::from("Alice"), String::from("Bob")],
         ));
         assert!(matches!(
-            serde_json::from_str::<AuthorName>("[]").unwrap(),
-            AuthorName::List(names) if names.is_empty(),
+            serde_json::from_str::<AuthorId>("[]").unwrap(),
+            AuthorId::List(names) if names.is_empty(),
         ));
 
-        let a = AuthorName::One(String::from("John"));
+        let a = AuthorId::One(String::from("John"));
         assert!(a.is_author("John"));
         assert!(!a.is_author("Alice"));
         assert_eq!("\"John\"", serde_json::to_string(&a).unwrap());
 
-        let a = AuthorName::List(vec![String::from("Alice"), String::from("Bob")]);
+        let a = AuthorId::List(vec![String::from("Alice"), String::from("Bob")]);
         assert!(a.is_author("Alice"));
         assert!(!a.is_author("John"));
         assert_eq!("[\"Alice\",\"Bob\"]", serde_json::to_string(&a).unwrap());
 
-        let a = AuthorName::List(vec![String::from("Alice"), String::from("Bob")]);
+        let a = AuthorId::List(vec![String::from("Alice"), String::from("Bob")]);
         assert!(a.is_author("Alice"));
         assert!(!a.is_author("John"));
         assert_eq!("[\"Alice\",\"Bob\"]", serde_json::to_string(&a).unwrap());

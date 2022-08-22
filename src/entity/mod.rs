@@ -15,7 +15,7 @@ mod zine;
 
 pub use self::zine::Zine;
 pub use article::{Article, MetaArticle};
-pub use author::{Author, AuthorList, AuthorName};
+pub use author::{Author, AuthorId, AuthorList};
 pub use end_matter::EndMatter;
 pub use issue::Issue;
 pub use markdown::MarkdownConfig;
@@ -62,10 +62,10 @@ impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
         self.par_iter_mut().try_for_each(|item| item.parse(source))
     }
 
-    fn render(&self, render: Context, dest: &Path) -> Result<()> {
+    fn render(&self, context: Context, dest: &Path) -> Result<()> {
         for item in self {
             let item = item.clone();
-            let render = render.clone();
+            let render = context.clone();
             let dest = dest.to_path_buf();
             tokio::task::spawn_blocking(move || {
                 item.render(render, &dest).expect("Render failed.")
