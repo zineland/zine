@@ -206,7 +206,9 @@ impl ZineEngine {
         include_dir::include_dir!("static").extract(dest_static_dir)?;
         // Alwasy copy static directory in debug mode.
         #[cfg(debug_assertions)]
-        copy_dir(Path::new("./static"), &self.dest)
+        copy_dir(Path::new("./static"), &self.dest)?;
+
+        Ok(())
     }
 
     pub fn build(&mut self, reload: bool) -> Result<()> {
