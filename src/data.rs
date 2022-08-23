@@ -10,7 +10,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 
-use crate::entity::Author;
+use crate::entity::{Author, MetaArticle};
 
 static ZINE_DATA: OnceCell<RwLock<ZineData>> = OnceCell::new();
 
@@ -42,6 +42,9 @@ pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
 pub struct ZineData {
     #[serde(skip)]
     authors: Vec<Author>,
+    // Issue slug and article pair list.
+    #[serde(skip)]
+    articles: Vec<(String, MetaArticle)>,
     url_previews: BTreeMap<String, (String, String)>,
 }
 
@@ -53,8 +56,9 @@ impl ZineData {
             Ok(serde_json::from_str(&json)?)
         } else {
             Ok(ZineData {
-                url_previews: BTreeMap::default(),
                 authors: Vec::default(),
+                articles: Vec::default(),
+                url_previews: BTreeMap::default(),
             })
         }
     }
@@ -71,10 +75,27 @@ impl ZineData {
         self.authors = authors;
     }
 
+    pub fn set_articles(&mut self, articles: Vec<(String, MetaArticle)>) {
+        self.articles = articles;
+    }
+
     pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {
         self.authors
             .iter()
             .find(|author| author.id.eq_ignore_ascii_case(author_id))
+    }
+
+    pub fn get_article_by_slug(&self, issue_slug: &str, article_slug: &str) -> Option<MetaArticle> {
+        self.articles
+            .iter()
+            .find_map(|(slug, article)| {
+                if slug == issue_slug && article.slug() == article_slug {
+                    Some(article)
+                } else {
+                    None
+                }
+            })
+            .cloned()
     }
 
     fn export_to_json(&self) -> Result<String> {

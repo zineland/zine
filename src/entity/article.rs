@@ -14,6 +14,7 @@ use super::{AuthorId, EndMatter, Entity};
 /// The Meta info of Article.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetaArticle {
+    pub file: String,
     /// The slug after this artcile rendered.
     /// Default to file name if no slug specified.
     pub slug: Option<String>,
@@ -29,7 +30,6 @@ pub struct MetaArticle {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Article {
-    pub file: String,
     #[serde(flatten)]
     pub meta: MetaArticle,
     /// The article's markdown content.
@@ -57,6 +57,16 @@ impl std::fmt::Debug for Article {
     }
 }
 
+impl MetaArticle {
+    #[inline]
+    pub fn slug(&self) -> String {
+        self.slug
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| self.file.replace(".md", ""))
+    }
+}
+
 impl Article {
     /// Check whether `author` name is the author of this article.
     pub fn is_author(&self, author: &str) -> bool {
@@ -77,17 +87,13 @@ impl Article {
     }
 
     pub fn slug(&self) -> String {
-        self.meta
-            .slug
-            .as_ref()
-            .cloned()
-            .unwrap_or_else(|| self.file.replace(".md", ""))
+        self.meta.slug()
     }
 }
 
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        let file_path = source.join(&self.file);
+        let file_path = source.join(&self.meta.file);
         let markdown = fs::read_to_string(&file_path).with_context(|| {
             format!("Failed to read markdown file of `{}`", file_path.display())
         })?;

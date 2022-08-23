@@ -104,6 +104,19 @@ impl Zine {
         self.authors.values().cloned().collect()
     }
 
+    fn articles(&self) -> Vec<(String, MetaArticle)> {
+        self.issues
+            .par_iter()
+            .flat_map(|issue| {
+                issue
+                    .articles
+                    .iter()
+                    .map(|article| (issue.slug.clone(), article.meta.clone()))
+                    .collect::<Vec<_>>()
+            })
+            .collect()
+    }
+
     /// Get latest `limit` number of articles in all issues.
     /// Sort by date in descending order.
     pub fn latest_feed_entries(&self, limit: usize) -> Vec<FeedEntry> {
@@ -221,18 +234,22 @@ impl Entity for Zine {
         // Render all authors pages.
         let authors = self.authors();
         let mut author_list = AuthorList::default();
-        for author in &authors {
+        authors.iter().try_for_each(|author| {
             let articles = self.query_articles_by_author(&author.id);
             author_list.record_author(author, articles.len());
 
             let mut context = context.clone();
             context.insert("articles", &articles);
             author.render(context, dest)?;
-        }
 
+            anyhow::Ok(())
+        })?;
         // Render author list page.
         author_list.render(context.clone(), dest)?;
-        data::write().set_authors(authors);
+
+        let mut zine_data = data::write();
+        zine_data.set_authors(authors);
+        zine_data.set_articles(self.articles());
 
         // Render all issues pages.
         self.issues.render(context.clone(), dest)?;
