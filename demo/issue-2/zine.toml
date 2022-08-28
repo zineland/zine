@@ -1,6 +1,5 @@
 
 [[article]]
-slug = "first"
 file = "first.md"
 title = "First article"
 author = "zine-team"
@@ -10,7 +9,6 @@ publish = true
 featured = true
 
 [[article]]
-slug = "second"
 file = "second.md"
 title = "Second article"
 author = "zine-team"
