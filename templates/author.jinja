@@ -43,7 +43,9 @@
                 </div>
                 <div class="prose my-2 sm:m-8 grow">
                     <div class="text-4xl font-bold py-2 text-center sm:text-start">{{ author_name }}</div>
+                    {% if author.bio -%}
                     <div>{{ markdown_to_html(markdown = author.bio) | safe }}</div>
+                    {% endif %}
                 </div>
             </div>
             <div class="my-4 sm:my-6 text-2xl font-bold">
