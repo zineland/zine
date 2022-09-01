@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{is_custom_code_block, render_code_block, AuthorCode, CodeBlock},
+    code_blocks::{AuthorCode, CodeBlock, Fenced},
     current_mode, data,
     entity::{Entity, MarkdownConfig, Zine},
     helpers::copy_dir,
@@ -244,7 +244,8 @@ struct HeadingRef<'a> {
     id: Option<&'a str>,
 }
 
-struct Vistor<'a> {
+/// Markdown visitor.
+pub struct Vistor<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
     heading_ref: Option<HeadingRef<'a>>,
@@ -254,6 +255,15 @@ impl<'a> Vistor<'a> {
     fn new(markdown_config: &'a MarkdownConfig) -> Self {
         Vistor {
             markdown_config,
+            code_block_fenced: None,
+            heading_ref: None,
+        }
+    }
+
+    /// Clone a brand-new Visitor only with markdown config.
+    pub fn clone(&self) -> Self {
+        Vistor {
+            markdown_config: self.markdown_config,
             code_block_fenced: None,
             heading_ref: None,
         }
@@ -319,18 +329,20 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
     }
 
     fn visit_text(&mut self, text: &CowStr<'b>) -> Visiting {
-        if let Some(fenced) = self.code_block_fenced.as_ref() {
-            if is_custom_code_block(fenced.as_ref()) {
+        if let Some(input) = self.code_block_fenced.as_ref() {
+            let fenced = Fenced::parse(input).unwrap();
+            if fenced.is_custom_code_block() {
                 // Block in place to execute async task
                 let rendered_html = task::block_in_place(|| {
-                    Handle::current().block_on(async { render_code_block(fenced, text).await })
+                    Handle::current()
+                        .block_on(async { fenced.render_code_block(text, self.clone()).await })
                 });
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));
                 }
             } else if self.markdown_config.highlight_code {
                 // Syntax highlight
-                let html = self.highlight_syntax(fenced, text);
+                let html = self.highlight_syntax(fenced.name, text);
                 return Visiting::Event(Event::Html(html.into()));
             } else {
                 return Visiting::Event(Event::Html(format!("<pre>{}</pre>", text).into()));

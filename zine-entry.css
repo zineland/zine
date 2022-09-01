@@ -51,6 +51,11 @@
     cursor: zoom-out;
 }
 
+.callout {
+    padding: 16px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
 
 /* auto center page's h1 heading */
 
