@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{AuthorCode, CodeBlock, Fenced},
+    code_blocks::{AuthorCode, CodeBlock, Fenced, InlineLink},
     current_mode, data,
     entity::{Entity, MarkdownConfig, Zine},
     helpers::copy_dir,
@@ -68,6 +68,10 @@ fn init_tera(source: &Path, zine: &Zine) {
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
+            (
+                "inline-link.jinja",
+                include_str!("../templates/inline-link.jinja"),
+            ),
         ])
         .unwrap();
         tera.register_function("get_author", get_author_fn);
@@ -107,7 +111,8 @@ fn init_tera(source: &Path, zine: &Zine) {
     tera.register_function("fluent", FluentLoader::new(source, locale));
 }
 
-fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
+/// Get a Tera under read lock.
+pub fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
     TERA.get().expect("Tera haven't initialized").read()
 }
 
@@ -375,6 +380,21 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                     .render()
                     .expect("Render author code failed.");
                 return Visiting::Event(Event::Html(html.into()));
+            }
+        } else if let Some(maybe_slug) = code.strip_prefix('/') {
+            let mut slugs = maybe_slug.split('/');
+            if let (Some(issue_slug), Some(article_slug)) = (slugs.next(), slugs.next()) {
+                let data = data::read();
+                if let Some(article) = data.get_article_by_slug(issue_slug, article_slug) {
+                    let html = InlineLink::new(
+                        &article.title,
+                        &format!("/{issue_slug}/{article_slug}"),
+                        &article.cover,
+                    )
+                    .render()
+                    .expect("Render inline linke failed.");
+                    return Visiting::Event(Event::Html(html.into()));
+                }
             }
         }
         Visiting::NotChanged

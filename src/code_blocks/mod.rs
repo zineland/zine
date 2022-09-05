@@ -4,10 +4,12 @@ use anyhow::{bail, Result};
 
 mod author;
 mod callout;
+mod inline_link;
 mod url_preview;
 
 use crate::{data, engine::Vistor, helpers, html};
 pub use author::AuthorCode;
+pub use inline_link::InlineLink;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
 use self::callout::CalloutBlock;
