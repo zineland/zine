@@ -68,10 +68,6 @@ fn init_tera(source: &Path, zine: &Zine) {
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
-            (
-                "inline-link.jinja",
-                include_str!("../templates/inline-link.jinja"),
-            ),
         ])
         .unwrap();
         tera.register_function("get_author", get_author_fn);
