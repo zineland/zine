@@ -1,46 +1,102 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use crate::engine;
-use crate::markdown::markdown_to_html;
+use crate::markdown::{markdown_to_html, MarkdownVisitor};
 
 use super::CodeBlock;
 
+static DEFAULT_BG_COLOR: &str = "#e1eaff";
+static DEFAULT_BORDER_COLOR: &str = "#82a7fc";
+
 /// The CalloutBlock to highlight some pragraphs.
-pub struct CalloutBlock<'a> {
-    bg_color: Option<&'a str>,
-    border_color: Option<&'a str>,
+pub struct CalloutBlock<'a, V> {
+    bg_color: &'a str,
+    border_color: &'a str,
     content: &'a str,
-    visitor: engine::Vistor<'a>,
+    visitor: V,
 }
 
-impl<'a> CalloutBlock<'a> {
-    pub fn new(
-        options: HashMap<String, &'a str>,
-        block: &'a str,
-        visitor: engine::Vistor<'a>,
-    ) -> Self {
+impl<'a, V> CalloutBlock<'a, V>
+where
+    V: MarkdownVisitor<'a>,
+{
+    pub fn new(options: HashMap<String, &'a str>, block: &'a str, visitor: V) -> Self {
+        let (bg_color, border_color) = Self::parse_colors(&options);
         CalloutBlock {
-            bg_color: options.get("bg_color").cloned(),
-            border_color: options.get("border_color").cloned(),
+            bg_color,
+            border_color,
             content: block,
             visitor,
         }
     }
+
+    fn parse_colors(options: &HashMap<String, &'a str>) -> (&'a str, &'a str) {
+        let (bg_color, border_color) = (
+            options.get("bg_color").cloned(),
+            options.get("border_color").cloned(),
+        );
+
+        let (theme_bg_color, theme_border_color) =
+            match options.get("theme").map(|theme| theme.to_lowercase()) {
+                Some(theme) => {
+                    match theme.as_ref() {
+                        "grey" | "gray" => ("#dee0e399", "#dee0e3"),
+                        "red" => ("#fde2e2", "#f98e8b"),
+                        "orange" => ("#feead2", "#ffba6b"),
+                        "yellow" => ("#ffffcc", "#fff67a"),
+                        "green" => ("#d9f5d6", "#8ee085"),
+                        "purple" => ("#eceafe", "#ad82f7"),
+                        // Default is the blue theme.
+                        _ => (DEFAULT_BG_COLOR, DEFAULT_BORDER_COLOR),
+                    }
+                }
+                None => (DEFAULT_BG_COLOR, DEFAULT_BORDER_COLOR),
+            };
+
+        (
+            bg_color.unwrap_or(theme_bg_color),
+            border_color.unwrap_or(theme_border_color),
+        )
+    }
 }
 
-impl<'a> CodeBlock for CalloutBlock<'a> {
+impl<'a, V> CodeBlock for CalloutBlock<'a, V>
+where
+    V: MarkdownVisitor<'a> + Clone,
+{
     fn render(&self) -> anyhow::Result<String> {
         let mut html = String::new();
         let style = format!(
             "background-color: {}; border-color: {}",
-            self.bg_color.unwrap_or("#fff"),
-            self.border_color.unwrap_or("var(--primary-color)"),
+            self.bg_color, self.border_color,
         );
         writeln!(&mut html, r#"<div class="callout" style="{}">"#, style)?;
         let block_html = markdown_to_html(self.content, self.visitor.clone());
         writeln!(&mut html, r#" <div>{}</div>"#, block_html)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{code_blocks::Fenced, markdown::MarkdownVisitor};
+
+    use super::CalloutBlock;
+
+    struct DummyVisitor;
+    impl<'a> MarkdownVisitor<'a> for DummyVisitor {}
+
+    #[test]
+    fn test_parse_colors() {
+        let fenced = Fenced::parse("callout, theme: red").unwrap();
+        let callout = CalloutBlock::new(fenced.options, "", DummyVisitor);
+        assert_eq!(callout.bg_color, "#fde2e2");
+        assert_eq!(callout.border_color, "#f98e8b");
+
+        let fenced = Fenced::parse("callout, theme: red, bg_color: #123456").unwrap();
+        let callout = CalloutBlock::new(fenced.options, "", DummyVisitor);
+        assert_eq!(callout.bg_color, "#123456");
+        assert_eq!(callout.border_color, "#f98e8b");
     }
 }

@@ -261,7 +261,7 @@ impl<'a> Vistor<'a> {
     }
 
     /// Clone a brand-new Visitor only with markdown config.
-    pub fn clone(&self) -> Self {
+    fn clone_with_config(&self) -> Self {
         Vistor {
             markdown_config: self.markdown_config,
             code_block_fenced: None,
@@ -334,8 +334,11 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
             if fenced.is_custom_code_block() {
                 // Block in place to execute async task
                 let rendered_html = task::block_in_place(|| {
-                    Handle::current()
-                        .block_on(async { fenced.render_code_block(text, self.clone()).await })
+                    Handle::current().block_on(async {
+                        fenced
+                            .render_code_block(text, &self.clone_with_config())
+                            .await
+                    })
                 });
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));

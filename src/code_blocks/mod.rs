@@ -41,7 +41,7 @@ impl<'a> Fenced<'a> {
     /// otherwise return URL preview error HTML string to remind user we have error.
     ///
     /// If the fenced is unsupported, we simply return `None`.
-    pub async fn render_code_block(self, block: &'a str, visitor: Vistor<'a>) -> Option<String> {
+    pub async fn render_code_block(self, block: &'a str, visitor: &Vistor<'a>) -> Option<String> {
         match self.name {
             URL_PREVIEW => {
                 let url = block.trim();
