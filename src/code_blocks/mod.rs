@@ -4,10 +4,12 @@ use anyhow::{bail, Result};
 
 mod author;
 mod callout;
+mod gallery;
 mod url_preview;
 
 use crate::{data, engine::Vistor, helpers, html};
 pub use author::AuthorCode;
+use gallery::GalleryBlock;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
 use self::callout::CalloutBlock;
@@ -17,9 +19,10 @@ pub trait CodeBlock {
 }
 
 const CALLOUT: &str = "callout";
+const GALLERY: &str = "gallery";
 const URL_PREVIEW: &str = "urlpreview";
 
-const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, URL_PREVIEW];
+const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, GALLERY, URL_PREVIEW];
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Fenced<'a> {
@@ -76,6 +79,10 @@ impl<'a> Fenced<'a> {
                 let html = CalloutBlock::new(self.options, block, visitor)
                     .render()
                     .unwrap();
+                Some(html)
+            }
+            GALLERY => {
+                let html = GalleryBlock::new(block).render().unwrap();
                 Some(html)
             }
             _ => None,
