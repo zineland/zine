@@ -1,7 +1,6 @@
-use anyhow::Ok;
-use tera::Context;
+use std::fmt::Write;
 
-use crate::engine;
+use anyhow::Ok;
 
 use super::CodeBlock;
 
@@ -19,11 +18,20 @@ impl<'a> InlineLink<'a> {
 
 impl<'a> CodeBlock for InlineLink<'a> {
     fn render(&self) -> anyhow::Result<String> {
-        let mut context = Context::new();
-        context.insert("title", &self.title);
-        context.insert("url", &self.url);
-        context.insert("image", &self.image);
-        let html = engine::get_tera().render("inline-link.jinja", &context)?;
+        let mut html = String::new();
+        writeln!(
+            &mut html,
+            r###"<a class="inline-link"
+                    href="{url}"
+                    data-title="{title}"
+                    data-url="{url}"
+                    data-image="{image}">
+                    {title}
+            </a>"###,
+            url = self.url,
+            title = self.title,
+            image = self.image.as_deref().unwrap_or_default()
+        )?;
         Ok(html)
     }
 }
