@@ -377,20 +377,13 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                     .expect("Render author code failed.");
                 return Visiting::Event(Event::Html(html.into()));
             }
-        } else if let Some(maybe_slug) = code.strip_prefix('/') {
-            let mut slugs = maybe_slug.split('/');
-            if let (Some(issue_slug), Some(article_slug)) = (slugs.next(), slugs.next()) {
-                let data = data::read();
-                if let Some(article) = data.get_article_by_slug(issue_slug, article_slug) {
-                    let html = InlineLink::new(
-                        &article.title,
-                        &format!("/{issue_slug}/{article_slug}"),
-                        &article.cover,
-                    )
+        } else if code.starts_with('/') {
+            let data = data::read();
+            if let Some(article) = data.get_article_by_path(code.as_ref()) {
+                let html = InlineLink::new(&article.title, code, &article.cover)
                     .render()
                     .expect("Render inline linke failed.");
-                    return Visiting::Event(Event::Html(html.into()));
-                }
+                return Visiting::Event(Event::Html(html.into()));
             }
         }
         Visiting::NotChanged

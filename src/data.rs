@@ -85,11 +85,11 @@ impl ZineData {
             .find(|author| author.id.eq_ignore_ascii_case(author_id))
     }
 
-    pub fn get_article_by_slug(&self, issue_slug: &str, article_slug: &str) -> Option<MetaArticle> {
+    pub fn get_article_by_path<P: AsRef<Path>>(&self, article_path: P) -> Option<MetaArticle> {
         self.articles
             .iter()
-            .find_map(|(slug, article)| {
-                if slug == issue_slug && article.slug() == article_slug {
+            .find_map(|(issue_slug, article)| {
+                if Path::new("/").join(issue_slug).join(article.slug()) == article_path.as_ref() {
                     Some(article)
                 } else {
                     None
