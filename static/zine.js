@@ -38,7 +38,7 @@
 
                 inlineCard.classList.remove("hidden");
                 // Align card top center above link.
-                inlineCard.style.left = target.offsetLeft + target.offsetWidth / 2 - 190 + 'px';
+                inlineCard.style.left = Math.max(3, target.offsetLeft + target.offsetWidth / 2 - 190) + 'px';
                 inlineCard.style.top = (target.offsetTop - 275) + 'px';
             };
             link.onmouseleave = () => {
