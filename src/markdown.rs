@@ -23,6 +23,8 @@ pub trait MarkdownVisitor<'a> {
     }
 }
 
+impl<'a, T: MarkdownVisitor<'a>> MarkdownVisitor<'a> for &'a T {}
+
 /// The markdown visit result.
 pub enum Visiting {
     /// A new event should be rendered.

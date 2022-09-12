@@ -52,7 +52,8 @@
 }
 
 .callout {
-    padding: 16px;
+    padding: 0 20px;
+    margin: 20px 0;
     border: 1px solid transparent;
     border-radius: 4px;
 }
