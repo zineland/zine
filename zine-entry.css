@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 .author-code {
     padding: 2px;
     margin: 0 2px;
@@ -58,8 +59,18 @@
     border-radius: 4px;
 }
 
-/* auto center page's h1 heading */
+.inline-link {
+    padding: 2px;
+    @apply inline rounded;
+    @apply font-bold text-black !important;
+    @apply underline decoration-primary !important;
+}
 
+.inline-link:hover {
+    @apply text-link !important;
+}
+
+/* auto center page's h1 heading */
 .zine-page>h1 {
     display: flex;
     justify-content: center;

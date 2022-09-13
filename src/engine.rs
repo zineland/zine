@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{AuthorCode, CodeBlock, Fenced},
+    code_blocks::{AuthorCode, CodeBlock, Fenced, InlineLink},
     current_mode, data,
     entity::{Entity, MarkdownConfig, Zine},
     helpers::copy_dir,
@@ -107,7 +107,8 @@ fn init_tera(source: &Path, zine: &Zine) {
     tera.register_function("fluent", FluentLoader::new(source, locale));
 }
 
-fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
+/// Get a Tera under read lock.
+pub fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
     TERA.get().expect("Tera haven't initialized").read()
 }
 
@@ -377,6 +378,14 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
                 let html = AuthorCode(author)
                     .render()
                     .expect("Render author code failed.");
+                return Visiting::Event(Event::Html(html.into()));
+            }
+        } else if code.starts_with('/') {
+            let data = data::read();
+            if let Some(article) = data.get_article_by_path(code.as_ref()) {
+                let html = InlineLink::new(&article.title, code, &article.cover)
+                    .render()
+                    .expect("Render inline linke failed.");
                 return Visiting::Event(Event::Html(html.into()));
             }
         }
