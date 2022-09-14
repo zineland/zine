@@ -99,10 +99,15 @@ impl Entity for Article {
         })?;
         let (content, end_matter) = split_article_content(&markdown)?;
 
-        let mut meta = &mut self.meta;
+        // Fallback to file name if no slug specified.
+        if self.meta.slug.is_none() {
+            self.meta.slug = Some(self.meta.file.replace(".md", ""))
+        }
         // Fallback to the default placeholder image if the cover is missing.
-        if meta.cover.is_none() || meta.cover.as_ref().map(|cover| cover.is_empty()) == Some(true) {
-            meta.cover = Some(String::from("/static/zine-placeholder.svg"));
+        if self.meta.cover.is_none()
+            || self.meta.cover.as_ref().map(|cover| cover.is_empty()) == Some(true)
+        {
+            self.meta.cover = Some(String::from("/static/zine-placeholder.svg"));
         }
 
         self.markdown = content.to_owned();
