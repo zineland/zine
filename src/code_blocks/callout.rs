@@ -75,12 +75,9 @@ impl<'a> CodeBlock for CalloutBlock<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{code_blocks::Fenced, markdown::MarkdownVisitor};
+    use crate::code_blocks::Fenced;
 
     use super::CalloutBlock;
-
-    struct DummyVisitor;
-    impl<'a> MarkdownVisitor<'a> for DummyVisitor {}
 
     #[test]
     fn test_parse_colors() {

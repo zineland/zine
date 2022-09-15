@@ -183,7 +183,7 @@ mod tests {
         struct NopVisitor;
         impl<'a> MarkdownVisitor<'a> for NopVisitor {}
 
-        let html = markdown_to_html("![](image.png)", &mut NopVisitor);
+        let html = markdown_to_html("![](image.png)", NopVisitor);
         assert_eq!("<p><img src=\"image.png\" alt=\"\" /></p>\n", html);
 
         struct DummyVisitor;
@@ -215,14 +215,25 @@ mod tests {
         }
 
         // Test Visiting::Event and Visiting::NotChanged
+        let html = markdown_to_html("`@zineland`", DummyVisitor);
+        assert_eq!(
+            "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
+            html
+        );
         let html = markdown_to_html("`@zineland`", &mut DummyVisitor);
         assert_eq!(
             "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
             html
         );
+
+        let html = markdown_to_html("`DummyVisitor`", DummyVisitor);
+        assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
         let html = markdown_to_html("`DummyVisitor`", &mut DummyVisitor);
         assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
+
         // Test Visiting::Ignore case
+        let html = markdown_to_html("> DummyVisitor", DummyVisitor);
+        assert_eq!("<p>DummyVisitor</p>\n", html);
         let html = markdown_to_html("> DummyVisitor", &mut DummyVisitor);
         assert_eq!("<p>DummyVisitor</p>\n", html);
     }
