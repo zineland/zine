@@ -25,7 +25,7 @@ use syntect::{
     dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
     parsing::SyntaxSet,
 };
-use tera::{Context, Function, Tera};
+use tera::{Context, Tera};
 use tokio::{runtime::Handle, task};
 
 static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
@@ -70,6 +70,7 @@ fn init_tera(source: &Path, zine: &Zine) {
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
         ])
         .unwrap();
+        tera.register_function("markdown_to_html", markdown_to_html_fn);
         tera.register_function("get_author", get_author_fn);
 
         parking_lot::RwLock::new(tera)
@@ -98,12 +99,6 @@ fn init_tera(source: &Path, zine: &Zine) {
     }
 
     // Dynamically register functions that need dynamic configuration.
-    tera.register_function(
-        "markdown_to_html",
-        MarkdownRender {
-            markdown_config: zine.markdown_config.clone(),
-        },
-    );
     tera.register_function("fluent", FluentLoader::new(source, locale));
 }
 
@@ -117,10 +112,6 @@ pub struct ZineEngine {
     pub source: PathBuf,
     pub dest: PathBuf,
     zine: Zine,
-}
-
-struct MarkdownRender {
-    markdown_config: MarkdownConfig,
 }
 
 pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Result<()> {
@@ -246,25 +237,16 @@ struct HeadingRef<'a> {
 }
 
 /// Markdown visitor.
-pub struct Vistor<'a> {
+pub struct Visitor<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
     heading_ref: Option<HeadingRef<'a>>,
 }
 
-impl<'a> Vistor<'a> {
-    fn new(markdown_config: &'a MarkdownConfig) -> Self {
-        Vistor {
+impl<'a> Visitor<'a> {
+    pub fn new(markdown_config: &'a MarkdownConfig) -> Self {
+        Visitor {
             markdown_config,
-            code_block_fenced: None,
-            heading_ref: None,
-        }
-    }
-
-    /// Clone a brand-new Visitor only with markdown config.
-    fn clone_with_config(&self) -> Self {
-        Vistor {
-            markdown_config: self.markdown_config,
             code_block_fenced: None,
             heading_ref: None,
         }
@@ -287,7 +269,7 @@ impl<'a> Vistor<'a> {
     }
 }
 
-impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
+impl<'a, 'b: 'a> MarkdownVisitor<'b> for Visitor<'a> {
     fn visit_start_tag(&mut self, tag: &Tag<'b>) -> Visiting {
         match tag {
             Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
@@ -335,11 +317,7 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
             if fenced.is_custom_code_block() {
                 // Block in place to execute async task
                 let rendered_html = task::block_in_place(|| {
-                    Handle::current().block_on(async {
-                        fenced
-                            .render_code_block(text, &self.clone_with_config())
-                            .await
-                    })
+                    Handle::current().block_on(async { fenced.render_code_block(text).await })
                 });
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));
@@ -394,14 +372,14 @@ impl<'a, 'b: 'a> MarkdownVisitor<'b> for Vistor<'a> {
 }
 
 // A tera function to convert markdown into html.
-impl Function for MarkdownRender {
-    fn call(&self, map: &HashMap<String, Value>) -> tera::Result<Value> {
-        if let Some(Value::String(markdown)) = map.get("markdown") {
-            let html = markdown_to_html(markdown, Vistor::new(&self.markdown_config));
-            Ok(Value::String(html))
-        } else {
-            Ok(Value::Array(vec![]))
-        }
+fn markdown_to_html_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
+    if let Some(Value::String(markdown)) = map.get("markdown") {
+        let zine_data = data::read();
+        let markdown_config = zine_data.get_markdown_config();
+        let html = markdown_to_html(markdown, Visitor::new(markdown_config));
+        Ok(Value::String(html))
+    } else {
+        Ok(Value::Array(vec![]))
     }
 }
 

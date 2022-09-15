@@ -247,9 +247,12 @@ impl Entity for Zine {
         // Render author list page.
         author_list.render(context.clone(), dest)?;
 
-        let mut zine_data = data::write();
-        zine_data.set_authors(authors);
-        zine_data.set_articles(self.articles());
+        {
+            let mut zine_data = data::write();
+            zine_data.set_authors(authors);
+            zine_data.set_articles(self.articles());
+            zine_data.set_markdown_config(self.markdown_config.clone());
+        }
 
         // Render all issues pages.
         self.issues.render(context.clone(), dest)?;

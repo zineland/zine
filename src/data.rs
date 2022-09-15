@@ -10,7 +10,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 
-use crate::entity::{Author, MetaArticle};
+use crate::entity::{Author, MarkdownConfig, MetaArticle};
 
 static ZINE_DATA: OnceCell<RwLock<ZineData>> = OnceCell::new();
 
@@ -45,6 +45,8 @@ pub struct ZineData {
     // Issue slug and article pair list.
     #[serde(skip)]
     articles: Vec<(String, MetaArticle)>,
+    #[serde(skip)]
+    markdown_config: MarkdownConfig,
     url_previews: BTreeMap<String, (String, String)>,
 }
 
@@ -58,6 +60,7 @@ impl ZineData {
             Ok(ZineData {
                 authors: Vec::default(),
                 articles: Vec::default(),
+                markdown_config: MarkdownConfig::default(),
                 url_previews: BTreeMap::default(),
             })
         }
@@ -79,6 +82,10 @@ impl ZineData {
         self.articles = articles;
     }
 
+    pub fn set_markdown_config(&mut self, config: MarkdownConfig) {
+        self.markdown_config = config;
+    }
+
     pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {
         self.authors
             .iter()
@@ -96,6 +103,10 @@ impl ZineData {
                 }
             })
             .cloned()
+    }
+
+    pub fn get_markdown_config(&self) -> &MarkdownConfig {
+        &self.markdown_config
     }
 
     fn export_to_json(&self) -> Result<String> {
