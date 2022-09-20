@@ -23,7 +23,23 @@ pub trait MarkdownVisitor<'a> {
     }
 }
 
-impl<'a, T: MarkdownVisitor<'a>> MarkdownVisitor<'a> for &'a T {}
+impl<'a, T: MarkdownVisitor<'a>> MarkdownVisitor<'a> for &'a mut T {
+    fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Visiting {
+        (**self).visit_start_tag(tag)
+    }
+
+    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
+        (**self).visit_end_tag(tag)
+    }
+
+    fn visit_text(&mut self, text: &CowStr<'a>) -> Visiting {
+        (**self).visit_text(text)
+    }
+
+    fn visit_code(&mut self, code: &CowStr<'a>) -> Visiting {
+        (**self).visit_code(code)
+    }
+}
 
 /// The markdown visit result.
 pub enum Visiting {
@@ -204,10 +220,21 @@ mod tests {
             "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
             html
         );
+        let html = markdown_to_html("`@zineland`", &mut DummyVisitor);
+        assert_eq!(
+            "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
+            html
+        );
+
         let html = markdown_to_html("`DummyVisitor`", DummyVisitor);
         assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
+        let html = markdown_to_html("`DummyVisitor`", &mut DummyVisitor);
+        assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
+
         // Test Visiting::Ignore case
         let html = markdown_to_html("> DummyVisitor", DummyVisitor);
+        assert_eq!("<p>DummyVisitor</p>\n", html);
+        let html = markdown_to_html("> DummyVisitor", &mut DummyVisitor);
         assert_eq!("<p>DummyVisitor</p>\n", html);
     }
 

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use crate::markdown::{markdown_to_html, MarkdownVisitor};
+use crate::{data, engine::Visitor, markdown::markdown_to_html};
 
 use super::CodeBlock;
 
@@ -9,24 +9,19 @@ static DEFAULT_BG_COLOR: &str = "#e1eaff";
 static DEFAULT_BORDER_COLOR: &str = "#82a7fc";
 
 /// The CalloutBlock to highlight some pragraphs.
-pub struct CalloutBlock<'a, V> {
+pub struct CalloutBlock<'a> {
     bg_color: &'a str,
     border_color: &'a str,
     content: &'a str,
-    visitor: V,
 }
 
-impl<'a, V> CalloutBlock<'a, V>
-where
-    V: MarkdownVisitor<'a>,
-{
-    pub fn new(options: HashMap<String, &'a str>, block: &'a str, visitor: V) -> Self {
+impl<'a> CalloutBlock<'a> {
+    pub fn new(options: HashMap<String, &'a str>, block: &'a str) -> Self {
         let (bg_color, border_color) = Self::parse_colors(&options);
         CalloutBlock {
             bg_color,
             border_color,
             content: block,
-            visitor,
         }
     }
 
@@ -60,10 +55,7 @@ where
     }
 }
 
-impl<'a, V> CodeBlock for CalloutBlock<'a, V>
-where
-    V: MarkdownVisitor<'a> + Clone,
-{
+impl<'a> CodeBlock for CalloutBlock<'a> {
     fn render(&self) -> anyhow::Result<String> {
         let mut html = String::new();
         let style = format!(
@@ -71,7 +63,10 @@ where
             self.bg_color, self.border_color,
         );
         writeln!(&mut html, r#"<div class="callout" style="{}">"#, style)?;
-        let block_html = markdown_to_html(self.content, self.visitor.clone());
+
+        let zine_data = data::read();
+        let markdown_config = zine_data.get_markdown_config();
+        let block_html = markdown_to_html(self.content, Visitor::new(markdown_config));
         writeln!(&mut html, r#" <div>{}</div>"#, block_html)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)
@@ -80,22 +75,19 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{code_blocks::Fenced, markdown::MarkdownVisitor};
+    use crate::code_blocks::Fenced;
 
     use super::CalloutBlock;
-
-    struct DummyVisitor;
-    impl<'a> MarkdownVisitor<'a> for DummyVisitor {}
 
     #[test]
     fn test_parse_colors() {
         let fenced = Fenced::parse("callout, theme: red").unwrap();
-        let callout = CalloutBlock::new(fenced.options, "", DummyVisitor);
+        let callout = CalloutBlock::new(fenced.options, "dummy");
         assert_eq!(callout.bg_color, "#fde2e2");
         assert_eq!(callout.border_color, "#f98e8b");
 
         let fenced = Fenced::parse("callout, theme: red, bg_color: #123456").unwrap();
-        let callout = CalloutBlock::new(fenced.options, "", DummyVisitor);
+        let callout = CalloutBlock::new(fenced.options, "dummy");
         assert_eq!(callout.bg_color, "#123456");
         assert_eq!(callout.border_color, "#f98e8b");
     }

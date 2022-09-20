@@ -7,7 +7,7 @@ mod callout;
 mod inline_link;
 mod url_preview;
 
-use crate::{data, engine::Vistor, helpers, html};
+use crate::{data, helpers, html};
 pub use author::AuthorCode;
 pub use inline_link::InlineLink;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
@@ -43,7 +43,7 @@ impl<'a> Fenced<'a> {
     /// otherwise return URL preview error HTML string to remind user we have error.
     ///
     /// If the fenced is unsupported, we simply return `None`.
-    pub async fn render_code_block(self, block: &'a str, visitor: &Vistor<'a>) -> Option<String> {
+    pub async fn render_code_block(self, block: &'a str) -> Option<String> {
         match self.name {
             URL_PREVIEW => {
                 let url = block.trim();
@@ -75,9 +75,7 @@ impl<'a> Fenced<'a> {
                 }
             }
             CALLOUT => {
-                let html = CalloutBlock::new(self.options, block, visitor)
-                    .render()
-                    .unwrap();
+                let html = CalloutBlock::new(self.options, block).render().unwrap();
                 Some(html)
             }
             _ => None,
