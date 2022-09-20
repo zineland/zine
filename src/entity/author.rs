@@ -188,7 +188,7 @@ mod tests {
     fn test_author_name() {
         assert!(matches!(
             serde_json::from_str::<AuthorId>("\"Alice\"").unwrap(),
-            AuthorId::One(name) if name == String::from("Alice"),
+            AuthorId::One(name) if name == *"Alice",
         ));
         assert!(matches!(
             serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\"]").unwrap(),

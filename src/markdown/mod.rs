@@ -1,90 +1,8 @@
-use pulldown_cmark::Event::{self, Code, End, HardBreak, Rule, SoftBreak, Start, Text};
-use pulldown_cmark::{html, CowStr, Options, Parser, Tag};
+use pulldown_cmark::Event::{Code, End, HardBreak, Rule, SoftBreak, Start, Text};
+use pulldown_cmark::{Options, Parser, Tag};
 
-/// The visitor trait to allow customize html rendering.
-///
-/// All methods return a [`Visiting`], the default behavior is [`Visiting::NotChanged`].
-#[allow(unused_variables)]
-pub trait MarkdownVisitor<'a> {
-    fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Visiting {
-        Visiting::NotChanged
-    }
-
-    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
-        Visiting::NotChanged
-    }
-
-    fn visit_text(&mut self, text: &CowStr<'a>) -> Visiting {
-        Visiting::NotChanged
-    }
-
-    fn visit_code(&mut self, code: &CowStr<'a>) -> Visiting {
-        Visiting::NotChanged
-    }
-}
-
-impl<'a, T: MarkdownVisitor<'a>> MarkdownVisitor<'a> for &'a mut T {
-    fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Visiting {
-        (**self).visit_start_tag(tag)
-    }
-
-    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
-        (**self).visit_end_tag(tag)
-    }
-
-    fn visit_text(&mut self, text: &CowStr<'a>) -> Visiting {
-        (**self).visit_text(text)
-    }
-
-    fn visit_code(&mut self, code: &CowStr<'a>) -> Visiting {
-        (**self).visit_code(code)
-    }
-}
-
-/// The markdown visit result.
-pub enum Visiting {
-    /// A new event should be rendered.
-    Event(Event<'static>),
-    /// Nothing changed, still render the origin event.
-    NotChanged,
-    /// Don't render this event.
-    Ignore,
-}
-
-impl Visiting {
-    fn resolve<'a, F>(self, not_changed: F) -> Option<Event<'a>>
-    where
-        F: FnOnce() -> Event<'a>,
-    {
-        match self {
-            Visiting::Event(event) => Some(event),
-            Visiting::NotChanged => Some(not_changed()),
-            Visiting::Ignore => None,
-        }
-    }
-}
-
-/// Render markdown to HTML.
-pub fn markdown_to_html<'a>(markdown: &'a str, mut v: impl MarkdownVisitor<'a>) -> String {
-    let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
-    let events = parser_events_iter
-        .into_iter()
-        .filter_map(|(event, _)| match event {
-            Event::Start(tag) => v.visit_start_tag(&tag).resolve(|| Event::Start(tag)),
-            Event::End(tag) => v.visit_end_tag(&tag).resolve(|| Event::End(tag)),
-            Event::Code(code) => v.visit_code(&code).resolve(|| Event::Code(code)),
-            Event::Text(text) => v
-                .visit_text(&text)
-                // Not a code block inside text, or the code block's fenced is unsupported.
-                // We still need record this text event.
-                .resolve(|| Event::Text(text)),
-            _ => Some(event),
-        });
-
-    let mut html = String::new();
-    html::push_html(&mut html, events);
-    html
-}
+mod render;
+pub use render::MarkdownRender;
 
 /// Extract the description from markdown content.
 ///
@@ -173,70 +91,9 @@ fn fresh_line(buffer: &mut String) {
 
 #[cfg(test)]
 mod tests {
-    use std::iter;
 
     use super::*;
     use test_case::test_case;
-
-    #[test]
-    fn test_markdown_visitor() {
-        struct NopVisitor;
-        impl<'a> MarkdownVisitor<'a> for NopVisitor {}
-
-        let html = markdown_to_html("![](image.png)", NopVisitor);
-        assert_eq!("<p><img src=\"image.png\" alt=\"\" /></p>\n", html);
-
-        struct DummyVisitor;
-        impl<'a> MarkdownVisitor<'a> for DummyVisitor {
-            fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Visiting {
-                if let Tag::BlockQuote = tag {
-                    Visiting::Ignore
-                } else {
-                    Visiting::NotChanged
-                }
-            }
-
-            fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
-                if let Tag::BlockQuote = tag {
-                    Visiting::Ignore
-                } else {
-                    Visiting::NotChanged
-                }
-            }
-
-            fn visit_code(&mut self, code: &CowStr<'a>) -> Visiting {
-                if let Some(username) = code.strip_prefix('@') {
-                    return Visiting::Event(Event::Html(
-                        format!("<a href=\"https://github.com/{username}\">{code}</a>").into(),
-                    ));
-                }
-                Visiting::NotChanged
-            }
-        }
-
-        // Test Visiting::Event and Visiting::NotChanged
-        let html = markdown_to_html("`@zineland`", DummyVisitor);
-        assert_eq!(
-            "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
-            html
-        );
-        let html = markdown_to_html("`@zineland`", &mut DummyVisitor);
-        assert_eq!(
-            "<p><a href=\"https://github.com/zineland\">@zineland</a></p>\n",
-            html
-        );
-
-        let html = markdown_to_html("`DummyVisitor`", DummyVisitor);
-        assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
-        let html = markdown_to_html("`DummyVisitor`", &mut DummyVisitor);
-        assert_eq!("<p><code>DummyVisitor</code></p>\n", html);
-
-        // Test Visiting::Ignore case
-        let html = markdown_to_html("> DummyVisitor", DummyVisitor);
-        assert_eq!("<p>DummyVisitor</p>\n", html);
-        let html = markdown_to_html("> DummyVisitor", &mut DummyVisitor);
-        assert_eq!("<p>DummyVisitor</p>\n", html);
-    }
 
     #[test_case("aaaa"; "case1")]
     fn test_extract_decription1(markdown: &str) {
@@ -263,16 +120,16 @@ mod tests {
 
     #[test]
     fn test_extract_decription_at_most_1_paragraphs() {
-        let base = iter::repeat('a').take(10).collect::<String>();
+        let base = "a".repeat(10);
         let mut p1 = base.clone();
         p1.push('\n');
-        p1.push_str(&base.clone());
+        p1.push_str(&base);
         assert_eq!(base, extract_description(&p1));
     }
 
     #[test]
     fn test_extract_decription_at_most_200_chars() {
-        let p1 = iter::repeat('a').take(400).collect::<String>();
+        let p1 = "a".repeat(400);
 
         let p2 = p1.clone();
         // Never extract more than 200 chars.
