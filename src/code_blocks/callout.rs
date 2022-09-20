@@ -66,7 +66,7 @@ impl<'a> CodeBlock for CalloutBlock<'a> {
         writeln!(&mut html, r#"<div class="callout" style="{}">"#, style)?;
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
-        let block_html = MarkdownRender::new(markdown_config).markdown_to_html(self.content);
+        let block_html = MarkdownRender::new(markdown_config).render_html(self.content);
         writeln!(&mut html, r#" <div>{}</div>"#, block_html)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)

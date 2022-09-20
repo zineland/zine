@@ -61,7 +61,7 @@ impl<'a> MarkdownRender<'a> {
     }
 
     /// Render markdown to HTML.
-    pub fn markdown_to_html(&mut self, markdown: &'a str) -> String {
+    pub fn render_html(&mut self, markdown: &'a str) -> String {
         let parser_events_iter = Parser::new_ext(markdown, Options::all()).into_offset_iter();
         let events = parser_events_iter
             .into_iter()

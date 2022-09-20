@@ -219,7 +219,7 @@ fn markdown_to_html_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Some(Value::String(markdown)) = map.get("markdown") {
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
-        let html = MarkdownRender::new(markdown_config).markdown_to_html(markdown);
+        let html = MarkdownRender::new(markdown_config).render_html(markdown);
         Ok(Value::String(html))
     } else {
         Ok(Value::Array(vec![]))
