@@ -27,12 +27,60 @@ static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
 pub struct MarkdownRender<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
-    heading_ref: Option<HeadingRef<'a>>,
+    heading: Option<HeadingRef<'a>>,
 }
 
 struct HeadingRef<'a> {
     level: usize,
+    // This id is parsed from the markdow heading part.
+    // Here is the syntax:
+    // `# Long title {#title}` parse the id: title
+    // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
     id: Option<&'a str>,
+    title: Vec<CowStr<'a>>,
+    events: Vec<Event<'a>>,
+}
+
+impl<'a> HeadingRef<'a> {
+    fn new(level: usize, id: Option<&'a str>) -> Self {
+        HeadingRef {
+            level,
+            id,
+            title: Vec::new(),
+            events: Vec::new(),
+        }
+    }
+
+    fn push_event(&mut self, event: Event<'a>) -> &mut Self {
+        self.events.push(event);
+        self
+    }
+
+    fn push_text(&mut self, text: CowStr<'a>) -> &mut Self {
+        self.title.push(text);
+        self
+    }
+
+    // Render heading anchor link.
+    fn render(self) -> Event<'static> {
+        let mut context = Context::new();
+        context.insert("level", &self.level);
+        let id = if let Some(id) = self.id {
+            id.to_owned()
+        } else {
+            // Fallback to raw text as the anchor id if the user didn't specify an id.
+            self.title.join("")
+        };
+        context.insert("id", &id);
+        let mut heading = String::new();
+        html::push_html(&mut heading, self.events.into_iter());
+        context.insert("heading", &heading);
+
+        let html = engine::get_tera()
+            .render("_anchor-link.jinja", &context)
+            .expect("Render anchor link failed.");
+        Event::Html(html.into())
+    }
 }
 
 impl<'a> MarkdownRender<'a> {
@@ -40,7 +88,7 @@ impl<'a> MarkdownRender<'a> {
         MarkdownRender {
             markdown_config,
             code_block_fenced: None,
-            heading_ref: None,
+            heading: None,
         }
     }
 
@@ -85,44 +133,62 @@ impl<'a> MarkdownRender<'a> {
         match tag {
             Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
                 self.code_block_fenced = Some(name.clone());
-                return Visiting::Ignore;
+                Visiting::Ignore
             }
             Tag::Image(_, src, title) => {
                 // Add loading="lazy" attribute for markdown image.
-                return Visiting::Event(Event::Html(
+                Visiting::Event(Event::Html(
                     format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title).into(),
-                ));
+                ))
             }
             Tag::Heading(level, id, _) => {
-                self.heading_ref = Some(HeadingRef {
-                    level: *level as usize,
-                    // This id is parsed from the markdow heading part.
-                    // Here is the syntax:
-                    // `# Long title {#title}` parse the id: title
-                    // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
-                    id: *id,
-                });
+                self.heading = Some(HeadingRef::new(*level as usize, *id));
+                Visiting::Ignore
             }
-            _ => {}
+            _ => {
+                if let Some(heading) = self.heading.as_mut() {
+                    heading.push_event(Event::Start(tag.to_owned()));
+                    Visiting::Ignore
+                } else {
+                    Visiting::NotChanged
+                }
+            }
         }
-        Visiting::NotChanged
     }
 
-    fn visit_end_tag(&mut self, tag: &Tag<'_>) -> Visiting {
+    fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
         match tag {
             Tag::CodeBlock(_) => {
                 self.code_block_fenced = None;
                 Visiting::Ignore
             }
             Tag::Heading(..) => {
-                self.heading_ref = None;
-                Visiting::Ignore
+                if let Some(heading) = self.heading.take() {
+                    // Render heading event.
+                    Visiting::Event(heading.render())
+                } else {
+                    Visiting::Ignore
+                }
             }
-            _ => Visiting::NotChanged,
+            _ => {
+                if let Some(heading) = self.heading.as_mut() {
+                    heading.push_event(Event::End(tag.to_owned()));
+                    Visiting::Ignore
+                } else {
+                    Visiting::NotChanged
+                }
+            }
         }
     }
 
     fn visit_text(&mut self, text: &CowStr<'a>) -> Visiting {
+        if let Some(heading) = self.heading.as_mut() {
+            heading
+                .push_text(text.to_owned())
+                .push_event(Event::Text(text.to_owned()));
+            return Visiting::Ignore;
+        }
+
         if let Some(input) = self.code_block_fenced.as_ref() {
             let fenced = Fenced::parse(input).unwrap();
             if fenced.is_custom_code_block() {
@@ -142,24 +208,17 @@ impl<'a> MarkdownRender<'a> {
             }
         }
 
-        // Render heading anchor link.
-        if let Some(heading_ref) = self.heading_ref.as_ref() {
-            let mut context = Context::new();
-            context.insert("level", &heading_ref.level);
-            // Fallback to raw text as the anchor id if the user didn't specify an id.
-            context.insert("id", heading_ref.id.unwrap_or_else(|| text.as_ref()));
-            context.insert("text", &text.as_ref());
-            let html = engine::get_tera()
-                .render("_anchor-link.jinja", &context)
-                .expect("Render anchor link failed.");
-
-            return Visiting::Event(Event::Html(html.into()));
-        }
-
         Visiting::NotChanged
     }
 
     fn visit_code(&mut self, code: &CowStr<'a>) -> Visiting {
+        if let Some(heading) = self.heading.as_mut() {
+            heading
+                .push_text(code.to_owned())
+                .push_event(Event::Code(code.to_owned()));
+            return Visiting::Ignore;
+        }
+
         if let Some(maybe_author_id) = code.strip_prefix('@') {
             let data = data::read();
             if let Some(author) = data.get_author_by_id(maybe_author_id) {
