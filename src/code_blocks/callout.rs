@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use crate::{data, engine::Visitor, markdown::markdown_to_html};
+use crate::data;
+use crate::markdown::MarkdownRender;
 
 use super::CodeBlock;
 
@@ -63,10 +64,9 @@ impl<'a> CodeBlock for CalloutBlock<'a> {
             self.bg_color, self.border_color,
         );
         writeln!(&mut html, r#"<div class="callout" style="{}">"#, style)?;
-
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
-        let block_html = markdown_to_html(self.content, Visitor::new(markdown_config));
+        let block_html = MarkdownRender::new(markdown_config).render_html(self.content);
         writeln!(&mut html, r#" <div>{}</div>"#, block_html)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)

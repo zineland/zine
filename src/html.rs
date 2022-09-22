@@ -241,9 +241,9 @@ mod tests {
     fn test_not_rewrite_html_base_url_relative_path(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", &path).as_bytes(), BASE_URL).unwrap()
+                &rewrite_html_base_url(html.replace("{}", path).as_bytes(), BASE_URL).unwrap()
             ),
-            html.replace("{}", &path)
+            html.replace("{}", path)
         );
     }
 }

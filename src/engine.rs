@@ -5,38 +5,21 @@ use std::{
 };
 
 use crate::{
-    code_blocks::{AuthorCode, CodeBlock, Fenced, InlineLink},
     current_mode, data,
-    entity::{Entity, MarkdownConfig, Zine},
+    entity::{Entity, Zine},
     helpers::copy_dir,
     html::rewrite_html_base_url,
     locales::FluentLoader,
-    markdown::{markdown_to_html, MarkdownVisitor, Visiting},
+    markdown::MarkdownRender,
     Mode,
 };
 
 use anyhow::Result;
 use hyper::Uri;
-use once_cell::sync::Lazy;
 use once_cell::sync::OnceCell;
-use pulldown_cmark::*;
 use serde_json::Value;
-use syntect::{
-    dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
-    parsing::SyntaxSet,
-};
 use tera::{Context, Tera};
-use tokio::{runtime::Handle, task};
 
-static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
-    let syntax_set: SyntaxSet =
-        from_binary(include_bytes!("../sublime/syntaxes/newlines.packdump"));
-    syntax_set
-});
-static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
-    let theme_set: ThemeSet = from_binary(include_bytes!("../sublime/themes/all.themedump"));
-    theme_set
-});
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
 fn init_tera(source: &Path, zine: &Zine) {
@@ -231,152 +214,12 @@ impl ZineEngine {
     }
 }
 
-struct HeadingRef<'a> {
-    level: usize,
-    id: Option<&'a str>,
-}
-
-/// Markdown visitor.
-pub struct Visitor<'a> {
-    markdown_config: &'a MarkdownConfig,
-    code_block_fenced: Option<CowStr<'a>>,
-    heading_ref: Option<HeadingRef<'a>>,
-}
-
-impl<'a> Visitor<'a> {
-    pub fn new(markdown_config: &'a MarkdownConfig) -> Self {
-        Visitor {
-            markdown_config,
-            code_block_fenced: None,
-            heading_ref: None,
-        }
-    }
-
-    fn highlight_syntax(&self, lang: &str, text: &str) -> String {
-        let theme = match THEME_SET.themes.get(&self.markdown_config.highlight_theme) {
-            Some(theme) => theme,
-            None => panic!(
-                "No theme: `{}` founded",
-                self.markdown_config.highlight_theme
-            ),
-        };
-
-        let syntax = SYNTAX_SET
-            .find_syntax_by_token(lang)
-            // Fallback to plain text if code block not supported
-            .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme)
-    }
-}
-
-impl<'a, 'b: 'a> MarkdownVisitor<'b> for Visitor<'a> {
-    fn visit_start_tag(&mut self, tag: &Tag<'b>) -> Visiting {
-        match tag {
-            Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
-                self.code_block_fenced = Some(name.clone());
-                return Visiting::Ignore;
-            }
-            Tag::Image(_, src, title) => {
-                // Add loading="lazy" attribute for markdown image.
-                return Visiting::Event(Event::Html(
-                    format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title).into(),
-                ));
-            }
-            Tag::Heading(level, id, _) => {
-                self.heading_ref = Some(HeadingRef {
-                    level: *level as usize,
-                    // This id is parsed from the markdow heading part.
-                    // Here is the syntax:
-                    // `# Long title {#title}` parse the id: title
-                    // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
-                    id: *id,
-                });
-            }
-            _ => {}
-        }
-        Visiting::NotChanged
-    }
-
-    fn visit_end_tag(&mut self, tag: &Tag<'_>) -> Visiting {
-        match tag {
-            Tag::CodeBlock(_) => {
-                self.code_block_fenced = None;
-                Visiting::Ignore
-            }
-            Tag::Heading(..) => {
-                self.heading_ref = None;
-                Visiting::Ignore
-            }
-            _ => Visiting::NotChanged,
-        }
-    }
-
-    fn visit_text(&mut self, text: &CowStr<'b>) -> Visiting {
-        if let Some(input) = self.code_block_fenced.as_ref() {
-            let fenced = Fenced::parse(input).unwrap();
-            if fenced.is_custom_code_block() {
-                // Block in place to execute async task
-                let rendered_html = task::block_in_place(|| {
-                    Handle::current().block_on(async { fenced.render_code_block(text).await })
-                });
-                if let Some(html) = rendered_html {
-                    return Visiting::Event(Event::Html(html.into()));
-                }
-            } else if self.markdown_config.highlight_code {
-                // Syntax highlight
-                let html = self.highlight_syntax(fenced.name, text);
-                return Visiting::Event(Event::Html(html.into()));
-            } else {
-                return Visiting::Event(Event::Html(format!("<pre>{}</pre>", text).into()));
-            }
-        }
-
-        // Render heading anchor link.
-        if let Some(heading_ref) = self.heading_ref.as_ref() {
-            let mut context = Context::new();
-            context.insert("level", &heading_ref.level);
-            // Fallback to raw text as the anchor id if the user didn't specify an id.
-            context.insert("id", heading_ref.id.unwrap_or_else(|| text.as_ref()));
-            context.insert("text", &text.as_ref());
-            let html = get_tera()
-                .render("_anchor-link.jinja", &context)
-                .expect("Render anchor link failed.");
-
-            return Visiting::Event(Event::Html(html.into()));
-        }
-
-        Visiting::NotChanged
-    }
-
-    fn visit_code(&mut self, code: &CowStr<'b>) -> Visiting {
-        if let Some(maybe_author_id) = code.strip_prefix('@') {
-            let data = data::read();
-            if let Some(author) = data.get_author_by_id(maybe_author_id) {
-                // Render author code UI.
-                let html = AuthorCode(author)
-                    .render()
-                    .expect("Render author code failed.");
-                return Visiting::Event(Event::Html(html.into()));
-            }
-        } else if code.starts_with('/') {
-            let data = data::read();
-            if let Some(article) = data.get_article_by_path(code.as_ref()) {
-                let html = InlineLink::new(&article.title, code, &article.cover)
-                    .render()
-                    .expect("Render inline linke failed.");
-                return Visiting::Event(Event::Html(html.into()));
-            }
-        }
-        Visiting::NotChanged
-    }
-}
-
 // A tera function to convert markdown into html.
 fn markdown_to_html_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Some(Value::String(markdown)) = map.get("markdown") {
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
-        let html = markdown_to_html(markdown, Visitor::new(markdown_config));
+        let html = MarkdownRender::new(markdown_config).render_html(markdown);
         Ok(Value::String(html))
     } else {
         Ok(Value::Array(vec![]))
