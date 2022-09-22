@@ -34,11 +34,8 @@ fn init_tera(source: &Path, zine: &Zine) {
         #[cfg(not(debug_assertions))]
         tera.add_raw_templates(vec![
             ("_macros.jinja", include_str!("../templates/_macros.jinja")),
-            (
-                "_anchor-link.jinja",
-                include_str!("../templates/_anchor-link.jinja"),
-            ),
             ("_meta.jinja", include_str!("../templates/_meta.jinja")),
+            ("heading.jinja", include_str!("../templates/heading.jinja")),
             ("base.jinja", include_str!("../templates/base.jinja")),
             ("index.jinja", include_str!("../templates/index.jinja")),
             ("issue.jinja", include_str!("../templates/issue.jinja")),

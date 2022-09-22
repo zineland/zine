@@ -1,15 +1,40 @@
 {% extends "base.jinja" -%}
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
-    <div class="p-4 pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-        <div class="relative mx-2">
-            <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
-               href="/{{ issue.slug }}">
-                <div class="relative text-main px-4">{{ issue.title }}</div>
-            </a>
-            <span class="ml-2 text-gray-700">/  {{ fluent(key = "article-number", number = number) }}</span>
+    <div class="pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+        <div class="sticky top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white">
+            <div class="mx-2 flex justify-between">
+                <div>
+                    <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
+                       href="/{{ issue.slug }}">
+                        <div class="relative text-main px-4">{{ issue.title }}</div>
+                    </a>
+                    <span class="ml-2 text-gray-700">/  {{ fluent(key = "article-number", number = number) }}</span>
+                </div>
+                <div>
+                    <div class="p-2 cursor-pointer rounded hover:bg-gray-200">
+                        <svg aria-hidden="true"
+                             height="16"
+                             viewBox="0 0 16 16"
+                             version="1.1"
+                             width="16"
+                             data-view-component="true">
+                            <path fill-rule="evenodd"
+                                  d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zM3 8a1 1 0 11-2 0 1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="absolute right-0 flex flex-col max-w-screen-sm max-h-96 w-60 p-2 my-4 border bg-white rounded z-[999] shadow-xl overflow-y-auto">
+                        {% for item in toc -%}
+                            <a href="#{{ item.id }}">
+                                <div class="p-2 rounded hover:bg-gray-100">{{ item.title }}</div>
+                            </a>
+                        {% endfor -%}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
         </div>
-        <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
         <div class="prose mx-auto">
             <h1 class="text-center">{{ article.title }}</h1>
             <div class="flex items-center justify-between text-gray-500">
@@ -18,7 +43,7 @@
             </div>
         </div>
         <article class="prose mx-auto my-12">
-            {{ markdown_to_html(markdown = article.markdown) | safe }}
+            {{ html | safe }}
             {% if end_matter -%}
                 <div class="not-prose">
                     {% for comment in end_matter.comments -%}
