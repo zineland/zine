@@ -1,4 +1,4 @@
-use std::mem;
+use std::{collections::BTreeSet, mem};
 
 use crate::{
     code_blocks::{AuthorCode, CodeBlock, Fenced, InlineLink},
@@ -31,6 +31,7 @@ pub struct MarkdownRender<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
     heading: Option<Heading<'a>>,
+    levels: BTreeSet<usize>,
     /// Table of content.
     pub toc: Vec<Heading<'a>>,
 }
@@ -38,6 +39,8 @@ pub struct MarkdownRender<'a> {
 /// Markdown heading.
 #[derive(Debug, Serialize)]
 pub struct Heading<'a> {
+    // The relative depth.
+    depth: usize,
     // Heading level: h1, h2 ... h6
     level: usize,
     // This id is parsed from the markdow heading part.
@@ -54,6 +57,7 @@ pub struct Heading<'a> {
 impl<'a> Heading<'a> {
     fn new(level: usize, id: Option<&'a str>) -> Self {
         Heading {
+            depth: level,
             level,
             id: id.map(|i| i.to_owned()),
             title: String::new(),
@@ -99,8 +103,21 @@ impl<'a> MarkdownRender<'a> {
             markdown_config,
             code_block_fenced: None,
             heading: None,
+            levels: BTreeSet::new(),
             toc: Vec::new(),
         }
+    }
+
+    /// Rebuild the relative depth of toc items.
+    pub fn rebuild_toc_depth(&mut self) {
+        let depths = Vec::from_iter(&self.levels);
+        self.toc.iter_mut().for_each(|item| {
+            item.depth = depths
+                .iter()
+                .position(|&x| *x == item.level)
+                .expect("Invalid heading level")
+                + 1;
+        });
     }
 
     fn highlight_syntax(&self, lang: &str, text: &str) -> String {
@@ -175,6 +192,7 @@ impl<'a> MarkdownRender<'a> {
             }
             Tag::Heading(..) => {
                 if let Some(mut heading) = self.heading.take() {
+                    self.levels.insert(heading.level);
                     // Render heading event.
                     let event = heading.render();
                     self.toc.push(heading);

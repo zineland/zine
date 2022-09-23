@@ -1,15 +1,15 @@
 {% extends "base.jinja" -%}
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
-    <div class="pb-10 md:p-8 md:pb-14 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-        <div class="sticky top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white">
+    <div class="px-4 pb-10 md:px-8 md:pb-14 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+        <div class="sticky py-4 md:py-8 top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white border-dashed border-b border-slate-300">
             <div class="mx-2 flex justify-between">
                 <div>
                     <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
                        href="/{{ issue.slug }}">
                         <div class="relative text-main px-4">{{ issue.title }}</div>
                     </a>
-                    <span class="ml-2 text-gray-700">/  {{ fluent(key = "article-number", number = number) }}</span>
+                    <span class="ml-2 text-gray-700">/ {{ fluent(key = "article-number", number = number) }}</span>
                 </div>
                 <div>
                     <div class="p-2 cursor-pointer rounded hover:bg-gray-200">
@@ -25,70 +25,81 @@
                         </svg>
                     </div>
                     <div class="absolute right-0 flex flex-col max-w-screen-sm max-h-96 w-60 p-2 my-4 border bg-white rounded z-[999] shadow-xl overflow-y-auto">
+                        {% set common_style = "py-2 rounded hover:bg-gray-100" -%}
                         {% for item in toc -%}
                             <a href="#{{ item.id }}">
-                                <div class="p-2 rounded hover:bg-gray-100">{{ item.title }}</div>
+                                {% if item.depth == 1 -%}
+                                    {% set variant_style = "pl-2 text-gray-800 font-bold text-sm" -%}
+                                {% elif item.depth == 2 -%}
+                                    {% set variant_style = "pl-4 text-gray-700 text-sm" -%}
+                                {% elif item.depth == 3 -%}
+                                    {% set variant_style = "pl-6 text-gray-600 text-xs" -%}
+                                {% endif -%}
+                                {% if variant_style -%}
+                                    <div class="{{ common_style }} {{ variant_style }}">{{ item.title }}</div>
+                                {% endif -%}
                             </a>
                         {% endfor -%}
                     </div>
                 </div>
             </div>
-            <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
         </div>
-        <div class="prose mx-auto">
-            <h1 class="text-center">{{ article.title }}</h1>
-            <div class="flex items-center justify-between text-gray-500">
-                <span>{{ article.pub_date }}</span>
-                {{ macros::author_link(author = article.author) }}
+        <div class="pt-10">
+            <div class="prose mx-auto">
+                <h1 class="text-center">{{ article.title }}</h1>
+                <div class="flex items-center justify-between text-gray-500">
+                    <span>{{ article.pub_date }}</span>
+                    {{ macros::author_link(author = article.author) }}
+                </div>
             </div>
-        </div>
-        <article class="prose mx-auto my-12">
-            {{ html | safe }}
-            {% if end_matter -%}
-                <div class="not-prose">
-                    {% for comment in end_matter.comments -%}
-                        <div class="relative my-6 p-8 bg-[#f8fafc]">
-                            <div class="mb-4">
-                                <div class="text-lg font-bold">{{ comment.author }}</div>
-                                {% if comment.bio -%}
-                                    <div class="text-sm text-slate-400">{{ markdown_to_html(markdown = comment.bio) | safe }}</div>
-                                {% endif -%}
+            <article class="prose mx-auto my-12">
+                {{ html | safe }}
+                {% if end_matter -%}
+                    <div class="not-prose">
+                        {% for comment in end_matter.comments -%}
+                            <div class="relative my-6 p-8 bg-[#f8fafc]">
+                                <div class="mb-4">
+                                    <div class="text-lg font-bold">{{ comment.author }}</div>
+                                    {% if comment.bio -%}
+                                        <div class="text-sm text-slate-400">{{ markdown_to_html(markdown = comment.bio) | safe }}</div>
+                                    {% endif -%}
+                                </div>
+                                <div class="prose prose-slate">{{ markdown_to_html(markdown = comment.content) | safe }}</div>
+                                <svg class="absolute top-8 right-8 w-10 h-10"
+                                     t="1647239309441"
+                                     viewBox="0 0 1024 1024"
+                                     version="1.1"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     xmlns:xlink="http://www.w3.org/1999/xlink">
+                                    <defs><style type="text/css"></style></defs>
+                                    <path d="M788.288069 458.634582c-3.442402 99.842962-20.061918 175.8521-49.92097 228.090858-29.827329 52.204989-76.305897 91.499947-139.435703 117.915573l75.743078 120.500445c104.442724-47.073108 180.749644-116.493178 228.948389-208.292953 36.744879-68.857251 55.085596-180.185802 55.085596-333.957001L958.70846 98.858542 626.473683 98.858542l0 359.77604L788.288069 458.634582zM254.647189 458.634582c-3.442402 99.842962-20.061918 175.8521-49.92097 228.089835-29.827329 52.206012-76.305897 91.50097-139.435703 117.916597l75.743078 120.500445C245.476319 878.06835 321.782216 808.647257 369.981984 716.848505c36.744879-68.857251 55.085596-180.185802 55.085596-333.957001L425.06758 98.858542 92.832803 98.858542l0 359.77604L254.647189 458.634582z"
+                                          fill="#eee">
+                                    </path>
+                                </svg>
                             </div>
-                            <div class="prose prose-slate">{{ markdown_to_html(markdown = comment.content) | safe }}</div>
-                            <svg class="absolute top-8 right-8 w-10 h-10"
-                                 t="1647239309441"
-                                 viewBox="0 0 1024 1024"
-                                 version="1.1"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 xmlns:xlink="http://www.w3.org/1999/xlink">
-                                <defs><style type="text/css"></style></defs>
-                                <path d="M788.288069 458.634582c-3.442402 99.842962-20.061918 175.8521-49.92097 228.090858-29.827329 52.204989-76.305897 91.499947-139.435703 117.915573l75.743078 120.500445c104.442724-47.073108 180.749644-116.493178 228.948389-208.292953 36.744879-68.857251 55.085596-180.185802 55.085596-333.957001L958.70846 98.858542 626.473683 98.858542l0 359.77604L788.288069 458.634582zM254.647189 458.634582c-3.442402 99.842962-20.061918 175.8521-49.92097 228.089835-29.827329 52.206012-76.305897 91.50097-139.435703 117.916597l75.743078 120.500445C245.476319 878.06835 321.782216 808.647257 369.981984 716.848505c36.744879-68.857251 55.085596-180.185802 55.085596-333.957001L425.06758 98.858542 92.832803 98.858542l0 359.77604L254.647189 458.634582z"
-                                      fill="#eee">
-                                </path>
-                            </svg>
-                        </div>
+                        {% endfor -%}
+                    </div>
+                {% endif -%}
+            </article>
+            {% if siblings.0 or siblings.1 -%}
+                <div class="my-4 w-full border-dashed border-t border-slate-300"></div>
+                <div class="flex flex-col md:flex-row">
+                    {% for article in [siblings.0, siblings.1] -%}
+                        {% if article -%}
+                            <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline"
+                               href="/{{ issue.slug }}/{{ article.slug }}">
+                                {% if loop.index0 == 0 -%}
+                                    {{ fluent(key = "previous") }}
+                                {% else -%}
+                                    {{ fluent(key = "next") }}
+                                {% endif -%}
+                                {{ article.title }}
+                            </a>
+                        {% endif -%}
                     {% endfor -%}
                 </div>
             {% endif -%}
-        </article>
-        {% if siblings.0 or siblings.1 -%}
-            <div class="my-4 w-full border-dashed border-t border-slate-300"></div>
-            <div class="flex flex-col md:flex-row">
-                {% for article in [siblings.0, siblings.1] -%}
-                    {% if article -%}
-                        <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline"
-                           href="/{{ issue.slug }}/{{ article.slug }}">
-                            {% if loop.index0 == 0 -%}
-                                {{ fluent(key = "previous") }}
-                            {% else -%}
-                                {{ fluent(key = "next") }}
-                            {% endif -%}
-                            {{ article.title }}
-                        </a>
-                    {% endif -%}
-                {% endfor -%}
-            </div>
-        {% endif -%}
+        </div>
     </div>
     <div class="inline-link-card absolute hidden bg-white shadow-xl border-slate-400 max-w-md transition ease-in-out sm:hover:scale-105 duration-500">
         <a class="inline-link-url">

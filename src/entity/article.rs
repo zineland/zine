@@ -125,6 +125,7 @@ impl Entity for Article {
         let markdown_config = zine_data.get_markdown_config();
         let mut markdown_render = MarkdownRender::new(markdown_config);
         let html = markdown_render.render_html(&self.markdown);
+        markdown_render.rebuild_toc_depth();
 
         context.insert(
             "meta",
