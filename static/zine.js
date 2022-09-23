@@ -45,11 +45,60 @@
                 cardTimeoutId = dismissInTimeout(inlineCard);
             }
         };
+
+        setupArticleToc();
     }
 
     function dismissInTimeout(element) {
         return setTimeout(() => {
             element.classList.add('hidden');
         }, 600);
+    }
+
+    function highlightToc() {
+        let items = document.querySelectorAll('main .toc-item>a');
+        const scrollHandler = entries => {
+            entries.forEach(entry => {
+                if (entry.intersectionRatio > 0) {
+                    document.querySelectorAll("#toc-list div").forEach((item) => {
+                        item.classList.remove("toc-active");
+                    });
+
+                    let url = new URL(entry.target.href);
+                    let link = document.querySelector(`#toc-list a[href$="${decodeURIComponent(url.hash)}"]`)
+                    if (link) {
+                        let target = link.querySelector('div');
+                        target.classList.add("toc-active");
+                        target.scrollIntoView({ behavior: "auto", block: "nearest" });
+                    }
+                }
+            });
+        };
+        const observer = new IntersectionObserver(scrollHandler);
+        items.forEach(item => observer.observe(item));
+    }
+
+    function setupArticleToc() {
+        let tocMenu = document.getElementById('toc-menu');
+        let tocList = document.getElementById('toc-list');
+        if (!tocMenu || !tocList) return;
+
+        tocMenu.onclick = (event) => {
+            if (tocList.classList.contains('hidden')) {
+                tocList.classList.remove('hidden');
+            } else {
+                tocList.classList.add('hidden');
+            }
+            event.stopPropagation();
+        };
+        tocList.onclick = (event) => {
+            event.stopPropagation();
+        };
+
+        document.addEventListener('click', () => {
+            tocList.classList.add('hidden');
+        });
+
+        highlightToc();
     }
 })();

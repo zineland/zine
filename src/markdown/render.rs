@@ -80,6 +80,10 @@ impl<'a> Heading<'a> {
         if self.id.is_none() {
             // Fallback to raw text as the anchor id if the user didn't specify an id.
             self.id = Some(self.title.to_lowercase());
+            // Replace blank char with '-'.
+            if let Some(id) = self.id.as_mut() {
+                *id = id.replace(' ', "-");
+            }
         }
 
         let mut context = Context::new();

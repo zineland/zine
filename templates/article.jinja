@@ -12,7 +12,7 @@
                     <span class="ml-2 text-gray-700">/ {{ fluent(key = "article-number", number = number) }}</span>
                 </div>
                 <div>
-                    <div class="p-2 cursor-pointer rounded hover:bg-gray-200">
+                    <div id="toc-menu" class="p-2 cursor-pointer rounded hover:bg-gray-200">
                         <svg aria-hidden="true"
                              height="16"
                              viewBox="0 0 16 16"
@@ -24,7 +24,8 @@
                             </path>
                         </svg>
                     </div>
-                    <div class="absolute right-0 flex flex-col max-w-screen-sm max-h-96 w-60 p-2 my-4 border bg-white rounded z-[999] shadow-xl overflow-y-auto">
+                    <div id="toc-list"
+                         class="absolute hidden right-0 flex flex-col max-w-screen-sm max-h-96 w-60 p-2 my-4 border bg-white rounded z-[99999] shadow-xl overflow-y-auto">
                         {% set common_style = "py-2 rounded hover:bg-gray-100" -%}
                         {% for item in toc -%}
                             <a href="#{{ item.id }}">

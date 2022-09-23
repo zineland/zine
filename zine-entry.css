@@ -75,3 +75,7 @@
     display: flex;
     justify-content: center;
 }
+
+.toc-active {
+    @apply bg-primary;
+}
