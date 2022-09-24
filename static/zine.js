@@ -58,23 +58,27 @@
     function highlightToc() {
         let items = document.querySelectorAll('main .toc-item>a');
         const scrollHandler = entries => {
-            entries.forEach(entry => {
-                if (entry.intersectionRatio > 0) {
-                    document.querySelectorAll("#toc-list div").forEach((item) => {
-                        item.classList.remove("toc-active");
-                    });
-
-                    let url = new URL(entry.target.href);
-                    let link = document.querySelector(`#toc-list a[href$="${decodeURIComponent(url.hash)}"]`)
-                    if (link) {
-                        let target = link.querySelector('div');
-                        target.classList.add("toc-active");
-                        target.scrollIntoView({ behavior: "auto", block: "nearest" });
-                    }
-                }
+            // Find the first entry which intersecting and ratio > 0.9 to highlight.
+            let entry = entries.find(entry => {
+                return entry.isIntersecting && entry.intersectionRatio > 0.9;
             });
+            if (!entry) return;
+
+            document.querySelectorAll("#toc-list div").forEach((item) => {
+                item.classList.remove("toc-active");
+            });
+
+            let url = new URL(entry.target.href);
+            let link = document.querySelector(`#toc-list a[href$="${decodeURIComponent(url.hash)}"]`)
+            if (link) {
+                let target = link.querySelector('div');
+                target.classList.add("toc-active");
+                target.scrollIntoView({ behavior: "auto", block: "nearest" });
+
+            }
         };
-        const observer = new IntersectionObserver(scrollHandler);
+        // Set -100px root margin to improve highlight experience.
+        const observer = new IntersectionObserver(scrollHandler, { rootMargin: "-100px", threshold: 1 });
         items.forEach(item => observer.observe(item));
     }
 

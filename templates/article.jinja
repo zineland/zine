@@ -2,8 +2,8 @@
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
     <div class="px-4 pb-10 md:px-8 md:pb-14 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-        <div class="sticky py-4 md:py-8 top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white border-dashed border-b border-slate-300">
-            <div class="mx-2 flex justify-between">
+        <div class="sticky z-10 py-4 top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white border-dashed border-b border-slate-300">
+            <div class="mx-2 flex justify-between items-center">
                 <div>
                     <a class="before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
                        href="/{{ issue.slug }}">
@@ -25,8 +25,9 @@
                         </svg>
                     </div>
                     <div id="toc-list"
-                         class="absolute hidden right-0 flex flex-col max-w-screen-sm max-h-96 w-60 p-2 my-4 border bg-white rounded z-[99999] shadow-xl overflow-y-auto">
-                        {% set common_style = "py-2 rounded hover:bg-gray-100" -%}
+                         class="absolute hidden right-0 flex flex-col max-w-screen-sm max-h-96 w-60 py-2 my-4 border bg-white rounded z-[99999] shadow-xl">
+                         <div class="px-2 overflow-y-auto">
+                        {% set common_style = "py-1 my-1 rounded hover:bg-gray-100" -%}
                         {% for item in toc -%}
                             <a href="#{{ item.id }}">
                                 {% if item.depth == 1 -%}
@@ -41,6 +42,7 @@
                                 {% endif -%}
                             </a>
                         {% endfor -%}
+                        </div>
                     </div>
                 </div>
             </div>
