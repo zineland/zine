@@ -271,7 +271,7 @@ https://github.com/zineland/zine
 
 - [x] Support code syntax highlight
 
-- [ ] Support table of content
+- [x] Support table of content
 
 - [ ] Support i18n
 
