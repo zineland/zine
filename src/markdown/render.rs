@@ -1,3 +1,5 @@
+use std::{collections::BTreeSet, mem};
+
 use crate::{
     code_blocks::{AuthorCode, CodeBlock, Fenced, InlineLink},
     data, engine,
@@ -6,6 +8,7 @@ use crate::{
 
 use once_cell::sync::Lazy;
 use pulldown_cmark::*;
+use serde::Serialize;
 use syntect::{
     dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
     parsing::SyntaxSet,
@@ -27,26 +30,37 @@ static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
 pub struct MarkdownRender<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
-    heading: Option<HeadingRef<'a>>,
+    heading: Option<Heading<'a>>,
+    levels: BTreeSet<usize>,
+    /// Table of content.
+    pub toc: Vec<Heading<'a>>,
 }
 
-struct HeadingRef<'a> {
+/// Markdown heading.
+#[derive(Debug, Serialize)]
+pub struct Heading<'a> {
+    // The relative depth.
+    depth: usize,
+    // Heading level: h1, h2 ... h6
     level: usize,
     // This id is parsed from the markdow heading part.
     // Here is the syntax:
     // `# Long title {#title}` parse the id: title
     // See https://docs.rs/pulldown-cmark/latest/pulldown_cmark/struct.Options.html#associatedconstant.ENABLE_HEADING_ATTRIBUTES
-    id: Option<&'a str>,
-    title: Vec<CowStr<'a>>,
+    id: Option<String>,
+    // Heading title
+    title: String,
+    #[serde(skip)]
     events: Vec<Event<'a>>,
 }
 
-impl<'a> HeadingRef<'a> {
+impl<'a> Heading<'a> {
     fn new(level: usize, id: Option<&'a str>) -> Self {
-        HeadingRef {
+        Heading {
+            depth: level,
             level,
-            id,
-            title: Vec::new(),
+            id: id.map(|i| i.to_owned()),
+            title: String::new(),
             events: Vec::new(),
         }
     }
@@ -56,29 +70,33 @@ impl<'a> HeadingRef<'a> {
         self
     }
 
-    fn push_text(&mut self, text: CowStr<'a>) -> &mut Self {
-        self.title.push(text);
+    fn push_text(&mut self, text: &str) -> &mut Self {
+        self.title.push_str(text);
         self
     }
 
-    // Render heading anchor link.
-    fn render(self) -> Event<'static> {
+    // Render heading to html.
+    fn render(&mut self) -> Event<'static> {
+        if self.id.is_none() {
+            // Fallback to raw text as the anchor id if the user didn't specify an id.
+            self.id = Some(self.title.to_lowercase());
+            // Replace blank char with '-'.
+            if let Some(id) = self.id.as_mut() {
+                *id = id.replace(' ', "-");
+            }
+        }
+
         let mut context = Context::new();
         context.insert("level", &self.level);
-        let id = if let Some(id) = self.id {
-            id.to_owned()
-        } else {
-            // Fallback to raw text as the anchor id if the user didn't specify an id.
-            self.title.join("")
-        };
-        context.insert("id", &id);
+        context.insert("id", &self.id);
         let mut heading = String::new();
-        html::push_html(&mut heading, self.events.into_iter());
+        let events = mem::take(&mut self.events);
+        html::push_html(&mut heading, events.into_iter());
         context.insert("heading", &heading);
 
         let html = engine::get_tera()
-            .render("_anchor-link.jinja", &context)
-            .expect("Render anchor link failed.");
+            .render("heading.jinja", &context)
+            .expect("Render heading failed.");
         Event::Html(html.into())
     }
 }
@@ -89,7 +107,21 @@ impl<'a> MarkdownRender<'a> {
             markdown_config,
             code_block_fenced: None,
             heading: None,
+            levels: BTreeSet::new(),
+            toc: Vec::new(),
         }
+    }
+
+    /// Rebuild the relative depth of toc items.
+    pub fn rebuild_toc_depth(&mut self) {
+        let depths = Vec::from_iter(&self.levels);
+        self.toc.iter_mut().for_each(|item| {
+            item.depth = depths
+                .iter()
+                .position(|&x| *x == item.level)
+                .expect("Invalid heading level")
+                + 1;
+        });
     }
 
     fn highlight_syntax(&self, lang: &str, text: &str) -> String {
@@ -142,7 +174,7 @@ impl<'a> MarkdownRender<'a> {
                 ))
             }
             Tag::Heading(level, id, _) => {
-                self.heading = Some(HeadingRef::new(*level as usize, *id));
+                self.heading = Some(Heading::new(*level as usize, *id));
                 Visiting::Ignore
             }
             _ => {
@@ -163,9 +195,12 @@ impl<'a> MarkdownRender<'a> {
                 Visiting::Ignore
             }
             Tag::Heading(..) => {
-                if let Some(heading) = self.heading.take() {
+                if let Some(mut heading) = self.heading.take() {
+                    self.levels.insert(heading.level);
                     // Render heading event.
-                    Visiting::Event(heading.render())
+                    let event = heading.render();
+                    self.toc.push(heading);
+                    Visiting::Event(event)
                 } else {
                     Visiting::Ignore
                 }
@@ -184,7 +219,7 @@ impl<'a> MarkdownRender<'a> {
     fn visit_text(&mut self, text: &CowStr<'a>) -> Visiting {
         if let Some(heading) = self.heading.as_mut() {
             heading
-                .push_text(text.to_owned())
+                .push_text(text.as_ref())
                 .push_event(Event::Text(text.to_owned()));
             return Visiting::Ignore;
         }
@@ -214,7 +249,7 @@ impl<'a> MarkdownRender<'a> {
     fn visit_code(&mut self, code: &CowStr<'a>) -> Visiting {
         if let Some(heading) = self.heading.as_mut() {
             heading
-                .push_text(code.to_owned())
+                .push_text(code.as_ref())
                 .push_event(Event::Code(code.to_owned()));
             return Visiting::Ignore;
         }

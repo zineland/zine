@@ -7,7 +7,12 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{current_mode, engine, markdown, meta::Meta, Mode};
+use crate::{
+    current_mode, data, engine,
+    markdown::{self, MarkdownRender},
+    meta::Meta,
+    Mode,
+};
 
 use super::{AuthorId, EndMatter, Entity};
 
@@ -33,7 +38,7 @@ pub struct Article {
     #[serde(flatten)]
     pub meta: MetaArticle,
     /// The article's markdown content.
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub markdown: String,
     /// The optional end matter of the article.
     pub end_matter: Option<EndMatter>,
@@ -116,6 +121,12 @@ impl Entity for Article {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        let zine_data = data::read();
+        let markdown_config = zine_data.get_markdown_config();
+        let mut markdown_render = MarkdownRender::new(markdown_config);
+        let html = markdown_render.render_html(&self.markdown);
+        markdown_render.rebuild_toc_depth();
+
         context.insert(
             "meta",
             &Meta {
@@ -127,6 +138,8 @@ impl Entity for Article {
         );
         context.insert("page_type", "article");
         context.insert("article", &self);
+        context.insert("html", &html);
+        context.insert("toc", &markdown_render.toc);
         context.insert("end_matter", &self.end_matter);
         engine::render("article.jinja", &context, dest)?;
         Ok(())

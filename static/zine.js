@@ -45,11 +45,64 @@
                 cardTimeoutId = dismissInTimeout(inlineCard);
             }
         };
+
+        setupArticleToc();
     }
 
     function dismissInTimeout(element) {
         return setTimeout(() => {
             element.classList.add('hidden');
         }, 600);
+    }
+
+    function highlightToc() {
+        let items = document.querySelectorAll('main .toc-item>a');
+        const scrollHandler = entries => {
+            // Find the first entry which intersecting and ratio > 0.9 to highlight.
+            let entry = entries.find(entry => {
+                return entry.isIntersecting && entry.intersectionRatio > 0.9;
+            });
+            if (!entry) return;
+
+            document.querySelectorAll("#toc-list div").forEach((item) => {
+                item.classList.remove("toc-active");
+            });
+
+            let url = new URL(entry.target.href);
+            let link = document.querySelector(`#toc-list a[href$="${decodeURIComponent(url.hash)}"]`)
+            if (link) {
+                let target = link.querySelector('div');
+                target.classList.add("toc-active");
+                target.scrollIntoView({ behavior: "auto", block: "nearest" });
+
+            }
+        };
+        // Set -100px root margin to improve highlight experience.
+        const observer = new IntersectionObserver(scrollHandler, { rootMargin: "-100px", threshold: 1 });
+        items.forEach(item => observer.observe(item));
+    }
+
+    function setupArticleToc() {
+        let tocMenu = document.getElementById('toc-menu');
+        let tocList = document.getElementById('toc-list');
+        if (!tocMenu || !tocList) return;
+
+        tocMenu.onclick = (event) => {
+            if (tocList.classList.contains('hidden')) {
+                tocList.classList.remove('hidden');
+            } else {
+                tocList.classList.add('hidden');
+            }
+            event.stopPropagation();
+        };
+        tocList.onclick = (event) => {
+            event.stopPropagation();
+        };
+
+        document.addEventListener('click', () => {
+            tocList.classList.add('hidden');
+        });
+
+        highlightToc();
     }
 })();
