@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 use tera::Context;
 
-use crate::{engine, markdown, meta::Meta, Entity};
+use crate::{engine, helpers::capitalize, markdown, meta::Meta, Entity};
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.
@@ -79,6 +79,11 @@ impl Entity for Author {
             || self.avatar.as_ref().map(|avatar| avatar.is_empty()) == Some(true)
         {
             self.avatar = Some(String::from("/static/zine.png"));
+        }
+
+        // Fallback to capitalized id if missing.
+        if self.name.is_none() {
+            self.name = Some(capitalize(&self.id));
         }
         Ok(())
     }

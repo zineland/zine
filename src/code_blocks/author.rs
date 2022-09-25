@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use crate::{entity::Author, helpers::capitalize};
+use crate::entity::Author;
 
 use super::CodeBlock;
 
@@ -31,7 +31,7 @@ impl<'a> CodeBlock for AuthorCode<'a> {
         writeln!(
             &mut html,
             r#"<span>{}</span>"#,
-            author.name.as_ref().unwrap_or(&capitalize(&author.id))
+            author.name.as_ref().unwrap()
         )?;
         writeln!(&mut html, r#"</a>"#)?;
         Ok(html)
