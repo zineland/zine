@@ -112,7 +112,8 @@ impl Entity for Article {
         if self.meta.cover.is_none()
             || self.meta.cover.as_ref().map(|cover| cover.is_empty()) == Some(true)
         {
-            self.meta.cover = Some(String::from("/static/zine-placeholder.svg"));
+            let data = data::write();
+            self.meta.cover = data.get_theme().default_cover.clone();
         }
 
         self.markdown = content.to_owned();

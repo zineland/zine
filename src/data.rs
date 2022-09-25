@@ -10,7 +10,7 @@ use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 
-use crate::entity::{Author, MarkdownConfig, MetaArticle};
+use crate::entity::{Author, MarkdownConfig, MetaArticle, Theme};
 
 static ZINE_DATA: OnceCell<RwLock<ZineData>> = OnceCell::new();
 
@@ -47,6 +47,8 @@ pub struct ZineData {
     articles: Vec<(String, MetaArticle)>,
     #[serde(skip)]
     markdown_config: MarkdownConfig,
+    #[serde(skip)]
+    theme: Theme,
     url_previews: BTreeMap<String, (String, String)>,
 }
 
@@ -61,6 +63,7 @@ impl ZineData {
                 authors: Vec::default(),
                 articles: Vec::default(),
                 markdown_config: MarkdownConfig::default(),
+                theme: Theme::default(),
                 url_previews: BTreeMap::default(),
             })
         }
@@ -74,16 +77,18 @@ impl ZineData {
         self.url_previews.insert(url.to_owned(), preview);
     }
 
-    pub fn set_authors(&mut self, authors: Vec<Author>) {
-        self.authors = authors;
-    }
-
-    pub fn set_articles(&mut self, articles: Vec<(String, MetaArticle)>) {
-        self.articles = articles;
-    }
-
-    pub fn set_markdown_config(&mut self, config: MarkdownConfig) {
+    /// Set global zine data.
+    pub fn set_data(
+        &mut self,
+        config: MarkdownConfig,
+        theme: Theme,
+        authors: Vec<Author>,
+        articles: Vec<(String, MetaArticle)>,
+    ) {
         self.markdown_config = config;
+        self.theme = theme;
+        self.authors = authors;
+        self.articles = articles;
     }
 
     pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {
@@ -107,6 +112,10 @@ impl ZineData {
 
     pub fn get_markdown_config(&self) -> &MarkdownConfig {
         &self.markdown_config
+    }
+
+    pub fn get_theme(&self) -> &Theme {
+        &self.theme
     }
 
     fn export_to_json(&self) -> Result<String> {

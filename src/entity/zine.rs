@@ -249,9 +249,12 @@ impl Entity for Zine {
 
         {
             let mut zine_data = data::write();
-            zine_data.set_authors(authors);
-            zine_data.set_articles(self.articles());
-            zine_data.set_markdown_config(self.markdown_config.clone());
+            zine_data.set_data(
+                self.markdown_config.clone(),
+                self.theme.clone(),
+                authors,
+                self.articles(),
+            );
         }
 
         // Render all issues pages.

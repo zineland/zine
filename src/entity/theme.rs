@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::Entity;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct Theme {
     // The primary color.
@@ -30,6 +30,8 @@ pub struct Theme {
     // The extend template path for article page, will be parsed to html.
     // Normally, this template can be a comment widget, such as https://giscus.app.
     pub article_extend_template: Option<String>,
+    pub default_cover: Option<String>,
+    pub default_avatar: Option<String>,
 }
 
 impl Default for Theme {
@@ -43,6 +45,8 @@ impl Default for Theme {
             head_template: None,
             footer_template: None,
             article_extend_template: None,
+            default_cover: None,
+            default_avatar: None,
         }
     }
 }
@@ -61,6 +65,8 @@ impl std::fmt::Debug for Theme {
                 "article_extend_template",
                 &self.article_extend_template.is_some(),
             )
+            .field("default_cover", &self.default_cover)
+            .field("default_avatar", &self.default_avatar)
             .finish()
     }
 }
@@ -90,6 +96,13 @@ impl Theme {
 
 impl Entity for Theme {
     fn parse(&mut self, source: &Path) -> Result<()> {
+        if self.default_cover.is_none() {
+            self.default_cover = Some(String::from("/static/zine-placeholder.svg"));
+        }
+        if self.default_avatar.is_none() {
+            self.default_avatar = Some(String::from("/static/zine.png"));
+        }
+
         if let Some(head_template) = self.head_template.as_ref() {
             // Read head template from path to html.
             self.head_template = Some(
