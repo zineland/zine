@@ -109,10 +109,9 @@ impl Entity for Article {
             self.meta.slug = Some(self.meta.file.replace(".md", ""))
         }
         // Fallback to the default placeholder image if the cover is missing.
-        if self.meta.cover.is_none()
-            || self.meta.cover.as_ref().map(|cover| cover.is_empty()) == Some(true)
+        if self.meta.cover.is_none() || matches!(&self.meta.cover, Some(cover) if cover.is_empty())
         {
-            let data = data::write();
+            let data = data::read();
             self.meta.cover = data.get_theme().default_cover.clone();
         }
 

@@ -77,18 +77,24 @@ impl ZineData {
         self.url_previews.insert(url.to_owned(), preview);
     }
 
-    /// Set global zine data.
-    pub fn set_data(
-        &mut self,
-        config: MarkdownConfig,
-        theme: Theme,
-        authors: Vec<Author>,
-        articles: Vec<(String, MetaArticle)>,
-    ) {
-        self.markdown_config = config;
-        self.theme = theme;
+    pub fn set_authors(&mut self, authors: Vec<Author>) -> &mut Self {
         self.authors = authors;
+        self
+    }
+
+    pub fn set_articles(&mut self, articles: Vec<(String, MetaArticle)>) -> &mut Self {
         self.articles = articles;
+        self
+    }
+
+    pub fn set_markdown_config(&mut self, config: MarkdownConfig) -> &mut Self {
+        self.markdown_config = config;
+        self
+    }
+
+    pub fn set_theme(&mut self, theme: Theme) -> &mut Self {
+        self.theme = theme;
+        self
     }
 
     pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {

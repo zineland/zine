@@ -182,6 +182,14 @@ impl Zine {
 
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
+        self.theme.parse(source)?;
+        {
+            let mut zine_data = data::write();
+            zine_data
+                .set_theme(self.theme.clone())
+                .set_markdown_config(self.markdown_config.clone());
+        }
+
         if self.authors.is_empty() {
             println!("Warn: no author specified in [authors] of root `zine.toml`.");
         } else {
@@ -191,7 +199,6 @@ impl Entity for Zine {
             })?;
         }
 
-        self.theme.parse(source)?;
         self.issues.parse(source)?;
         // Sort all issues by number.
         self.issues.par_sort_unstable_by_key(|s| s.number);
@@ -249,12 +256,7 @@ impl Entity for Zine {
 
         {
             let mut zine_data = data::write();
-            zine_data.set_data(
-                self.markdown_config.clone(),
-                self.theme.clone(),
-                authors,
-                self.articles(),
-            );
+            zine_data.set_authors(authors).set_articles(self.articles());
         }
 
         // Render all issues pages.

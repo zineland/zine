@@ -75,10 +75,8 @@ impl<'a> AuthorList<'a> {
 impl Entity for Author {
     fn parse(&mut self, _source: &Path) -> anyhow::Result<()> {
         // Fallback to default zine avatar if neccessary.
-        if self.avatar.is_none()
-            || self.avatar.as_ref().map(|avatar| avatar.is_empty()) == Some(true)
-        {
-            let data = data::write();
+        if self.avatar.is_none() || matches!(&self.avatar, Some(avatar) if avatar.is_empty()) {
+            let data = data::read();
             self.avatar = data.get_theme().default_avatar.clone();
         }
 
