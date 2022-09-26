@@ -37,9 +37,16 @@
                 inlineCard.querySelector('.inline-link-title').textContent = target.getAttribute('data-title');
 
                 inlineCard.classList.remove("hidden");
+
                 // Align card top center above link.
-                inlineCard.style.left = Math.max(3, target.offsetLeft + target.offsetWidth / 2 - 190) + 'px';
-                inlineCard.style.top = (target.offsetTop - 275) + 'px';
+                let isLineWrapped = target.getClientRects().length > 1;
+                let isSmallViewport = window.innerWidth < 640;
+                if (isLineWrapped || isSmallViewport) {
+                    inlineCard.style.left = (inlineCard.parentElement.offsetWidth - inlineCard.offsetWidth) / 2 + 'px';
+                } else {
+                    inlineCard.style.left = Math.max(0, target.offsetLeft + target.offsetWidth / 2 - 190) + 'px';
+                }
+                inlineCard.style.top = (target.offsetTop - inlineCard.offsetHeight - 15) + 'px';
             };
             link.onmouseleave = () => {
                 cardTimeoutId = dismissInTimeout(inlineCard);
