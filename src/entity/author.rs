@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 use tera::Context;
 
-use crate::{engine, helpers::capitalize, markdown, meta::Meta, Entity};
+use crate::{data, engine, helpers::capitalize, markdown, meta::Meta, Entity};
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.
@@ -75,10 +75,9 @@ impl<'a> AuthorList<'a> {
 impl Entity for Author {
     fn parse(&mut self, _source: &Path) -> anyhow::Result<()> {
         // Fallback to default zine avatar if neccessary.
-        if self.avatar.is_none()
-            || self.avatar.as_ref().map(|avatar| avatar.is_empty()) == Some(true)
-        {
-            self.avatar = Some(String::from("/static/zine.png"));
+        if self.avatar.is_none() || matches!(&self.avatar, Some(avatar) if avatar.is_empty()) {
+            let data = data::read();
+            self.avatar = data.get_theme().default_avatar.clone();
         }
 
         // Fallback to capitalized id if missing.
