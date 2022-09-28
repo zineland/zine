@@ -84,8 +84,8 @@
 
             }
         };
-        // Set -100px root margin to improve highlight experience.
-        const observer = new IntersectionObserver(scrollHandler, { rootMargin: "-100px", threshold: 1 });
+        // Set -50% bottom root margin to improve highlight experience.
+        const observer = new IntersectionObserver(scrollHandler, { rootMargin: "0% 0% -50% 0%", threshold: 1 });
         items.forEach(item => observer.observe(item));
     }
 
