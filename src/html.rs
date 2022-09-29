@@ -7,7 +7,27 @@ use html5ever::{
 use lol_html::{element, html_content::Element, HtmlRewriter, Settings};
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
-use crate::meta::Meta;
+use serde::Serialize;
+
+/// The meta info of the HTML page.
+#[derive(Debug, Default, Serialize)]
+pub struct Meta<'a> {
+    pub title: Cow<'a, str>,
+    pub description: Cow<'a, str>,
+    pub url: Option<Cow<'a, str>>,
+    pub image: Option<Cow<'a, str>>,
+}
+
+impl<'a> Meta<'a> {
+    pub fn is_filled(&self) -> bool {
+        !self.title.is_empty() && !self.description.is_empty()
+    }
+
+    pub fn truncate(&mut self) {
+        self.title.to_mut().truncate(200);
+        self.description.to_mut().truncate(200);
+    }
+}
 
 /// Rewrite root path URL in `raw_html` with `base_url`.
 pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>> {
@@ -127,6 +147,11 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                     Some("og:title" | "twitter:title") if meta.title.is_empty() => {
                         if let Some(title) = get_attribute(&*attrs, "content") {
                             meta.title = Cow::Owned(title.trim().to_owned());
+                        }
+                    }
+                    Some("og:image" | "twitter:image") => {
+                        if let Some(image) = get_attribute(&*attrs, "content") {
+                            meta.image = Some(Cow::Owned(image.to_owned()));
                         }
                     }
                     _ => {}

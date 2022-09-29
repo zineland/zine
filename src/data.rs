@@ -8,7 +8,7 @@ use std::{
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use serde::{Deserialize, Serialize};
+use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 
 use crate::entity::{Author, MarkdownConfig, MetaArticle, Theme};
 
@@ -37,6 +37,61 @@ pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug)]
+pub struct UrlPreviewInfo {
+    pub title: String,
+    pub description: String,
+    pub image: Option<String>,
+}
+
+impl Serialize for UrlPreviewInfo {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(3))?;
+        seq.serialize_element(&self.title)?;
+        seq.serialize_element(&self.description)?;
+        seq.serialize_element(&self.image)?;
+        seq.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for UrlPreviewInfo {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(UrlPreviewInfoVisitor)
+    }
+}
+
+struct UrlPreviewInfoVisitor;
+
+impl<'de> de::Visitor<'de> for UrlPreviewInfoVisitor {
+    type Value = UrlPreviewInfo;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("2 or 3 elements tuple")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        let (title, description, image) = (
+            seq.next_element()?.unwrap_or_default(),
+            seq.next_element()?.unwrap_or_default(),
+            seq.next_element()?,
+        );
+        Ok(UrlPreviewInfo {
+            title,
+            description,
+            image,
+        })
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ZineData {
@@ -49,7 +104,7 @@ pub struct ZineData {
     markdown_config: MarkdownConfig,
     #[serde(skip)]
     theme: Theme,
-    url_previews: BTreeMap<String, (String, String)>,
+    url_previews: BTreeMap<String, UrlPreviewInfo>,
 }
 
 impl ZineData {
@@ -69,11 +124,11 @@ impl ZineData {
         }
     }
 
-    pub fn url_previews(&self) -> &BTreeMap<String, (String, String)> {
+    pub fn url_previews(&self) -> &BTreeMap<String, UrlPreviewInfo> {
         &self.url_previews
     }
 
-    pub fn insert_url_preview(&mut self, url: &str, preview: (String, String)) {
+    pub fn insert_url_preview(&mut self, url: &str, preview: UrlPreviewInfo) {
         self.url_previews.insert(url.to_owned(), preview);
     }
 

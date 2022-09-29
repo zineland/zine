@@ -16,7 +16,6 @@ mod helpers;
 mod html;
 mod locales;
 mod markdown;
-mod meta;
 mod new;
 mod serve;
 

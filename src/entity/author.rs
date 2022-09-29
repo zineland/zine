@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 use tera::Context;
 
-use crate::{data, engine, helpers::capitalize, markdown, meta::Meta, Entity};
+use crate::{data, engine, helpers::capitalize, html::Meta, markdown, Entity};
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.

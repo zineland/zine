@@ -9,8 +9,8 @@ use time::Date;
 
 use crate::{
     current_mode, data, engine,
+    html::Meta,
     markdown::{self, MarkdownRender},
-    meta::Meta,
     Mode,
 };
 
