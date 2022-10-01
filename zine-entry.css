@@ -77,5 +77,5 @@
 }
 
 .toc-active {
-    @apply bg-primary !important;
+    @apply text-main bg-primary !important;
 }
