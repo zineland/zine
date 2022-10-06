@@ -1,4 +1,5 @@
 use std::{
+    collections::BTreeMap,
     fs::{self, File},
     io::Write,
     path::Path,
@@ -8,7 +9,11 @@ use anyhow::Result;
 use dashmap::DashMap;
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
+use serde::{
+    de,
+    ser::{SerializeMap, SerializeSeq},
+    Deserialize, Serialize,
+};
 
 use crate::entity::{Author, MarkdownConfig, MetaArticle, Theme};
 
@@ -96,7 +101,7 @@ impl<'de> de::Visitor<'de> for UrlPreviewInfoVisitor {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ZineData {
     #[serde(skip)]
@@ -109,6 +114,26 @@ pub struct ZineData {
     #[serde(skip)]
     theme: Theme,
     url_previews: DashMap<String, UrlPreviewInfo>,
+}
+
+// Implement Serialize manually to keep urlPreviews ordered.
+impl Serialize for ZineData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut url_previews = BTreeMap::new();
+        self.url_previews
+            .clone()
+            .into_iter()
+            .for_each(|(key, value)| {
+                url_previews.insert(key, value);
+            });
+
+        let mut map = serializer.serialize_map(Some(1))?;
+        map.serialize_entry("urlPreviews", &url_previews)?;
+        map.end()
+    }
 }
 
 impl ZineData {
