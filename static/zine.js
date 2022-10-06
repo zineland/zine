@@ -5,7 +5,7 @@
             // Ignore the event if the user click the A tag.
             if (event.target.tagName === 'A') return;
 
-            let a = preview.lastElementChild;
+            let a = preview.querySelector('a');
             if (a && a.href) {
                 window.open(a.href);
             }

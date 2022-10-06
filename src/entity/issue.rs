@@ -5,7 +5,7 @@ use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{engine, markdown, meta::Meta};
+use crate::{engine, html::Meta, markdown};
 
 use super::{article::Article, Entity};
 

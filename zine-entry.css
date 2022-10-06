@@ -42,6 +42,11 @@
     display: block;
 }
 
+.url-preview>img {
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
 .url-preview:hover {
     outline: #dee0e3 2px solid;
     cursor: pointer;

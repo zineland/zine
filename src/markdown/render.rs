@@ -137,7 +137,7 @@ impl<'a> MarkdownRender<'a> {
             .find_syntax_by_token(lang)
             // Fallback to plain text if code block not supported
             .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme)
+        highlighted_html_for_string(text, &SYNTAX_SET, syntax, theme).expect("Highlight failed")
     }
 
     /// Render markdown to HTML.

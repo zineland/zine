@@ -7,7 +7,10 @@ mod callout;
 mod inline_link;
 mod url_preview;
 
-use crate::{data, helpers, html};
+use crate::{
+    data::{self, UrlPreviewInfo},
+    helpers, html,
+};
 pub use author::AuthorCode;
 pub use inline_link::InlineLink;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
@@ -49,25 +52,46 @@ impl<'a> Fenced<'a> {
                 let url = block.trim();
 
                 {
-                    // parking_lot Mutex guard isn't async-aware,
+                    // parking_lot RwLock guard isn't async-aware,
                     // we should keep this guard drop in this scope.
                     let data = data::read();
-                    if let Some((title, description)) = data.url_previews().get(url) {
-                        return Some(UrlPreviewBlock(url, title, description).render().unwrap());
+                    let url_previews = data.url_previews();
+                    if let Some(info) = url_previews.get(url).map(|a| a.clone()) {
+                        return Some(
+                            UrlPreviewBlock::new(
+                                url,
+                                &info.title,
+                                &info.description,
+                                &info.image.as_ref().cloned().unwrap_or_default(),
+                            )
+                            .render()
+                            .unwrap(),
+                        );
                     }
                 }
 
-                println!("Preview new url: {}", url);
+                println!("Previewing new url: {}", url);
                 match helpers::fetch_url(url).await {
                     Ok(html) => {
                         let meta = html::parse_html_meta(html);
-                        let html = UrlPreviewBlock(url, &meta.title, &meta.description)
-                            .render()
-                            .unwrap();
-                        data::write().insert_url_preview(
+                        let html = UrlPreviewBlock::new(
                             url,
-                            (meta.title.into_owned(), meta.description.into_owned()),
+                            &meta.title,
+                            &meta.description,
+                            &meta.image.as_ref().cloned().unwrap_or_default(),
+                        )
+                        .render()
+                        .unwrap();
+                        data::read().insert_url_preview(
+                            url,
+                            UrlPreviewInfo {
+                                title: meta.title.into_owned(),
+                                description: meta.description.into_owned(),
+                                image: meta.image.as_ref().map(|image| image.to_string()),
+                            },
                         );
+                        println!("{url} previewed.");
+
                         Some(html)
                     }
                     // Return a preview error block.
