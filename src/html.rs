@@ -20,7 +20,9 @@ pub struct Meta<'a> {
 
 impl<'a> Meta<'a> {
     pub fn is_filled(&self) -> bool {
-        !self.title.is_empty() && !self.description.is_empty()
+        !self.title.is_empty()
+            && !self.description.is_empty()
+            && matches!(&self.image, Some(image) if !image.is_empty())
     }
 
     pub fn truncate(&mut self) {
@@ -134,23 +136,22 @@ fn walk(handle: &Handle, meta: &mut Meta) {
             "meta" => {
                 // <meta name="description" content="xxx"/>
                 // get description value from attribute.
-                let attrs = attrs.borrow();
-                match get_attribute(&*attrs, "name").or_else(|| get_attribute(&*attrs, "property"))
-                {
+                let attrs = &*attrs.borrow();
+                match get_attribute(attrs, "name").or_else(|| get_attribute(attrs, "property")) {
                     Some("description" | "og:description" | "twitter:description")
                         if meta.description.is_empty() =>
                     {
-                        if let Some(description) = get_attribute(&*attrs, "content") {
+                        if let Some(description) = get_attribute(attrs, "content") {
                             meta.description = Cow::Owned(description.trim().to_owned());
                         }
                     }
                     Some("og:title" | "twitter:title") if meta.title.is_empty() => {
-                        if let Some(title) = get_attribute(&*attrs, "content") {
+                        if let Some(title) = get_attribute(attrs, "content") {
                             meta.title = Cow::Owned(title.trim().to_owned());
                         }
                     }
-                    Some("og:image" | "twitter:image") => {
-                        if let Some(image) = get_attribute(&*attrs, "content") {
+                    Some("og:image" | "twitter:image") if meta.image.is_none() => {
+                        if let Some(image) = get_attribute(attrs, "content") {
                             meta.image = Some(Cow::Owned(image.to_owned()));
                         }
                     }

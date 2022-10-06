@@ -28,10 +28,10 @@ impl<'a> CodeBlock for UrlPreviewBlock<'a> {
         writeln!(&mut html, r#"<div class="url-preview">"#)?;
         writeln!(&mut html, r#" <div>{}</div>"#, self.title)?;
         writeln!(&mut html, r#" <div>{}</div>"#, self.description)?;
+        writeln!(&mut html, r#" <a href="{url}">{url}</a>"#, url = self.url)?;
         if !self.image.is_empty() {
             writeln!(&mut html, r#" <img src="{}" />"#, self.image)?;
         }
-        writeln!(&mut html, r#" <a href="{url}">{url}</a>"#, url = self.url)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)
     }
