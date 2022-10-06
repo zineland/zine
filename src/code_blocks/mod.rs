@@ -52,22 +52,17 @@ impl<'a> Fenced<'a> {
                 let url = block.trim();
 
                 {
-                    // parking_lot Mutex guard isn't async-aware,
+                    // parking_lot RwLock guard isn't async-aware,
                     // we should keep this guard drop in this scope.
                     let data = data::read();
-
-                    if let Some(UrlPreviewInfo {
-                        title,
-                        description,
-                        image,
-                    }) = data.url_previews().get(url)
-                    {
+                    let url_previews = data.url_previews();
+                    if let Some(info) = url_previews.get(url).map(|a| a.clone()) {
                         return Some(
                             UrlPreviewBlock::new(
                                 url,
-                                title,
-                                description,
-                                &image.as_ref().cloned().unwrap_or_default(),
+                                &info.title,
+                                &info.description,
+                                &info.image.as_ref().cloned().unwrap_or_default(),
                             )
                             .render()
                             .unwrap(),
@@ -75,7 +70,7 @@ impl<'a> Fenced<'a> {
                     }
                 }
 
-                println!("Preview new url: {}", url);
+                println!("Previewing new url: {}", url);
                 match helpers::fetch_url(url).await {
                     Ok(html) => {
                         let meta = html::parse_html_meta(html);
@@ -87,7 +82,7 @@ impl<'a> Fenced<'a> {
                         )
                         .render()
                         .unwrap();
-                        data::write().insert_url_preview(
+                        data::read().insert_url_preview(
                             url,
                             UrlPreviewInfo {
                                 title: meta.title.into_owned(),
@@ -95,6 +90,8 @@ impl<'a> Fenced<'a> {
                                 image: meta.image.as_ref().map(|image| image.to_string()),
                             },
                         );
+                        println!("{url} previewed.");
+
                         Some(html)
                     }
                     // Return a preview error block.

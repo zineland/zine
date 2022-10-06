@@ -1,11 +1,11 @@
 use std::{
-    collections::BTreeMap,
     fs::{self, File},
     io::Write,
     path::Path,
 };
 
 use anyhow::Result;
+use dashmap::DashMap;
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
@@ -37,7 +37,7 @@ pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct UrlPreviewInfo {
     pub title: String,
     pub description: String,
@@ -52,7 +52,11 @@ impl Serialize for UrlPreviewInfo {
         let mut seq = serializer.serialize_seq(Some(3))?;
         seq.serialize_element(&self.title)?;
         seq.serialize_element(&self.description)?;
-        seq.serialize_element(&self.image)?;
+        if let Some(image) = self.image.as_ref() {
+            seq.serialize_element(image)?;
+        } else {
+            seq.serialize_element("")?;
+        }
         seq.end()
     }
 }
@@ -104,7 +108,7 @@ pub struct ZineData {
     markdown_config: MarkdownConfig,
     #[serde(skip)]
     theme: Theme,
-    url_previews: BTreeMap<String, UrlPreviewInfo>,
+    url_previews: DashMap<String, UrlPreviewInfo>,
 }
 
 impl ZineData {
@@ -119,16 +123,16 @@ impl ZineData {
                 articles: Vec::default(),
                 markdown_config: MarkdownConfig::default(),
                 theme: Theme::default(),
-                url_previews: BTreeMap::default(),
+                url_previews: DashMap::default(),
             })
         }
     }
 
-    pub fn url_previews(&self) -> &BTreeMap<String, UrlPreviewInfo> {
+    pub fn url_previews(&self) -> &DashMap<String, UrlPreviewInfo> {
         &self.url_previews
     }
 
-    pub fn insert_url_preview(&mut self, url: &str, preview: UrlPreviewInfo) {
+    pub fn insert_url_preview(&self, url: &str, preview: UrlPreviewInfo) {
         self.url_previews.insert(url.to_owned(), preview);
     }
 
