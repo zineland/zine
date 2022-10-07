@@ -1,6 +1,6 @@
 use anyhow::Result;
 use build::watch_build;
-use clap::StructOpt;
+use clap::Parser;
 use new::new_zine_project;
 use parking_lot::RwLock;
 use serve::run_serve;

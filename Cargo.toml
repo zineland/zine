@@ -17,7 +17,7 @@ openssl-vendored = ["hyper-tls/vendored"]
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "3.1.2", default-features = false, features = [
+clap = { version = "4", default-features = false, features = [
     "std",
     "derive",
 ] }
