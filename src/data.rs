@@ -167,6 +167,10 @@ impl ZineData {
         }
     }
 
+    pub fn get_preview(&self, url: &str) -> Option<UrlPreviewInfo> {
+        self.url_previews.get(url).map(|u| u.to_owned())
+    }
+
     /// Preview url asynchronously, return a tuple.
     /// The first bool argument indicating whether is a first time previewing.
     /// The second argument is the receiver to wait preview event finished.

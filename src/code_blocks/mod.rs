@@ -52,6 +52,19 @@ impl<'a> Fenced<'a> {
                     // parking_lot RwLock guard isn't async-aware,
                     // we should keep this guard drop in this scope.
                     let data = data::read();
+                    if let Some(info) = data.get_preview(url) {
+                        let html = UrlPreviewBlock::new(
+                            url,
+                            &info.title,
+                            &info.description,
+                            &info.image.as_ref().cloned().unwrap_or_default(),
+                        )
+                        .render()
+                        .unwrap();
+
+                        return Some(html);
+                    }
+
                     data.preview_url(url)
                 };
                 rx.changed()
