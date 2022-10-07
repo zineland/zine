@@ -118,9 +118,9 @@ pub struct ZineData {
     markdown_config: MarkdownConfig,
     #[serde(skip)]
     theme: Theme,
-    // The preview queue.
+    // The preview tasks.
     #[serde(skip)]
-    preview_queue: Arc<DashMap<String, Receiver<Option<PreviewEvent>>>>,
+    preview_tasks: DashMap<String, Receiver<Option<PreviewEvent>>>,
     // All url preview data.
     url_previews: Arc<DashMap<String, UrlPreviewInfo>>,
 }
@@ -162,7 +162,7 @@ impl ZineData {
                 markdown_config: MarkdownConfig::default(),
                 theme: Theme::default(),
                 url_previews: Arc::new(DashMap::default()),
-                preview_queue: Arc::new(DashMap::default()),
+                preview_tasks: DashMap::default(),
             })
         }
     }
@@ -171,16 +171,15 @@ impl ZineData {
     /// The first bool argument indicating whether is a first time previewing.
     /// The second argument is the receiver to wait preview event finished.
     pub fn preview_url(&self, url: &str) -> (bool, Receiver<Option<PreviewEvent>>) {
-        if let Some(rx) = self.preview_queue.get(url) {
+        if let Some(rx) = self.preview_tasks.get(url) {
             // In the preview queue.
             (false, rx.clone())
         } else {
             let (tx, rx) = watch::channel::<Option<PreviewEvent>>(None);
             // Not in the preview queue, enqueue the preview task.
-            self.preview_queue.insert(url.to_owned(), rx.clone());
+            self.preview_tasks.insert(url.to_owned(), rx.clone());
 
             let url = url.to_owned();
-            let queue = Arc::clone(&self.preview_queue);
             let list = Arc::clone(&self.url_previews);
             // Spawn a background task to preview the url.
             tokio::spawn(async move {
@@ -193,10 +192,7 @@ impl ZineData {
                             image: meta.image.as_ref().map(|image| image.to_string()),
                         };
 
-                        // Remove from the queue after previewing finished.
-                        queue.remove(&url);
                         list.insert(url, info.clone());
-
                         tx.send(Some(PreviewEvent::Finished(info)))
                     }
                     Err(err) => tx.send(Some(PreviewEvent::Failed(err.to_string()))),
