@@ -7,10 +7,7 @@ mod callout;
 mod inline_link;
 mod url_preview;
 
-use crate::{
-    data::{self, UrlPreviewInfo},
-    helpers, html,
-};
+use crate::data::{self, PreviewEvent};
 pub use author::AuthorCode;
 pub use inline_link::InlineLink;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
@@ -51,51 +48,49 @@ impl<'a> Fenced<'a> {
             URL_PREVIEW => {
                 let url = block.trim();
 
-                {
+                let (first_preview, mut rx) = {
                     // parking_lot RwLock guard isn't async-aware,
                     // we should keep this guard drop in this scope.
                     let data = data::read();
-                    let url_previews = data.url_previews();
-                    if let Some(info) = url_previews.get(url).map(|a| a.clone()) {
-                        return Some(
-                            UrlPreviewBlock::new(
-                                url,
-                                &info.title,
-                                &info.description,
-                                &info.image.as_ref().cloned().unwrap_or_default(),
-                            )
-                            .render()
-                            .unwrap(),
-                        );
-                    }
-                }
-
-                println!("Previewing new url: {}", url);
-                match helpers::fetch_url(url).await {
-                    Ok(html) => {
-                        let meta = html::parse_html_meta(html);
+                    if let Some(info) = data.get_preview(url) {
                         let html = UrlPreviewBlock::new(
                             url,
-                            &meta.title,
-                            &meta.description,
-                            &meta.image.as_ref().cloned().unwrap_or_default(),
+                            &info.title,
+                            &info.description,
+                            &info.image.as_ref().cloned().unwrap_or_default(),
                         )
                         .render()
                         .unwrap();
-                        data::read().insert_url_preview(
-                            url,
-                            UrlPreviewInfo {
-                                title: meta.title.into_owned(),
-                                description: meta.description.into_owned(),
-                                image: meta.image.as_ref().map(|image| image.to_string()),
-                            },
-                        );
-                        println!("{url} previewed.");
 
+                        return Some(html);
+                    }
+
+                    data.preview_url(url)
+                };
+                rx.changed()
+                    .await
+                    .expect("URL preview watch channel receive failed.");
+                let event = rx.borrow();
+                match event.to_owned().expect("Url preview didn't initialized.") {
+                    PreviewEvent::Finished(info) => {
+                        let html = UrlPreviewBlock::new(
+                            url,
+                            &info.title,
+                            &info.description,
+                            &info.image.as_ref().cloned().unwrap_or_default(),
+                        )
+                        .render()
+                        .unwrap();
+
+                        if first_preview {
+                            println!("URL previewed: {url}");
+                        }
                         Some(html)
                     }
-                    // Return a preview error block.
-                    Err(err) => Some(UrlPreviewError(url, &err.to_string()).render().unwrap()),
+                    PreviewEvent::Failed(err) => {
+                        // Return a preview error block.
+                        Some(UrlPreviewError(url, &err).render().unwrap())
+                    }
                 }
             }
             CALLOUT => {
