@@ -1,6 +1,6 @@
 use anyhow::Result;
 use build::watch_build;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use new::new_zine_project;
 use parking_lot::RwLock;
 use serve::run_serve;
@@ -52,15 +52,15 @@ fn set_current_mode(mode: Mode) {
     *MODE.write() = mode;
 }
 
-#[derive(Debug, clap::Parser)]
-#[clap(name = "zine")]
-#[clap(about = "A simple and opinionated tool to build your own magazine.", long_about = None)]
+#[derive(Debug, Parser)]
+#[command(name = "zine")]
+#[command(author, version, about, long_about = None)]
 struct Cli {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     command: Commands,
 }
 
-#[derive(Debug, clap::Subcommand)]
+#[derive(Debug, Subcommand)]
 enum Commands {
     /// Build Zine site.
     Build {
@@ -69,7 +69,7 @@ enum Commands {
         /// The destination directory. Default dest dir is `build`.
         dest: Option<String>,
         /// Enable watching.
-        #[clap(short, long)]
+        #[arg(short, long)]
         watch: bool,
     },
     /// Serve the Zine site.
@@ -77,7 +77,7 @@ enum Commands {
         /// The source directory of zine site.
         source: Option<String>,
         /// The listen port.
-        #[clap(short, default_value_t = 3000)]
+        #[arg(short, default_value_t = 3000)]
         port: u16,
     },
     /// New a Zine project.

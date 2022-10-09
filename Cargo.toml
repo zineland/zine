@@ -17,10 +17,7 @@ openssl-vendored = ["hyper-tls/vendored"]
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4", default-features = false, features = [
-    "std",
-    "derive",
-] }
+clap = { version = "4", features = ["derive"] }
 dashmap = { version = "5.4", features = ["serde"] }
 fluent = "0.16"
 html5ever = "0.25"
