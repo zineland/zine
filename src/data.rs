@@ -236,7 +236,7 @@ impl ZineData {
         self.articles
             .iter()
             .find_map(|(issue_slug, article)| {
-                if Path::new("/").join(issue_slug).join(article.slug()) == article_path.as_ref() {
+                if Path::new("/").join(issue_slug).join(&article.slug) == article_path.as_ref() {
                     Some(article)
                 } else {
                     None

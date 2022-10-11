@@ -13,16 +13,20 @@ use super::{article::Article, Entity};
 /// It parsed from issue directory's `zine.toml`.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Issue {
+    /// The slug after this issue rendered.
+    /// Fallback to issue path name if no slug specified.
+    #[serde(default)]
     pub slug: String,
     pub number: u32,
     pub title: String,
     /// The optional introduction for this issue.
     pub intro: Option<String>,
     pub cover: Option<String>,
+    /// The path of issue diretory.
     pub path: String,
-    // Skip serialize `articles` since a single article page would
-    // contain a issue context, the `articles` is useless for the
-    // single article page.
+    /// Skip serialize `articles` since a single article page would
+    /// contain a issue context, the `articles` is useless for the
+    /// single article page.
     #[serde(skip_serializing, default)]
     #[serde(rename(deserialize = "article"))]
     pub articles: Vec<Article>,
@@ -73,6 +77,11 @@ impl Issue {
 
 impl Entity for Issue {
     fn parse(&mut self, source: &Path) -> Result<()> {
+        // Fallback to path if no slug specified.
+        if self.slug.is_empty() {
+            self.slug = self.path.clone();
+        }
+
         // Parse intro file
         if let Some(intro_path) = &self.intro {
             self.intro = Some(
