@@ -21,8 +21,9 @@ use super::{AuthorId, EndMatter, Entity};
 pub struct MetaArticle {
     pub file: String,
     /// The slug after this artcile rendered.
-    /// Default to file name if no slug specified.
-    pub slug: Option<String>,
+    /// Fallback to file name if no slug specified.
+    #[serde(default)]
+    pub slug: String,
     pub title: String,
     /// The author id of this article.
     /// An article can has zero, one or multiple authors.
@@ -62,16 +63,6 @@ impl std::fmt::Debug for Article {
     }
 }
 
-impl MetaArticle {
-    #[inline]
-    pub fn slug(&self) -> String {
-        self.slug
-            .as_ref()
-            .cloned()
-            .unwrap_or_else(|| self.file.replace(".md", ""))
-    }
-}
-
 impl Article {
     /// Check whether `author` name is the author of this article.
     pub fn is_author(&self, author: &str) -> bool {
@@ -91,8 +82,8 @@ impl Article {
         self.publish || matches!(current_mode(), Mode::Serve)
     }
 
-    pub fn slug(&self) -> String {
-        self.meta.slug()
+    pub fn slug(&self) -> &String {
+        &self.meta.slug
     }
 }
 
@@ -105,8 +96,8 @@ impl Entity for Article {
         let (content, end_matter) = split_article_content(&markdown)?;
 
         // Fallback to file name if no slug specified.
-        if self.meta.slug.is_none() {
-            self.meta.slug = Some(self.meta.file.replace(".md", ""))
+        if self.meta.slug.is_empty() {
+            self.meta.slug = self.meta.file.replace(".md", "")
         }
         // Fallback to the default placeholder image if the cover is missing.
         if self.meta.cover.is_none() || matches!(&self.meta.cover, Some(cover) if cover.is_empty())
@@ -132,7 +123,7 @@ impl Entity for Article {
             &Meta {
                 title: Cow::Borrowed(&self.meta.title),
                 description: Cow::Owned(markdown::extract_description(&self.markdown)),
-                url: Some(Cow::Owned(self.slug())),
+                url: Some(Cow::Borrowed(self.slug())),
                 image: self.meta.cover.as_deref().map(Cow::Borrowed),
             },
         );
