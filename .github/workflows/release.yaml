@@ -50,7 +50,7 @@ jobs:
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v2
-      - uses: taiki-e/github-actions/install-rust@main
+      - uses: taiki-e/install-action@v1
         with:
           toolchain: stable
       - uses: taiki-e/upload-rust-binary-action@v1
