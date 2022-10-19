@@ -20,9 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: taiki-e/install-action@v1
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - run: cargo package
       - uses: taiki-e/create-gh-release-action@v1
         with:
@@ -33,42 +31,3 @@ jobs:
       - run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-  upload-assets:
-    name: ${{ matrix.target }}
-    needs:
-      - create-release
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-          - target: x86_64-unknown-linux-musl
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: taiki-e/install-action@v1
-        with:
-          toolchain: stable
-      - uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: zine
-          target: ${{ matrix.target }}
-          tar: all
-          zip: windows
-          features: openssl-vendored
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          CARGO_PROFILE_RELEASE_LTO: true
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
-      - name: Update zine homebrew formula
-        run: |
-          curl -X POST -H "Accept: application/vnd.github.v3+json" \
-               -H "Authorization: token ${{ secrets.TOKEN }}" \
-               -d '{"event_type":"version-updated","client_payload":{"version":"${{ steps.get_version.outputs.VERSION }}"}}' \
-               https://api.github.com/repos/zineland/homebrew-tap/dispatches
