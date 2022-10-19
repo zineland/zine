@@ -22,11 +22,15 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
+            tap: true
           - target: x86_64-apple-darwin
             os: macos-latest
+            tap: true
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            tap: false
           - target: x86_64-unknown-linux-musl
+            tap: false
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v2
@@ -45,6 +49,7 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
       - name: Update zine homebrew formula
+        if: ${{ matrix.tap == true }}
         run: |
           curl -X POST -H "Accept: application/vnd.github.v3+json" \
                -H "Authorization: token ${{ secrets.TOKEN }}" \
