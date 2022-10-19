@@ -127,7 +127,8 @@ highlight_theme = "ayu-light"
 
 # Issue 1
 [[issue]]
-# the slug of this issue: https://your-domain.com/s1
+# the slug of this issue: https://your-domain.com/s1.
+# optional. Fallback to `path` if missing. 
 slug = "s1"
 # the number of this issue
 number = 1
@@ -141,7 +142,6 @@ intro = "content/issue-1/intro.md"
 
 # Issue 2
 [[issue]]
-slug = "s2"
 number = 2
 title = "Issue 2"
 path = "content/issue-2"
@@ -154,6 +154,7 @@ The issue `zine.toml` file list all your articles of this issue.
 ```toml
 [[article]]
 # the slug of this article. E.g: https://your-domain.com/s1/1
+# optional. Fallback to `file` name if missing.
 slug = "1"
 # the markdown file path of this article
 file = "1-first.md"
@@ -188,8 +189,8 @@ Zine will generate a dedicated profile page for each author declared in the root
 [authors]
 # https://your-domain.com/@alice
 alice = { name = "Alice", bio = "An engineer." }
-# https://your-domain.com/@bob
-bob = { name = "Bob", avatar = "/cool/avatar.png", bio = "An engineer." }
+# https://your-domain.com/@bob, the `avatar` and `bio` are optional.
+bob = { name = "Bob", avatar = "/cool/avatar.png" }
 ```
 
 > The path of an author page consists of `@` and author id, for example above, the path are `@alice` and `@bob`.
@@ -246,6 +247,10 @@ The syntax is very simple, just write like this \`@author_id\`.
 If the `author_id` is declared in the `[authors]` table of the root `zine.toml`, 
 it will render the UI as expected, otherwise it fallback into the raw code UI.
 
+#### Callout
+
+#### Article link
+
 #### URL preview
 
 ~~~
@@ -274,8 +279,6 @@ https://github.com/zineland/zine
 - [x] Support table of content
 
 - [ ] Support i18n
-
-- [ ] Generate word cloud for issue
 
 ## License
 
