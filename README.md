@@ -124,6 +124,10 @@ article_extend_template = "templates/article-extend.html"
 highlight_code = true
 # custom highligh theme
 highlight_theme = "ayu-light"
+# custom pre block code color, only works if `highlight_code` is disabled
+pre_code_color = "#333"
+# custom pre block background color, only works if `highlight_code` is disabled
+pre_bg_color = "#eee"
 
 # Issue 1
 [[issue]]

@@ -237,6 +237,7 @@ impl Entity for Zine {
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("theme", &self.theme);
         context.insert("site", &self.site);
+        context.insert("markdown_config", &self.markdown_config);
 
         // Render all authors pages.
         let authors = self.authors();
