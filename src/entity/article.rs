@@ -1,8 +1,6 @@
 use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::{Context as _, Result};
-use once_cell::sync::Lazy;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
@@ -14,7 +12,7 @@ use crate::{
     Mode,
 };
 
-use super::{AuthorId, EndMatter, Entity};
+use super::{AuthorId, Entity};
 
 /// The Meta info of Article.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,8 +39,6 @@ pub struct Article {
     /// The article's markdown content.
     #[serde(default, skip_serializing)]
     pub markdown: String,
-    /// The optional end matter of the article.
-    pub end_matter: Option<EndMatter>,
     /// Whether the article is an featured article.
     /// Featured article will display in home page.
     #[serde(default)]
@@ -90,10 +86,9 @@ impl Article {
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
         let file_path = source.join(&self.meta.file);
-        let markdown = fs::read_to_string(&file_path).with_context(|| {
+        self.markdown = fs::read_to_string(&file_path).with_context(|| {
             format!("Failed to read markdown file of `{}`", file_path.display())
         })?;
-        let (content, end_matter) = split_article_content(&markdown)?;
 
         // Fallback to file name if no slug specified.
         if self.meta.slug.is_empty() {
@@ -105,9 +100,6 @@ impl Entity for Article {
             let data = data::read();
             self.meta.cover = data.get_theme().default_cover.clone();
         }
-
-        self.markdown = content.to_owned();
-        self.end_matter = end_matter;
         Ok(())
     }
 
@@ -131,154 +123,7 @@ impl Entity for Article {
         context.insert("article", &self);
         context.insert("html", &html);
         context.insert("toc", &markdown_render.toc);
-        context.insert("end_matter", &self.end_matter);
         engine::render("article.jinja", &context, dest)?;
         Ok(())
-    }
-}
-
-static END_MATTER_REGEX: Lazy<Regex> = Lazy::new(|| {
-    // The regex is an variant of zola's fronmatter regex.
-    Regex::new(
-        r"[[:space:]]*(?:$|(?:\r?\n((?s).*(?-s))))[[:space:]]*\+\+\+(\r?\n(?s).*?(?-s))\+\+\+[[:space:]]*$",
-    )
-    .unwrap()
-});
-
-// Splite article content and optional end matter from article markdown.
-fn split_article_content(markdown: &str) -> Result<(&str, Option<EndMatter>)> {
-    if let Some(caps) = END_MATTER_REGEX.captures(markdown) {
-        // caps[0] is the full match
-        // caps[1] => article
-        // caps[2] => end matter
-        let article = caps.get(1).expect("").as_str().trim();
-        let end_matter = caps.get(2).expect("").as_str().trim();
-        match toml::from_str::<EndMatter>(end_matter) {
-            Ok(end_matter) => {
-                return Ok((article, Some(end_matter)));
-            }
-            // Parse failed if the end matter has invalid toml syntax.
-            Err(error) => println!("Parse end matter error: {}", error),
-        }
-    }
-
-    Ok((markdown, None))
-}
-
-#[cfg(test)]
-mod tests {
-    use test_case::test_case;
-
-    use super::split_article_content;
-
-    #[test_case(r#"
-    Hello
-    "#; "No end matter")]
-    #[test_case(r#"
-    Hello
-    +++
-    "#; "Invalid end matter")]
-    #[test_case(r#"
-    Hello
-    +++
-    +++
-    "#; "Empty end matter")]
-    fn test_parse_end_matter_none(input: &str) {
-        let r = split_article_content(input).unwrap();
-        assert!(r.1.is_none());
-    }
-
-    #[test_case(r#"
-    Hello
-    +++
-    [[abc]]
-    +++
-    "#; "Invalid end matter1")]
-    #[test_case(r#"
-    Hello
-    +++
-    [[comment]]
-    xxx = "yyy"
-    +++
-    "#; "Invalid end matter2")]
-    #[test_case(r#"
-    Hello
-    +++
-    [[comment]]
-    author = 123
-    content = 123
-    +++
-    "#; "Invalid end matter3")]
-    fn test_parse_end_matter_invalid(input: &str) {
-        let (_, end_matter) = split_article_content(input).unwrap();
-        assert!(end_matter.is_none());
-    }
-
-    #[test_case(r#"
-    Hello
-    +++
-    [[comment]]
-    author = "Alice"
-    content = "Hi"
-    +++
-    "#; "Normal end matter")]
-    fn test_parse_end_matter_normal(input: &str) {
-        let (_, end_matter) = split_article_content(input).unwrap();
-        let end_matter = end_matter.unwrap();
-        assert_eq!(1, end_matter.comments.len());
-        let comment = end_matter.comments.get(0).unwrap();
-        assert_eq!("Alice", comment.author);
-        assert_eq!(None, comment.bio);
-        assert_eq!("Hi", comment.content);
-    }
-
-    #[test_case(r#"
-    Hello
-    +++
-    [[comment]]
-    author = "Alice"
-    bio = "Developer"
-    content = "Hi"
-    +++
-    "#; "Single comment in end matter")]
-    fn test_parse_end_matter_full(input: &str) {
-        let (_, end_matter) = split_article_content(input).unwrap();
-        let end_matter = end_matter.unwrap();
-        assert_eq!(1, end_matter.comments.len());
-        let comment = end_matter.comments.get(0).unwrap();
-        assert_eq!("Alice", comment.author);
-        assert_eq!(Some("Developer".into()), comment.bio);
-        assert_eq!("Hi", comment.content);
-    }
-
-    #[test_case(r#"
-    Hello
-
-    +++
-    [[comment]]
-    author = "Alice"
-    content = "Hi"
-
-    [[comment]]
-    author = "Bob"
-    bio = "Rustacean"
-    content = "Hey"
-    +++
-    "#; "Multipe comments in end matter")]
-    fn test_parse_end_matter_multiple(input: &str) {
-        let (_, end_matter) = split_article_content(input).unwrap();
-        let end_matter = end_matter.unwrap();
-        let mut iter = end_matter.comments.iter();
-        assert_eq!(2, iter.len());
-
-        let comment = iter.next().unwrap();
-        assert_eq!("Alice", comment.author);
-        assert_eq!(None, comment.bio);
-        assert_eq!("Hi", comment.content);
-
-        let comment = iter.next().unwrap();
-        assert_eq!("Bob", comment.author);
-        assert_eq!(Some("Rustacean".into()), comment.bio);
-        assert_eq!("Hey", comment.content);
     }
 }
