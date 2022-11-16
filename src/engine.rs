@@ -26,7 +26,7 @@ fn init_tera(source: &Path, zine: &Zine) {
     TERA.get_or_init(|| {
         // Debug version tera which need to reload templates.
         #[cfg(debug_assertions)]
-        let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
+        let mut tera = Tera::new("templates/**/*.jinja").expect("Invalid template dir.");
 
         // Release version tera which not need to reload templates.
         #[cfg(not(debug_assertions))]
@@ -48,6 +48,10 @@ fn init_tera(source: &Path, zine: &Zine) {
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
+            (
+                "block-quote.jinja",
+                include_str!("../templates/blocks/quote.jinja"),
+            ),
         ])
         .unwrap();
         tera.register_function("markdown_to_html", markdown_to_html_fn);
