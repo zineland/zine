@@ -49,7 +49,7 @@ fn init_tera(source: &Path, zine: &Zine) {
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
             (
-                "block-quote.jinja",
+                "blocks/quote.jinja",
                 include_str!("../templates/blocks/quote.jinja"),
             ),
         ])
