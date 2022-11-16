@@ -26,7 +26,7 @@ fn init_tera(source: &Path, zine: &Zine) {
     TERA.get_or_init(|| {
         // Debug version tera which need to reload templates.
         #[cfg(debug_assertions)]
-        let mut tera = Tera::new("templates/*.jinja").expect("Invalid template dir.");
+        let mut tera = Tera::new("templates/**/*.jinja").expect("Invalid template dir.");
 
         // Release version tera which not need to reload templates.
         #[cfg(not(debug_assertions))]
@@ -48,6 +48,10 @@ fn init_tera(source: &Path, zine: &Zine) {
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
+            (
+                "blocks/quote.jinja",
+                include_str!("../templates/blocks/quote.jinja"),
+            ),
         ])
         .unwrap();
         tera.register_function("markdown_to_html", markdown_to_html_fn);
@@ -99,7 +103,7 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     let dest = dest.as_ref().join("index.html");
     if let Some(parent_dir) = dest.parent() {
         if !parent_dir.exists() {
-            fs::create_dir_all(&parent_dir)?;
+            fs::create_dir_all(parent_dir)?;
         }
     }
 
@@ -227,7 +231,7 @@ fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Some(Value::String(author_id)) = map.get("id") {
         let data = data::read();
         let author = data.get_author_by_id(author_id);
-        Ok(serde_json::to_value(&author)?)
+        Ok(serde_json::to_value(author)?)
     } else {
         Ok(Value::Null)
     }

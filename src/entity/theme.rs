@@ -106,7 +106,7 @@ impl Entity for Theme {
         if let Some(head_template) = self.head_template.as_ref() {
             // Read head template from path to html.
             self.head_template = Some(
-                fs::read_to_string(source.join(&head_template)).with_context(|| {
+                fs::read_to_string(source.join(head_template)).with_context(|| {
                     format!(
                         "Failed to parse the head template: `{}`",
                         source.join(head_template).display(),
@@ -117,7 +117,7 @@ impl Entity for Theme {
         if let Some(footer_template) = self.footer_template.as_ref() {
             // Read footer template from path to html.
             self.footer_template = Some(
-                fs::read_to_string(source.join(&footer_template)).with_context(|| {
+                fs::read_to_string(source.join(footer_template)).with_context(|| {
                     format!(
                         "Failed to parse the footer template: `{}`",
                         source.join(footer_template).display(),
@@ -128,7 +128,7 @@ impl Entity for Theme {
         if let Some(article_extend_template) = self.article_extend_template.as_ref() {
             // Read article extend template from path to html.
             self.article_extend_template = Some(
-                fs::read_to_string(source.join(&article_extend_template)).with_context(|| {
+                fs::read_to_string(source.join(article_extend_template)).with_context(|| {
                     format!(
                         "Failed to parse the article extend template: `{}`",
                         source.join(article_extend_template).display(),

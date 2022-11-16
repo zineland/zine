@@ -5,6 +5,7 @@ use anyhow::{bail, Result};
 mod author;
 mod callout;
 mod inline_link;
+mod quote;
 mod url_preview;
 
 use crate::data::{self, PreviewEvent};
@@ -12,16 +13,17 @@ pub use author::AuthorCode;
 pub use inline_link::InlineLink;
 use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
-use self::callout::CalloutBlock;
+use self::{callout::CalloutBlock, quote::QuoteBlock};
 
 pub trait CodeBlock {
     fn render(&self) -> Result<String>;
 }
 
 const CALLOUT: &str = "callout";
+const QUOTE: &str = "quote";
 const URL_PREVIEW: &str = "urlpreview";
 
-const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, URL_PREVIEW];
+const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, QUOTE, URL_PREVIEW];
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Fenced<'a> {
@@ -95,6 +97,10 @@ impl<'a> Fenced<'a> {
             }
             CALLOUT => {
                 let html = CalloutBlock::new(self.options, block).render().unwrap();
+                Some(html)
+            }
+            QUOTE => {
+                let html = QuoteBlock::parse(block).unwrap().render().unwrap();
                 Some(html)
             }
             _ => None,
