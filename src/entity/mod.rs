@@ -5,7 +5,6 @@ use tera::Context;
 
 mod article;
 mod author;
-mod end_matter;
 mod issue;
 mod markdown;
 mod page;
@@ -16,7 +15,6 @@ mod zine;
 pub use self::zine::Zine;
 pub use article::{Article, MetaArticle};
 pub use author::{Author, AuthorId, AuthorList};
-pub use end_matter::EndMatter;
 pub use issue::Issue;
 pub use markdown::MarkdownConfig;
 pub use page::Page;

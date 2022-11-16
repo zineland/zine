@@ -213,28 +213,6 @@ pages
 1 directory, 4 files
 ```
 
-### Comment
-
-You can add an arbitrary number of comments for an article. Simply put the **end matter** below the article content.
-
-> **end matter** is a terminology similar to **front matter** in other Static Site Generators. Just like the **front matter** shown ahead of the markdown content, the **end matter** is shown below.
-
-```markdown
-You cool article content.
-
-+++
-[[comment]]
-author = "Bob"
-bio = "A developer"
-content = "The cool comment"
-
-[[comment]]
-author = "Alice"
-bio = ""
-content = "Another cool comment"
-+++
-```
-
 ### Code blocks
 
 Zine provides some advanced code blocks to help you write articles.
