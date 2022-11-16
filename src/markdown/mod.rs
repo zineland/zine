@@ -14,7 +14,7 @@ pub fn extract_description(markdown: &str) -> String {
         .find_map(|line| {
             // Ignore heading, image line.
             let line = line.trim();
-            if line.is_empty() || line.starts_with(&['#', '!']) {
+            if line.is_empty() || line.starts_with(['#', '!']) {
                 None
             } else {
                 let raw = strip_markdown(line);

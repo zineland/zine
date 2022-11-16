@@ -22,9 +22,7 @@ pub struct QuoteBlock {
 impl QuoteBlock {
     pub fn parse(block: &str) -> Result<Self> {
         match toml::from_str::<Self>(block) {
-            Ok(quote_block) => {
-                return Ok(quote_block);
-            }
+            Ok(quote_block) => Ok(quote_block),
             // Parse failed if the block has invalid toml syntax.
             Err(error) => Err(anyhow!("Parse quote block error: {}", error)),
         }

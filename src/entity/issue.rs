@@ -85,7 +85,7 @@ impl Entity for Issue {
         // Parse intro file
         if let Some(intro_path) = &self.intro {
             self.intro = Some(
-                fs::read_to_string(&source.join(&intro_path))
+                fs::read_to_string(&source.join(intro_path))
                     .with_context(|| format!("Failed to read intro from {}", intro_path))?,
             );
         }

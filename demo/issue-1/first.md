@@ -1,4 +1,3 @@
-
 # The first article of Issue 1
 
 Hello Zine.
@@ -17,4 +16,10 @@ Text 2
 fn main() {
     println!("{}", "Hello, Zine!");
 }
+```
+
+```quote
+author = "Bob"
+bio = "Rustacean"
+content = "Hello, Bob!"
 ```

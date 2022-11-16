@@ -103,7 +103,7 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     let dest = dest.as_ref().join("index.html");
     if let Some(parent_dir) = dest.parent() {
         if !parent_dir.exists() {
-            fs::create_dir_all(&parent_dir)?;
+            fs::create_dir_all(parent_dir)?;
         }
     }
 
@@ -231,7 +231,7 @@ fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     if let Some(Value::String(author_id)) = map.get("id") {
         let data = data::read();
         let author = data.get_author_by_id(author_id);
-        Ok(serde_json::to_value(&author)?)
+        Ok(serde_json::to_value(author)?)
     } else {
         Ok(Value::Null)
     }
