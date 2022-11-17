@@ -4,7 +4,6 @@
     {% else -%}
         {% set author_ids = [author] -%}
     {% endif -%}
-    <div class="flex items-center">
     {% for author_id in author_ids -%}
         {% set author = get_author(id = author_id) -%}
         {% if author -%}
@@ -26,5 +25,4 @@
             <span>{{ author_id }}</span>
         {% endif -%}
     {% endfor -%}
-    </div>
 {% endmacro input -%}

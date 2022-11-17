@@ -1,44 +1,44 @@
 {% extends "base.jinja" -%}
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
-    <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-        <div class="text-2xl text-center m-6">
-            <span class="before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block">
-                <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ issue.title }}</div>
-            </span>
-        </div>
-        <div class="max-w-[65ch] mx-auto">
-            {% if issue.intro -%}
-                <div class="prose my-8 md:mx-8">{{ markdown_to_html(markdown = issue.intro) | safe }}</div>
-            {% endif -%}
-            {% for article in articles -%}
-                <div class="py-6 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
-                    <a class="group" href="/{{ issue.slug }}/{{ article.slug }}">
-                        <div class="relative">
-                            <span class="absolute top-4 right-4 text-white text-2xl font-bold"
-                                  style="color: #eee; text-shadow: 1px 1px 2px #000">
-                                No. {{ loop.index }}
-                            </span>
-                            <img class="z-0 w-full max-h-52 md:max-h-72 object-cover"
-                                 loading="lazy"
-                                 src="{{ article.cover }}"
-                                 alt="{{ article.title }}"/>
-                        </div>
-                        <div class="my-4 text-2xl text-black">
-                            <div class="pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
-                                {{ article.title }}
-                            </div>
-                            <div class="flex items-center justify-between text-base text-gray-500">
-                                <span>{{ article.pub_date }}</span>
-                                {{ macros::author_link(author = article.author) }}
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                {% if not loop.last -%}
-                    <hr>
-                {% endif -%}
-            {% endfor -%}
-        </div>
+<div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+    <div class="text-2xl text-center m-6">
+        <span
+            class="before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block">
+            <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ issue.title }}</div>
+        </span>
     </div>
+    <div class="max-w-[65ch] mx-auto">
+        {% if issue.intro -%}
+        <div class="prose my-8 md:mx-8">{{ markdown_to_html(markdown = issue.intro) | safe }}</div>
+        {% endif -%}
+        {% for article in articles -%}
+        <div class="relative py-6 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
+            <a class="group" href="/{{ issue.slug }}/{{ article.slug }}">
+                <div class="relative">
+                    <span class="absolute top-4 right-4 text-white text-2xl font-bold"
+                        style="color: #eee; text-shadow: 1px 1px 2px #000">
+                        No. {{ loop.index }}
+                    </span>
+                    <img class="z-0 w-full max-h-52 md:max-h-72 object-cover" loading="lazy" src="{{ article.cover }}"
+                        alt="{{ article.title }}" />
+                </div>
+                <div class="my-4 text-2xl text-black">
+                    <div
+                        class="pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
+                        {{ article.title }}
+                    </div>
+                </div>
+            </a>
+            <div class="flex sm:px-8 items-center justify-between text-base text-gray-500 absolute bottom-4 left-0 right-0">
+                <span>{{ article.pub_date }}</span>
+                {{ macros::author_link(author = article.author) }}
+            </div>
+        </div>
+        {% if not loop.last -%}
+        <hr>
+        {% endif -%}
+        {% endfor -%}
+    </div>
+</div>
 {% endblock content -%}
