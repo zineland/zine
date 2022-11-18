@@ -241,6 +241,7 @@ https://github.com/zineland/zine
 
 - [https://2d2d.io](https://2d2d.io)
 - [https://o11y.cn](https://o11y.cn)
+- [https://rustpr.github.io](https://rustpr.github.io)
 
 ## TODO
 
