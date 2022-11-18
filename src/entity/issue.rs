@@ -126,9 +126,9 @@ impl Entity for Issue {
             let mut context = context.clone();
             context.insert("siblings", &self.sibling_articles(index));
             context.insert("number", &(index + 1));
-            let dest = issue_dir.join(article.slug());
-            let article = (*article).clone();
 
+            let dest = issue_dir.clone();
+            let article = (*article).clone();
             tokio::task::spawn_blocking(move || {
                 article
                     .render(context, &dest)

@@ -56,7 +56,11 @@
                 {% for item in articles -%}
                     {% set article = item.article -%}
                     <div class="py-6 sm:px-8 hover:bg-gray-100">
+                        {% if article.path -%}
+                        <a href="{{ article.path }}">
+                        {% else -%}
                         <a href="/{{ item.issue_slug }}/{{ article.slug }}">
+                        {% endif -%}
                             <div class="flex">
                                 <img class="w-28 h-18 sm:w-40 sm:h-28 object-cover"
                                      src="{{ article.cover }}"

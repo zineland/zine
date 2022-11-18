@@ -14,7 +14,11 @@
         {% endif -%}
         {% for article in articles -%}
         <div class="relative py-6 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
+            {% if article.path -%}
+            <a class="group" href="{{ article.path }}">
+            {% else -%}
             <a class="group" href="/{{ issue.slug }}/{{ article.slug }}">
+            {% endif -%}
                 <div class="relative">
                     <span class="absolute top-4 right-4 text-white text-2xl font-bold"
                         style="color: #eee; text-shadow: 1px 1px 2px #000">

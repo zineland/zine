@@ -1,7 +1,7 @@
 
 [[article]]
-slug = "first"
 file = "first.md"
+path = "/first-article"
 title = "First article"
 author = ["zine-team", "admin"]
 cover = "/static/duck.png"
