@@ -23,7 +23,8 @@ pub struct Issue {
     pub intro: Option<String>,
     pub cover: Option<String>,
     /// The path of issue diretory.
-    pub path: String,
+    #[serde(alias = "path")]
+    pub dir: String,
     /// Skip serialize `articles` since a single article page would
     /// contain a issue context, the `articles` is useless for the
     /// single article page.
@@ -79,7 +80,7 @@ impl Entity for Issue {
     fn parse(&mut self, source: &Path) -> Result<()> {
         // Fallback to path if no slug specified.
         if self.slug.is_empty() {
-            self.slug = self.path.clone();
+            self.slug = self.dir.clone();
         }
 
         // Parse intro file
@@ -97,7 +98,7 @@ impl Entity for Issue {
             articles: Vec<Article>,
         }
 
-        let dir = source.join(&self.path);
+        let dir = source.join(&self.dir);
         let content = fs::read_to_string(&dir.join(crate::ZINE_FILE))
             .with_context(|| format!("Failed to parse `zine.toml` of `{}`", dir.display()))?;
         let issue_file = toml::from_str::<IssueFile>(&content)?;

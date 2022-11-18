@@ -136,7 +136,7 @@ number = 1
 title = "Issue 1"
 # the directory path to parse this issue, you should put
 # your markdown files in this directory
-path = "content/issue-1"
+dir = "content/issue-1"
 # the introduction of this issue. optional.
 intro = "content/issue-1/intro.md"
 
@@ -144,7 +144,7 @@ intro = "content/issue-1/intro.md"
 [[issue]]
 number = 2
 title = "Issue 2"
-path = "content/issue-2"
+dir = "content/issue-2"
 ```
 
 ### Issue `zine.toml`
