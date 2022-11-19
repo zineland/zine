@@ -12,6 +12,8 @@
                     <span class="ml-2 text-gray-700">/ {{ fluent(key = "article-number", number = number) }}</span>
                 </div>
                 <div class="flex items-center">
+                    {% set translation_length = i18n | length -%}
+                    {% if translation_length > 1 %}
                     <div>
                         {% for translation in i18n %}
                             {% if translation.path -%}
@@ -23,6 +25,7 @@
                             </a>
                         {% endfor %}
                     </div>
+                    {% endif %}
                     <div id="toc-menu" class="p-2 cursor-pointer rounded hover:bg-gray-200">
                         <svg aria-hidden="true"
                              height="16"
