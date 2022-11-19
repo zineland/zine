@@ -53,7 +53,9 @@
             }
         };
 
-        setupArticleToc();
+        setupMenuList('i18n-menu', 'i18n-list');
+        setupMenuList('toc-menu', 'toc-list');
+        highlightToc();
     }
 
     function dismissInTimeout(element) {
@@ -81,7 +83,6 @@
                 let target = link.querySelector('div');
                 target.classList.add("toc-active");
                 target.scrollIntoView({ behavior: "auto", block: "nearest" });
-
             }
         };
         // Set -50% bottom root margin to improve highlight experience.
@@ -89,27 +90,25 @@
         items.forEach(item => observer.observe(item));
     }
 
-    function setupArticleToc() {
-        let tocMenu = document.getElementById('toc-menu');
-        let tocList = document.getElementById('toc-list');
-        if (!tocMenu || !tocList) return;
+    function setupMenuList(menuId, listId) {
+        let menu = document.getElementById(menuId);
+        let list = document.getElementById(listId);
+        if (!menu || !list) return;
 
-        tocMenu.onclick = (event) => {
-            if (tocList.classList.contains('hidden')) {
-                tocList.classList.remove('hidden');
+        menu.onclick = (event) => {
+            if (list.classList.contains('hidden')) {
+                list.classList.remove('hidden');
             } else {
-                tocList.classList.add('hidden');
+                list.classList.add('hidden');
             }
             event.stopPropagation();
         };
-        tocList.onclick = (event) => {
+        list.onclick = (event) => {
             event.stopPropagation();
         };
 
         document.addEventListener('click', () => {
-            tocList.classList.add('hidden');
+            list.classList.add('hidden');
         });
-
-        highlightToc();
     }
 })();
