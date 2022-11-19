@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Site {
     /// The absolute url of this site.
     pub url: String,
@@ -11,14 +11,19 @@ pub struct Site {
     pub social_image: Option<String>,
     /// The locale to localize some builtin text.
     /// Default to 'en'.
-    pub locale: Option<String>,
+    #[serde(default = "default_locale")]
+    pub locale: String,
     #[serde(rename(deserialize = "menu"))]
     #[serde(default)]
     pub menus: Vec<Menu>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Menu {
     pub name: String,
     pub url: String,
+}
+
+fn default_locale() -> String {
+    "en".to_owned()
 }

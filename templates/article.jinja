@@ -13,8 +13,14 @@
                 </div>
                 <div class="flex items-center">
                     <div>
-                        {% for locale, path in i18n %}
-                            <a href="{{ path }}">{{ locale }}</a>
+                        {% for translation in i18n %}
+                            {% if translation.path -%}
+                            <a href="{{ translation.path }}">
+                            {% else -%}
+                            <a href="/{{ issue.slug }}/{{ translation.slug }}">
+                            {% endif -%}
+                            {{ translation.name }}
+                            </a>
                         {% endfor %}
                     </div>
                     <div id="toc-menu" class="p-2 cursor-pointer rounded hover:bg-gray-200">

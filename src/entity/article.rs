@@ -8,6 +8,7 @@ use time::Date;
 use crate::{
     current_mode, data, engine,
     html::Meta,
+    i18n,
     markdown::{self, MarkdownRender},
     Mode,
 };
@@ -55,6 +56,17 @@ pub struct Article {
     pub i18n: HashMap<String, Article>,
 }
 
+/// The translation info of an article.
+#[derive(Serialize)]
+struct Translations<'a> {
+    // The locale name.
+    name: &'static str,
+    // Article slug.
+    slug: &'a String,
+    // Article path.
+    path: &'a Option<String>,
+}
+
 impl std::fmt::Debug for Article {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Article")
@@ -88,17 +100,30 @@ impl Article {
         &self.meta.slug
     }
 
-    pub fn get_translation_urls(&self) -> HashMap<&String, &String> {
-        self.i18n
+    fn get_translations(&self) -> Vec<Translations<'_>> {
+        let mut translations = self
+            .i18n
             .iter()
-            .map(|(locale, article)| {
-                if let Some(path) = article.meta.path.as_ref() {
-                    (locale, path)
-                } else {
-                    (locale, article.slug())
-                }
+            .map(|(locale, article)| Translations {
+                name: i18n::get_locale_name(locale)
+                    .unwrap_or_else(|| panic!("Currently, we dosen't support locale: `{locale}`")),
+                slug: article.slug(),
+                path: &article.meta.path,
             })
-            .collect()
+            .collect::<Vec<_>>();
+
+        let zine_data = data::read();
+        let site = zine_data.get_site();
+        // Add default locale.
+        translations.push(Translations {
+            name: i18n::get_locale_name(&site.locale).unwrap_or_else(|| {
+                panic!("Currently, we dosen't support locale: `{}`", site.locale)
+            }),
+            slug: self.slug(),
+            path: &self.meta.path,
+        });
+        translations.sort_by_key(|t| t.name);
+        translations
     }
 }
 
@@ -106,7 +131,6 @@ impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
         parse_article(self, source)?;
         for article in self.i18n.values_mut() {
-            article.i18n = HashMap::default();
             if article.meta.author.is_none() {
                 article.meta.author = self.meta.author.clone();
             }
@@ -119,7 +143,7 @@ impl Entity for Article {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        context.insert("i18n", &self.get_translation_urls());
+        context.insert("i18n", &self.get_translations());
         render_article(self, context.clone(), dest)?;
         for article in self.i18n.values() {
             render_article(article, context.clone(), dest)?;

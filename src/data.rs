@@ -18,7 +18,7 @@ use serde::{
 use tokio::sync::watch::{self, Receiver};
 
 use crate::{
-    entity::{Author, MarkdownConfig, MetaArticle, Theme},
+    entity::{Author, MarkdownConfig, MetaArticle, Site, Theme},
     helpers, html,
 };
 
@@ -115,6 +115,8 @@ pub struct ZineData {
     #[serde(skip)]
     articles: Vec<(String, MetaArticle)>,
     #[serde(skip)]
+    site: Site,
+    #[serde(skip)]
     markdown_config: MarkdownConfig,
     #[serde(skip)]
     theme: Theme,
@@ -159,6 +161,7 @@ impl ZineData {
             Ok(ZineData {
                 authors: Vec::default(),
                 articles: Vec::default(),
+                site: Site::default(),
                 markdown_config: MarkdownConfig::default(),
                 theme: Theme::default(),
                 url_previews: Arc::new(DashMap::default()),
@@ -216,6 +219,11 @@ impl ZineData {
         self
     }
 
+    pub fn set_site(&mut self, site: Site) -> &mut Self {
+        self.site = site;
+        self
+    }
+
     pub fn set_markdown_config(&mut self, config: MarkdownConfig) -> &mut Self {
         self.markdown_config = config;
         self
@@ -243,6 +251,10 @@ impl ZineData {
                 }
             })
             .cloned()
+    }
+
+    pub fn get_site(&self) -> &Site {
+        &self.site
     }
 
     pub fn get_markdown_config(&self) -> &MarkdownConfig {
