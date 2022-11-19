@@ -9,7 +9,7 @@ pub_date = "2022-02-25"
 publish = true
 featured = true
 i18n.zh_CN = { file = "first-zh.md", title = "第一篇文章", author = "zine-team", pub_date = "2022-11-18" }
-i18n.zh_TW= { file = "first-tw.md", title = "第一篇文章", author = "zine-team", pub_date = "2022-11-18" }
+i18n.zh_TW= { file = "first-tw.md", title = "第一篇文章", pub_date = "2022-11-18" }
 
 [[article]]
 slug = "second"
