@@ -125,11 +125,65 @@ impl Article {
         translations.sort_by_key(|t| t.name);
         translations
     }
+
+    fn parse(&mut self, source: &Path) -> Result<()> {
+        let file_path = source.join(&self.meta.file);
+        self.markdown = fs::read_to_string(&file_path).with_context(|| {
+            format!("Failed to read markdown file of `{}`", file_path.display())
+        })?;
+
+        // Fallback to file name if no slug specified.
+        if self.meta.path.is_none() && self.meta.slug.is_empty() {
+            self.meta.slug = self.meta.file.replace(".md", "")
+        }
+        // Fallback to the default placeholder image if the cover is missing.
+        if self.meta.cover.is_none() || matches!(&self.meta.cover, Some(cover) if cover.is_empty())
+        {
+            let data = data::read();
+            self.meta.cover = data.get_theme().default_cover.clone();
+        }
+        Ok(())
+    }
+
+    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert(
+            "meta",
+            &Meta {
+                title: Cow::Borrowed(&self.meta.title),
+                description: Cow::Owned(markdown::extract_description(&self.markdown)),
+                url: Some(Cow::Borrowed(self.slug())),
+                image: self.meta.cover.as_deref().map(Cow::Borrowed),
+            },
+        );
+        context.insert("page_type", "article");
+        context.insert("article", &self);
+
+        let zine_data = data::read();
+        let markdown_config = zine_data.get_markdown_config();
+        let mut markdown_render = MarkdownRender::new(markdown_config);
+        let html = markdown_render.render_html(&self.markdown);
+        markdown_render.rebuild_toc_depth();
+        context.insert("html", &html);
+        context.insert("toc", &markdown_render.toc);
+        drop(zine_data);
+
+        if let Some(path) = self.meta.path.as_ref() {
+            let mut dest = dest.to_path_buf();
+            dest.pop();
+            engine::render(
+                "article.jinja",
+                &context,
+                dest.join(path.trim_start_matches('/')),
+            )
+        } else {
+            engine::render("article.jinja", &context, dest.join(self.slug()))
+        }
+    }
 }
 
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        parse_article(self, source)?;
+        Article::parse(self, source)?;
         for article in self.i18n.values_mut() {
             if article.meta.author.is_none() {
                 article.meta.author = self.meta.author.clone();
@@ -137,72 +191,18 @@ impl Entity for Article {
             if article.meta.cover.is_none() {
                 article.meta.cover = self.meta.cover.clone();
             }
-            parse_article(article, source)?;
+            Article::parse(article, source)?;
         }
         Ok(())
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("i18n", &self.get_translations());
-        render_article(self, context.clone(), dest)?;
+        Article::render(self, context.clone(), dest)?;
         for article in self.i18n.values() {
-            render_article(article, context.clone(), dest)?;
+            Article::render(article, context.clone(), dest)?;
         }
 
         Ok(())
-    }
-}
-
-fn parse_article(article: &mut Article, source: &Path) -> Result<()> {
-    let file_path = source.join(&article.meta.file);
-    article.markdown = fs::read_to_string(&file_path)
-        .with_context(|| format!("Failed to read markdown file of `{}`", file_path.display()))?;
-
-    // Fallback to file name if no slug specified.
-    if article.meta.path.is_none() && article.meta.slug.is_empty() {
-        article.meta.slug = article.meta.file.replace(".md", "")
-    }
-    // Fallback to the default placeholder image if the cover is missing.
-    if article.meta.cover.is_none()
-        || matches!(&article.meta.cover, Some(cover) if cover.is_empty())
-    {
-        let data = data::read();
-        article.meta.cover = data.get_theme().default_cover.clone();
-    }
-    Ok(())
-}
-
-fn render_article(article: &Article, mut context: Context, dest: &Path) -> Result<()> {
-    context.insert(
-        "meta",
-        &Meta {
-            title: Cow::Borrowed(&article.meta.title),
-            description: Cow::Owned(markdown::extract_description(&article.markdown)),
-            url: Some(Cow::Borrowed(article.slug())),
-            image: article.meta.cover.as_deref().map(Cow::Borrowed),
-        },
-    );
-    context.insert("page_type", "article");
-    context.insert("article", &article);
-
-    let zine_data = data::read();
-    let markdown_config = zine_data.get_markdown_config();
-    let mut markdown_render = MarkdownRender::new(markdown_config);
-    let html = markdown_render.render_html(&article.markdown);
-    markdown_render.rebuild_toc_depth();
-    context.insert("html", &html);
-    context.insert("toc", &markdown_render.toc);
-    drop(zine_data);
-
-    if let Some(path) = article.meta.path.as_ref() {
-        let mut dest = dest.to_path_buf();
-        dest.pop();
-        engine::render(
-            "article.jinja",
-            &context,
-            dest.join(path.trim_start_matches('/')),
-        )
-    } else {
-        engine::render("article.jinja", &context, dest.join(article.slug()))
     }
 }
