@@ -11,7 +11,11 @@
             <div class="flex flex-wrap flex-col sm:flex-row sm:justify-evenly items-center">
                 {% for article in article_map[issue.number] -%}
                     <div class="mt-8 sm:mx-2 sm:max-w-md w-full transition ease-in-out sm:hover:scale-105 duration-500 hover:border border-gray-200">
+                        {% if article.path -%}
+                        <a href="{{ article.path }}">
+                        {% else -%}
                         <a href="/{{ issue.slug }}/{{ article.slug }}">
+                        {% endif -%}
                             <div class="relative mx-auto ">
                                 <img class="z-0 w-full max-h-52 md:max-h-56 object-cover"
                                      loading="lazy"

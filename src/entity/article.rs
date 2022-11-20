@@ -22,6 +22,9 @@ pub struct MetaArticle {
     /// Fallback to file name if no slug specified.
     #[serde(default)]
     pub slug: String,
+    /// Absolute path of this article.
+    /// The field take precedence over `slug` field.
+    pub path: Option<String>,
     pub title: String,
     /// The author id of this article.
     /// An article can has zero, one or multiple authors.
@@ -91,7 +94,7 @@ impl Entity for Article {
         })?;
 
         // Fallback to file name if no slug specified.
-        if self.meta.slug.is_empty() {
+        if self.meta.path.is_none() && self.meta.slug.is_empty() {
             self.meta.slug = self.meta.file.replace(".md", "")
         }
         // Fallback to the default placeholder image if the cover is missing.
@@ -104,12 +107,6 @@ impl Entity for Article {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        let zine_data = data::read();
-        let markdown_config = zine_data.get_markdown_config();
-        let mut markdown_render = MarkdownRender::new(markdown_config);
-        let html = markdown_render.render_html(&self.markdown);
-        markdown_render.rebuild_toc_depth();
-
         context.insert(
             "meta",
             &Meta {
@@ -121,9 +118,27 @@ impl Entity for Article {
         );
         context.insert("page_type", "article");
         context.insert("article", &self);
+
+        let zine_data = data::read();
+        let markdown_config = zine_data.get_markdown_config();
+        let mut markdown_render = MarkdownRender::new(markdown_config);
+        let html = markdown_render.render_html(&self.markdown);
+        markdown_render.rebuild_toc_depth();
         context.insert("html", &html);
         context.insert("toc", &markdown_render.toc);
-        engine::render("article.jinja", &context, dest)?;
+        drop(zine_data);
+
+        if let Some(path) = self.meta.path.as_ref() {
+            let mut dest = dest.to_path_buf();
+            dest.pop();
+            engine::render(
+                "article.jinja",
+                &context,
+                dest.join(path.trim_start_matches('/')),
+            )?;
+        } else {
+            engine::render("article.jinja", &context, dest.join(self.slug()))?;
+        }
         Ok(())
     }
 }
