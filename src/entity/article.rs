@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fs, path::Path};
+use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
@@ -8,6 +8,7 @@ use time::Date;
 use crate::{
     current_mode, data, engine,
     html::Meta,
+    i18n,
     markdown::{self, MarkdownRender},
     Mode,
 };
@@ -51,12 +52,26 @@ pub struct Article {
     /// generate HTML file in this mode.
     #[serde(default)]
     pub publish: bool,
+    #[serde(default)]
+    pub i18n: HashMap<String, Article>,
+}
+
+/// The translation info of an article.
+#[derive(Serialize)]
+struct Translations<'a> {
+    // The locale name.
+    name: &'static str,
+    // Article slug.
+    slug: &'a String,
+    // Article path.
+    path: &'a Option<String>,
 }
 
 impl std::fmt::Debug for Article {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Article")
             .field("meta", &self.meta)
+            .field("i18n", &self.i18n)
             .field("publish", &self.publish)
             .finish()
     }
@@ -84,9 +99,33 @@ impl Article {
     pub fn slug(&self) -> &String {
         &self.meta.slug
     }
-}
 
-impl Entity for Article {
+    fn get_translations(&self) -> Vec<Translations<'_>> {
+        let mut translations = self
+            .i18n
+            .iter()
+            .map(|(locale, article)| Translations {
+                name: i18n::get_locale_name(locale)
+                    .unwrap_or_else(|| panic!("Currently, we dosen't support locale: `{locale}`")),
+                slug: article.slug(),
+                path: &article.meta.path,
+            })
+            .collect::<Vec<_>>();
+
+        let zine_data = data::read();
+        let site = zine_data.get_site();
+        // Add default locale.
+        translations.push(Translations {
+            name: i18n::get_locale_name(&site.locale).unwrap_or_else(|| {
+                panic!("Currently, we dosen't support locale: `{}`", site.locale)
+            }),
+            slug: self.slug(),
+            path: &self.meta.path,
+        });
+        translations.sort_by_key(|t| t.name);
+        translations
+    }
+
     fn parse(&mut self, source: &Path) -> Result<()> {
         let file_path = source.join(&self.meta.file);
         self.markdown = fs::read_to_string(&file_path).with_context(|| {
@@ -135,10 +174,35 @@ impl Entity for Article {
                 "article.jinja",
                 &context,
                 dest.join(path.trim_start_matches('/')),
-            )?;
+            )
         } else {
-            engine::render("article.jinja", &context, dest.join(self.slug()))?;
+            engine::render("article.jinja", &context, dest.join(self.slug()))
         }
+    }
+}
+
+impl Entity for Article {
+    fn parse(&mut self, source: &Path) -> Result<()> {
+        Article::parse(self, source)?;
+        for article in self.i18n.values_mut() {
+            if article.meta.author.is_none() {
+                article.meta.author = self.meta.author.clone();
+            }
+            if article.meta.cover.is_none() {
+                article.meta.cover = self.meta.cover.clone();
+            }
+            Article::parse(article, source)?;
+        }
+        Ok(())
+    }
+
+    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert("i18n", &self.get_translations());
+        Article::render(self, context.clone(), dest)?;
+        for article in self.i18n.values() {
+            Article::render(article, context.clone(), dest)?;
+        }
+
         Ok(())
     }
 }

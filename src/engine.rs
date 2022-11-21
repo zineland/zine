@@ -60,7 +60,6 @@ fn init_tera(source: &Path, zine: &Zine) {
         parking_lot::RwLock::new(tera)
     });
 
-    let locale = zine.site.locale.as_deref().unwrap_or("en");
     let mut tera = TERA.get().expect("Tera haven't initialized").write();
 
     // Full realod tera templates in debug mode.
@@ -83,7 +82,7 @@ fn init_tera(source: &Path, zine: &Zine) {
     }
 
     // Dynamically register functions that need dynamic configuration.
-    tera.register_function("fluent", FluentLoader::new(source, locale));
+    tera.register_function("fluent", FluentLoader::new(source, &zine.site.locale));
 }
 
 /// Get a Tera under read lock.

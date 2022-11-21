@@ -256,7 +256,10 @@ impl Entity for Zine {
 
         {
             let mut zine_data = data::write();
-            zine_data.set_authors(authors).set_articles(self.articles());
+            zine_data
+                .set_site(self.site.clone())
+                .set_authors(authors)
+                .set_articles(self.articles());
         }
 
         // Render all issues pages.

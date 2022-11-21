@@ -14,6 +14,7 @@ mod error;
 mod feed;
 mod helpers;
 mod html;
+mod i18n;
 mod locales;
 mod markdown;
 mod new;
