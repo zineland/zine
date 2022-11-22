@@ -1,30 +1,27 @@
 {% macro author_link(author) -%}
-    {% if author is iterable -%}
-        {% set author_ids = author -%}
-    {% else -%}
-        {% set author_ids = [author] -%}
-    {% endif -%}
-    <div class="flex items-center">
+{% if author is iterable -%}
+{% set author_ids = author -%}
+{% else -%}
+{% set author_ids = [author] -%}
+{% endif -%}
+<div class="flex items-center">
     {% for author_id in author_ids -%}
-        {% set author = get_author(id = author_id) -%}
-        {% if author -%}
-            <a class="inline-flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline"
-               href="/@{{ author.id | lower }}">
-                <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover"
-                     src="{{ author.avatar }}"
-                     alt="avatar"
-                     loading="lazy">
-                <span>
-                    {% if author.name -%}
-                        {{ author.name }}
-                    {% else -%}
-                        {{ author.id }}
-                    {% endif -%}
-                </span>
-            </a>
-        {% else -%}
-            <span>{{ author_id }}</span>
-        {% endif -%}
+    {% set author = get_author(id = author_id) -%}
+    {% if author -%}
+    <a class="inline-flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline"
+        href="/@{{ author.id | lower }}">
+        <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover" src="{{ author.avatar }}" alt="avatar" loading="lazy">
+        <span>
+            {% if author.name -%}
+            {{ author.name }}
+            {% else -%}
+            {{ author.id }}
+            {% endif -%}
+        </span>
+    </a>
+    {% else -%}
+    <span>{{ author_id }}</span>
+    {% endif -%}
     {% endfor -%}
-    </div>
+</div>
 {% endmacro input -%}

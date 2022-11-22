@@ -3,7 +3,8 @@
 {% for issue in issues | reverse -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="text-2xl text-center m-4">
-        <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500" href="/{{ issue.slug }}">
+        <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
+            href="/{{ issue.slug }}">
             <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ issue.title }}</div>
         </a>
     </div>
