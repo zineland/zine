@@ -142,6 +142,10 @@ impl Article {
             let data = data::read();
             self.meta.cover = data.get_theme().default_cover.clone();
         }
+        // Ensure the path starts with / if exists.
+        if matches!(self.meta.path.as_ref(), Some(path) if !path.starts_with('/')) {
+            self.meta.path = Some(format!("/{}", self.meta.path.take().unwrap_or_default()));
+        }
         Ok(())
     }
 
