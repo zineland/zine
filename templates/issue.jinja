@@ -4,7 +4,7 @@
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="text-2xl text-center m-6">
         <span
-            class="before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block">
+            class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block">
             <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ issue.title }}</div>
         </span>
     </div>
@@ -19,7 +19,7 @@
             {% else -%}
             <a class="group" href="/{{ issue.slug }}/{{ article.slug }}">
             {% endif -%}
-                <div class="relative">
+                <div class="zine-cover relative">
                     <span class="absolute top-4 right-4 text-white text-2xl font-bold"
                         style="color: #eee; text-shadow: 1px 1px 2px #000">
                         No. {{ loop.index }}
@@ -29,13 +29,13 @@
                 </div>
                 <div class="my-4 text-2xl text-black">
                     <div
-                        class="pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
+                        class="zine-card-title pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
                         {{ article.title }}
                     </div>
                 </div>
             </a>
             <div class="flex sm:px-8 items-center justify-between text-base text-gray-500 absolute bottom-4 left-0 right-0">
-                <span>{{ article.pub_date }}</span>
+                <span class="zine-card-date">{{ article.pub_date }}</span>
                 {{ macros::author_link(author = article.author) }}
             </div>
         </div>

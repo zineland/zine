@@ -17,8 +17,8 @@
     <div class="max-w-[65ch] mx-auto">
         <div class="flex flex-col sm:flex-row py-6">
             <div class="m-4 sm:m-8 text-center">
-                <img class="mx-auto w-44 h-44 object-cover rounded-full border" src="{{ author.avatar }}" alt="Avatar"
-                    loading="lazy">
+                <img class="zine-avatar mx-auto w-44 h-44 object-cover rounded-full border" src="{{ author.avatar }}"
+                    alt="Avatar" loading="lazy">
                 {% if author.is_editor -%}
                 <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-4">
                     <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
@@ -39,9 +39,9 @@
                 {% endif -%}
             </div>
             <div class="prose my-2 sm:m-8 grow">
-                <div class="text-4xl font-bold py-2 text-center sm:text-start">{{ author_name }}</div>
+                <div class="zine-author-name text-4xl font-bold py-2 text-center sm:text-start">{{ author_name }}</div>
                 {% if author.bio -%}
-                <div>{{ markdown_to_html(markdown = author.bio) | safe }}</div>
+                <div class="zine-author-bio">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
                 {% endif -%}
             </div>
         </div>
@@ -55,25 +55,25 @@
             <div class="py-6 sm:px-8 hover:bg-gray-100">
                 {% if article.path -%}
                 <a href="{{ article.path }}">
-                    {% else -%}
-                    <a href="/{{ item.issue_slug }}/{{ article.slug }}">
-                        {% endif -%}
-                        <div class="flex">
-                            <img class="w-28 h-18 sm:w-40 sm:h-28 object-cover" src="{{ article.cover }}"
-                                alt="{{ article.title }}" loading="lazy">
-                            <div
-                                class="flex flex-col justify-between ml-4 sm:ml-8 text-base sm:text-lg text-black grow">
-                                <div class="py-2 font-bold line-clamp-2">{{ article.title }}</div>
-                                <div class="relative text-base text-gray-500 flex justify-between items-center">
-                                    <span>{{ article.pub_date }}</span>
-                                    <span
-                                        class="zine-diamond mx-4 my-2 before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block">
-                                        <span class="relative text-main text-xs">{{ item.issue_title }}</span>
-                                    </span>
-                                </div>
+                {% else -%}
+                <a href="/{{ item.issue_slug }}/{{ article.slug }}">
+                {% endif -%}
+                    <div class="flex">
+                        <img class="zine-thumbnail w-28 h-18 sm:w-40 sm:h-28 object-cover" src="{{ article.cover }}"
+                            alt="{{ article.title }}" loading="lazy">
+                        <div
+                            class="flex flex-col justify-between ml-4 sm:ml-8 text-base sm:text-lg text-black grow">
+                            <div class="zine-card-title py-2 font-bold line-clamp-2">{{ article.title }}</div>
+                            <div class="relative text-base text-gray-500 flex justify-between items-center">
+                                <span class="zine-card-date">{{ article.pub_date }}</span>
+                                <span
+                                    class="zine-diamond mx-4 my-2 before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block">
+                                    <span class="relative text-main text-xs">{{ item.issue_title }}</span>
+                                </span>
                             </div>
                         </div>
-                    </a>
+                    </div>
+                </a>
             </div>
             {% if not loop.last -%}
             <hr>
