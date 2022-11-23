@@ -27,7 +27,7 @@ pub use theme::Theme;
 /// - **parse**, the stage the entity to parse its attribute, such as parse markdown to html.
 /// - **render**, the stage to render the entity to html file.
 ///
-/// [`Entity`] have default empty implementations for both methods.
+/// [`Entity`] has default empty implementations for both methods.
 #[allow(unused_variables)]
 pub trait Entity {
     fn parse(&mut self, source: &Path) -> Result<()> {
@@ -57,16 +57,17 @@ impl<T: Entity> Entity for Option<T> {
 
 impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        self.par_iter_mut().try_for_each(|item| item.parse(source))
+        self.par_iter_mut()
+            .try_for_each(|entity| entity.parse(source))
     }
 
     fn render(&self, context: Context, dest: &Path) -> Result<()> {
-        for item in self {
-            let item = item.clone();
-            let render = context.clone();
+        for entity in self {
+            let entity = entity.clone();
+            let context = context.clone();
             let dest = dest.to_path_buf();
             tokio::task::spawn_blocking(move || {
-                item.render(render, &dest).expect("Render failed.")
+                entity.render(context, &dest).expect("Render failed.")
             });
         }
         Ok(())

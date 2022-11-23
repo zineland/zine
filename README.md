@@ -257,7 +257,7 @@ https://github.com/zineland/zine
 
 - [x] Support table of content
 
-- [ ] Support i18n
+- [x] Support i18n
 
 ## License
 
