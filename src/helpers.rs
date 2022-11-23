@@ -1,7 +1,8 @@
 use anyhow::Result;
 use hyper::{
     body::{self, Buf},
-    Client, Uri,
+    http::HeaderValue,
+    Client, Request, Uri,
 };
 use hyper_tls::HttpsConnector;
 use rayon::iter::{ParallelBridge, ParallelIterator};
@@ -17,7 +18,15 @@ pub fn capitalize(text: &str) -> String {
 
 pub async fn fetch_url(url: &str) -> Result<impl Read> {
     let client = Client::builder().build::<_, hyper::Body>(HttpsConnector::new());
-    let resp = client.get(url.parse::<Uri>()?).await?;
+    let mut req = Request::new(Default::default());
+    *req.uri_mut() = url.parse::<Uri>()?;
+    req.headers_mut().insert(
+        "User-Agent",
+        HeaderValue::from_static(
+            "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36",
+        ),
+    );
+    let resp = client.request(req).await?;
     let bytes = body::to_bytes(resp.into_body()).await?;
     Ok(bytes.reader())
 }
