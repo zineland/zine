@@ -55,15 +55,9 @@ impl<'a> Fenced<'a> {
                     // we should keep this guard drop in this scope.
                     let data = data::read();
                     if let Some(info) = data.get_preview(url) {
-                        let html = UrlPreviewBlock::new(
-                            url,
-                            &info.title,
-                            &info.description,
-                            &info.image.as_ref().cloned().unwrap_or_default(),
-                        )
-                        .render()
-                        .unwrap();
-
+                        let html = UrlPreviewBlock::new(self.options, url, info)
+                            .render()
+                            .unwrap();
                         return Some(html);
                     }
 
@@ -75,15 +69,9 @@ impl<'a> Fenced<'a> {
                 let event = rx.borrow();
                 match event.to_owned().expect("Url preview didn't initialized.") {
                     PreviewEvent::Finished(info) => {
-                        let html = UrlPreviewBlock::new(
-                            url,
-                            &info.title,
-                            &info.description,
-                            &info.image.as_ref().cloned().unwrap_or_default(),
-                        )
-                        .render()
-                        .unwrap();
-
+                        let html = UrlPreviewBlock::new(self.options, url, info)
+                            .render()
+                            .unwrap();
                         if first_preview {
                             println!("URL previewed: {url}");
                         }
