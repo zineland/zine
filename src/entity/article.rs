@@ -112,17 +112,19 @@ impl Article {
             })
             .collect::<Vec<_>>();
 
-        let zine_data = data::read();
-        let site = zine_data.get_site();
-        // Add default locale.
-        translations.push(Translations {
-            name: i18n::get_locale_name(&site.locale).unwrap_or_else(|| {
-                panic!("Currently, we dosen't support locale: `{}`", site.locale)
-            }),
-            slug: self.slug(),
-            path: &self.meta.path,
-        });
-        translations.sort_by_key(|t| t.name);
+        if !translations.is_empty() {
+            let zine_data = data::read();
+            let site = zine_data.get_site();
+            // Add default locale.
+            translations.push(Translations {
+                name: i18n::get_locale_name(&site.locale).unwrap_or_else(|| {
+                    panic!("Currently, we dosen't support locale: `{}`", site.locale)
+                }),
+                slug: self.slug(),
+                path: &self.meta.path,
+            });
+            translations.sort_by_key(|t| t.name);
+        }
         translations
     }
 
