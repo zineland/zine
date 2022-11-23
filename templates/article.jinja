@@ -5,7 +5,7 @@
     <div
         class="sticky z-10 py-4 top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white border-dashed border-b border-slate-300">
         <div class="mx-2 flex justify-between items-center">
-            <div>
+            <div class="zine-breadcrumb">
                 <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
                     href="/{{ issue.slug }}">
                     <div class="relative text-main px-4">{{ issue.title }}</div>
@@ -84,11 +84,16 @@
         </article>
         {% if siblings.0 or siblings.1 -%}
         <div class="my-4 w-full border-dashed border-t border-slate-300"></div>
-        <div class="flex flex-col md:flex-row">
+        <div class="zine-navigate flex flex-col md:flex-row md:justify-between">
             {% for article in [siblings.0, siblings.1] -%}
             {% if article -%}
-            <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline"
-                href="/{{ issue.slug }}/{{ article.slug }}">
+
+            {% if article.path -%}
+            {% set href = article.path -%}
+            {% else -%}
+            {% set href = "/" ~ issue.slug ~ "/" ~ article.slug -%}
+            {% endif -%}
+            <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline" href="{{ href }}">
                 {% if loop.index0 == 0 -%}
                 {{ fluent(key = "previous") }}
                 {% else -%}

@@ -26,8 +26,8 @@
 {% else -%}
 {% set path = meta.url -%}
 {% endif -%}
-<meta property="og:url" content="{{ site.url ~ " /" ~ path }}">
-<meta property="twitter:url" content="{{ site.url ~ " /" ~ path }}">
+<meta property="og:url" content="{{ site.url ~ "/" ~ path }}">
+<meta property="twitter:url" content="{{ site.url ~ "/" ~ path }}">
 {% endif -%}
 {% if image -%}
 <meta name="twitter:card" content="summary_large_image">
