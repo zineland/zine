@@ -91,6 +91,9 @@ enum Commands {
     Lint {
         /// The source directory of zine site.
         source: Option<String>,
+        /// Enable CI mode. If lint failed will reture a non-zero code.
+        #[arg(long)]
+        ci: bool,
     },
     /// Prints the app version.
     Version,
@@ -114,8 +117,11 @@ async fn main() -> Result<()> {
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
         Commands::New { name } => new_zine_project(name)?,
-        Commands::Lint { source } => {
-            lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?
+        Commands::Lint { source, ci } => {
+            let success = lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?;
+            if ci && !success {
+                std::process::exit(1);
+            }
         }
         Commands::Version => {
             let version =

@@ -7,7 +7,9 @@ use hyper_tls::HttpsConnector;
 
 use crate::data;
 
-pub async fn lint_zine_project<P: AsRef<Path>>(source: P) -> Result<()> {
+/// Lint the zine project.
+/// Return true if lint success.
+pub async fn lint_zine_project<P: AsRef<Path>>(source: P) -> Result<bool> {
     let tasks = {
         data::load(source);
         let guard = data::read();
@@ -37,19 +39,17 @@ pub async fn lint_zine_project<P: AsRef<Path>>(source: P) -> Result<()> {
                 },
             );
 
-    if let Some(urls) = conditions.get(&UrlCondition::NotFound) {
-        println!("\nThe following URLs are 404:");
-        urls.iter().for_each(|url| println!("- {url}"));
-    }
-    if let Some(urls) = conditions.get(&UrlCondition::Redirected) {
-        println!("\nThe following URLs have been redirected:");
-        urls.iter().for_each(|url| println!("- {url}"));
-    }
-    if let Some(urls) = conditions.get(&UrlCondition::ServerError) {
-        println!("\nThe following URLs have a server error:");
-        urls.iter().for_each(|url| println!("- {url}"));
-    }
-    Ok(())
+    let check_condition = |condition, statement: &str| {
+        if let Some(urls) = conditions.get(&condition) {
+            println!("\nThe following URLs {statement}:");
+            urls.iter().for_each(|url| println!("- {url}"));
+        }
+    };
+    check_condition(UrlCondition::NotFound, "are 404");
+    check_condition(UrlCondition::Redirected, "have been redirected");
+    check_condition(UrlCondition::ServerError, "have a server error");
+
+    Ok(conditions.is_empty())
 }
 
 async fn check_url(url: String) -> Result<(String, UrlCondition)> {
