@@ -27,6 +27,16 @@ pub async fn fetch_url(url: &str) -> Result<impl Read> {
         ),
     );
     let resp = client.request(req).await?;
+    if resp.status().is_redirection() {
+        if let Some(location) = resp.headers().get("Location") {
+            println!(
+                "Warning: url `{url}` has been redirected to `{}`",
+                location.to_str()?,
+            );
+        } else {
+            println!("Warning: url `{url}` has been redirected");
+        }
+    }
     let bytes = body::to_bytes(resp.into_body()).await?;
     Ok(bytes.reader())
 }
