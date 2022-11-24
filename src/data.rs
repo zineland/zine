@@ -170,6 +170,10 @@ impl ZineData {
         }
     }
 
+    pub fn get_all_previews(&self) -> Arc<DashMap<String, UrlPreviewInfo>> {
+        Arc::clone(&self.url_previews)
+    }
+
     pub fn get_preview(&self, url: &str) -> Option<UrlPreviewInfo> {
         self.url_previews.get(url).map(|u| u.to_owned())
     }

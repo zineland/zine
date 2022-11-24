@@ -12,7 +12,7 @@ name = "{name}"
 description = ""
 
 [[issue]]
-slug = "s1"
+slug = "issue1"
 number = 1
 title = "Issue 1"
 path = "content/issue-1"
@@ -20,7 +20,6 @@ path = "content/issue-1"
 
 static TEMPLATE_ISSUE_FILE: &str = r#"
 [[article]]
-slug = "1"
 file = "1-first.md"
 title = "First article"
 author = ""

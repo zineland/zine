@@ -15,6 +15,7 @@ mod feed;
 mod helpers;
 mod html;
 mod i18n;
+mod lint;
 mod locales;
 mod markdown;
 mod new;
@@ -86,6 +87,14 @@ enum Commands {
         /// The project name.
         name: Option<String>,
     },
+    /// Lint Zine project.
+    Lint {
+        /// The source directory of zine site.
+        source: Option<String>,
+        /// Enable CI mode. If lint failed will reture a non-zero code.
+        #[arg(long)]
+        ci: bool,
+    },
     /// Prints the app version.
     Version,
 }
@@ -108,6 +117,12 @@ async fn main() -> Result<()> {
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
         Commands::New { name } => new_zine_project(name)?,
+        Commands::Lint { source, ci } => {
+            let success = lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?;
+            if ci && !success {
+                std::process::exit(1);
+            }
+        }
         Commands::Version => {
             let version =
                 option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)");
