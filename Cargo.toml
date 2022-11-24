@@ -20,6 +20,7 @@ anyhow = "1.0"
 clap = { version = "4", features = ["derive"] }
 dashmap = { version = "5.4", features = ["serde"] }
 fluent = "0.16"
+futures = { version = "0.3", default-features = false }
 html5ever = "0.25"
 http-body = "0.4"
 hyper = { version = "0.14", features = ["client", "server", "tcp", "http1"] }
