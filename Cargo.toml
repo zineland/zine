@@ -31,6 +31,7 @@ intl-memoizer = "0.5"
 lol_html = "0.3"
 markup5ever_rcdom = "0.2"
 notify-debouncer-mini = { version = "0.2", default-features = false }
+minijinja = { version = "0.26.0", features = ["source"] }
 once_cell = "1"
 opener = "0.5"
 parking_lot = "0.12"

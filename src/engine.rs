@@ -16,11 +16,23 @@ use crate::{
 
 use anyhow::Result;
 use hyper::Uri;
+use minijinja::{Environment, Source};
 use once_cell::sync::OnceCell;
 use serde_json::Value;
 use tera::{Context, Tera};
 
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
+static JINJA: OnceCell<parking_lot::RwLock<Environment>> = OnceCell::new();
+
+fn init_jinja() {
+    JINJA.get_or_init(|| {
+        let mut env = Environment::new();
+        let source = Source::from_path("templates/**/*.jinja");
+        env.set_source(source);
+        // env.add_function("markdown_to_html", "");
+        parking_lot::RwLock::new(env)
+    });
+}
 
 fn init_tera(source: &Path, zine: &Zine) {
     TERA.get_or_init(|| {
@@ -219,6 +231,7 @@ impl ZineEngine {
 
         self.zine.parse(&self.source)?;
 
+        init_jinja();
         init_tera(&self.source, &self.zine);
 
         self.zine.render(Context::new(), &self.dest)?;
