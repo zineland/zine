@@ -3,6 +3,7 @@
 url = "http://localhost"
 name = "Demo"
 description = "Demonstration of Zine."
+edit_url = "https://github.com/zineland/zine/edit/master/demo"
 menu = [
     { name = "About", url = "/about" },
     { name = "Github", url = "https://github.com" },
