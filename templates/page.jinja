@@ -1,8 +1,14 @@
 {% extends "base.jinja" -%}
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white min-h-[500px] shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+    {% if site.edit_url -%}
+    <a class="absolute top-2 right-6 p-2 rounded hover:bg-gray-200"
+        href="{{ site.edit_url }}/pages/{{ page.file_path }}">
+        <img src="/static/edit.svg" alt="edit">
+    </a>
+    {% endif -%}
     <article class="zine-page prose mx-auto py-8">
-        {{ markdown_to_html(markdown = markdown) | safe }}
+        {{ markdown_to_html(markdown = page.markdown) | safe }}
     </article>
 </div>
 {% endblock content -%}

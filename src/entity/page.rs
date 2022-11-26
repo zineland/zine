@@ -50,7 +50,7 @@ impl Entity for Page {
                 image: None,
             },
         );
-        context.insert("markdown", &self.markdown);
+        context.insert("page", &self);
         engine::render("page.jinja", &context, dest.join(self.slug()))?;
         Ok(())
     }
