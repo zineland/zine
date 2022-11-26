@@ -15,7 +15,7 @@ description = ""
 slug = "issue1"
 number = 1
 title = "Issue 1"
-path = "content/issue-1"
+dir = "content/issue-1"
 "#;
 
 static TEMPLATE_ISSUE_FILE: &str = r#"
