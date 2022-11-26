@@ -23,7 +23,7 @@ pub struct Issue {
     pub intro: Option<String>,
     pub cover: Option<String>,
     /// The path of issue diretory.
-    #[serde(alias = "path")]
+    #[serde(skip_deserializing)]
     pub dir: String,
     /// Skip serialize `articles` since a single article page would
     /// contain a issue context, the `articles` is useless for the
@@ -41,6 +41,7 @@ impl std::fmt::Debug for Issue {
             .field("title", &self.title)
             .field("intro", &self.intro.is_some())
             .field("cover", &self.cover)
+            .field("dir", &self.dir)
             .field("articles", &self.articles)
             .finish()
     }
@@ -91,18 +92,7 @@ impl Entity for Issue {
             );
         }
 
-        // Representing a zine.toml file for issue.
-        #[derive(Debug, Deserialize)]
-        struct IssueFile {
-            #[serde(rename = "article")]
-            articles: Vec<Article>,
-        }
-
-        let dir = source.join(&self.dir);
-        let content = fs::read_to_string(&dir.join(crate::ZINE_FILE))
-            .with_context(|| format!("Failed to parse `zine.toml` of `{}`", dir.display()))?;
-        let issue_file = toml::from_str::<IssueFile>(&content)?;
-        self.articles = issue_file.articles;
+        let dir = source.join(crate::ZINE_CONTENT_DIR).join(&self.dir);
         // Sort all articles by pub_date.
         self.articles
             .par_sort_unstable_by_key(|article| article.meta.pub_date);

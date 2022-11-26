@@ -1,4 +1,4 @@
-use anyhow::{Context as _, Result};
+use anyhow::{ensure, Context as _, Result};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
     fs,
-    path::Path,
+    path::{Component, Path},
 };
 use tera::Context;
 use walkdir::WalkDir;
@@ -197,6 +197,46 @@ impl Entity for Zine {
                 author.id = id.clone();
                 author.parse(source)
             })?;
+        }
+
+        let content_dir = source.join(crate::ZINE_CONTENT_DIR);
+        ensure!(
+            content_dir.exists(),
+            "`{}` fold not found.",
+            crate::ZINE_CONTENT_DIR
+        );
+
+        for entry in WalkDir::new(&content_dir).contents_first(true).into_iter() {
+            let entry = entry?;
+            if entry.file_name() != crate::ZINE_FILE {
+                continue;
+            }
+            let content = fs::read_to_string(entry.path()).with_context(|| {
+                format!(
+                    "Failed to parse `zine.toml` of `{}`",
+                    entry.path().display()
+                )
+            })?;
+            let mut issue = toml::from_str::<Issue>(&content)?;
+            let dir = entry
+                .path()
+                .components()
+                .fold(Vec::new(), |mut dir, component| {
+                    let name = component.as_os_str();
+                    if !dir.is_empty() && name != crate::ZINE_FILE {
+                        dir.push(name.to_string_lossy().to_string());
+                        return dir;
+                    }
+
+                    if matches!(component, Component::Normal(c) if c == crate::ZINE_CONTENT_DIR ) {
+                        // a empty indicator we should start collect the components
+                        dir.push(String::new());
+                    }
+                    dir
+                });
+            // skip the first empty indicator
+            issue.dir = dir[1..].join("/");
+            self.issues.push(issue);
         }
 
         self.issues.parse(source)?;

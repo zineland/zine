@@ -1,3 +1,6 @@
+slug = "dev"
+number = 2
+title = "Issue 2"
 
 [[article]]
 file = "first.md"
