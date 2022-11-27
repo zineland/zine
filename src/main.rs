@@ -24,8 +24,12 @@ mod serve;
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
 
+/// The convention name of zine config file.
 pub static ZINE_FILE: &str = "zine.toml";
+/// The convention name of zine markdown directory.
 pub static ZINE_CONTENT_DIR: &str = "content";
+/// The convention name of introduction file for zine issue.
+pub static ZINE_INTRO_FILE: &str = "intro.md";
 pub static ZINE_BANNER: &str = r"
 
 ███████╗██╗███╗   ██╗███████╗
