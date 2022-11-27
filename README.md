@@ -16,6 +16,7 @@ Zine - a simple and opinionated tool to build your own magazine.
 - Theme customizable, extend friendly.
 - RSS Feed supported.
 - Open Graph Protocol supported.
+- I18n and o11n supported.
 - Build into a static website, hosting anywhere.
 
 ## Installation
@@ -84,6 +85,8 @@ description = ""
 logo = "/path/to/favicon"
 # the OpenGraph social image path.
 social_image = "/path/to/social_image"
+# the repository edit url
+edit_url = "https://github.com/zineland/zine/edit/master/demo"
 # the locale to localize your Zine site. default to "en".
 # Zine has builtin supported locales, please check the `locales` directory of this repo.
 locale = "en"
@@ -124,27 +127,6 @@ article_extend_template = "templates/article-extend.html"
 highlight_code = true
 # custom highligh theme
 highlight_theme = "ayu-light"
-
-# Issue 1
-[[issue]]
-# the slug of this issue: https://your-domain.com/s1.
-# optional. Fallback to `path` if missing. 
-slug = "s1"
-# the number of this issue
-number = 1
-# issue title
-title = "Issue 1"
-# the directory path to parse this issue, you should put
-# your markdown files in this directory
-dir = "content/issue-1"
-# the introduction of this issue. optional.
-intro = "content/issue-1/intro.md"
-
-# Issue 2
-[[issue]]
-number = 2
-title = "Issue 2"
-dir = "content/issue-2"
 ```
 
 ### Issue `zine.toml`
@@ -152,6 +134,14 @@ dir = "content/issue-2"
 The issue `zine.toml` file list all your articles of this issue.
 
 ```toml
+# the slug of this issue: https://your-domain.com/s1.
+# optional. Fallback to `path` if missing. 
+slug = "s1"
+# the number of this issue
+number = 1
+# issue title
+title = "Issue 1"
+
 [[article]]
 # the slug of this article. E.g: https://your-domain.com/s1/1
 # optional. Fallback to `file` name if missing.
@@ -173,10 +163,13 @@ publish = true
 # whether mark this article as a featured article. 
 # the featured articles will be shown on the home page
 featured = true
+# the translations of this artcle.
+# the key of syntax is `i18n.[locale]`, the value is the article object.
+i18n.fr = { file = "1-first-fr.md", title = "Premier article", pub_date = "2022-11-27" }
+i18n.zh = { file = "1-first-zh.md", title = "第一篇文章", pub_date = "2022-11-27" }
 
 # Another article
 [[article]]
-
 ```
 
 ## Advanced
