@@ -45,14 +45,14 @@ pub struct Article {
     pub markdown: String,
     /// Whether the article is an featured article.
     /// Featured article will display in home page.
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub featured: bool,
     /// Whether publish the article. Publish means generate the article HTML file.
     /// This field would be ignored if in `zine serve` mode, that's mean we alwasy
     /// generate HTML file in this mode.
     #[serde(default)]
     pub publish: bool,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub i18n: HashMap<String, Article>,
 }
 

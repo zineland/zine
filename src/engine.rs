@@ -137,20 +137,27 @@ pub fn render_str(raw_template: &str, context: &Context) -> Result<String> {
 
 // Render Atom feed
 fn render_atom_feed(context: Context, dest: impl AsRef<Path>) -> Result<()> {
-    let mut buf = vec![];
     let dest = dest.as_ref().join("feed.xml");
-
-    get_tera().render_to("feed.jinja", &context, &mut buf)?;
-    fs::write(dest, buf)?;
+    tokio::task::spawn_blocking(move || {
+        let mut buf = vec![];
+        get_tera()
+            .render_to("feed.jinja", &context, &mut buf)
+            .expect("Render feed.jinja failed.");
+        fs::write(dest, buf).expect("Write feed.xml failed");
+    });
     Ok(())
 }
 
 // Render sitemap.xml
 fn render_sitemap(context: Context, dest: impl AsRef<Path>) -> Result<()> {
-    let mut buf = vec![];
     let dest = dest.as_ref().join("sitemap.xml");
-    get_tera().render_to("sitemap.jinja", &context, &mut buf)?;
-    fs::write(dest, buf)?;
+    tokio::task::spawn_blocking(move || {
+        let mut buf = vec![];
+        get_tera()
+            .render_to("sitemap.jinja", &context, &mut buf)
+            .expect("Render sitemap.jinja failed.");
+        fs::write(dest, buf).expect("Write sitemap.xml failed");
+    });
     Ok(())
 }
 
