@@ -9,8 +9,14 @@
         </span>
     </div>
     <div class="max-w-[65ch] mx-auto">
-        {% if issue.intro -%}
-        <div class="prose my-8 md:mx-8">{{ markdown_to_html(markdown = issue.intro) | safe }}</div>
+        {% if intro -%}
+        {% if site.edit_url -%}
+        <a class="absolute top-5 right-10 p-2 rounded hover:bg-gray-200"
+            href="{{ site.edit_url }}/content/{{ issue.dir }}/intro.md">
+            <img src="/static/edit.svg" alt="edit">
+        </a>
+        {% endif -%}
+        <div class="prose my-8 md:mx-8">{{ markdown_to_html(markdown = intro) | safe }}</div>
         {% endif -%}
         {% for article in articles -%}
         <div class="relative py-6 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">

@@ -19,7 +19,8 @@ pub struct Issue {
     pub slug: String,
     pub number: u32,
     pub title: String,
-    /// The optional introduction for this issue.
+    /// The optional introduction for this issue (parsed from convention intro.md file).
+    #[serde(skip)]
     pub intro: Option<String>,
     pub cover: Option<String>,
     /// The path of issue diretory.
@@ -84,15 +85,16 @@ impl Entity for Issue {
             self.slug = self.dir.clone();
         }
 
+        let dir = source.join(crate::ZINE_CONTENT_DIR).join(&self.dir);
         // Parse intro file
-        if let Some(intro_path) = &self.intro {
-            self.intro = Some(
-                fs::read_to_string(&source.join(intro_path))
-                    .with_context(|| format!("Failed to read intro from {}", intro_path))?,
-            );
+        let intro_path = dir.join(crate::ZINE_INTRO_FILE);
+        if intro_path.exists() {
+            self.intro =
+                Some(fs::read_to_string(&intro_path).with_context(|| {
+                    format!("Failed to read intro from {}", intro_path.display())
+                })?);
         }
 
-        let dir = source.join(crate::ZINE_CONTENT_DIR).join(&self.dir);
         // Sort all articles by pub_date.
         self.articles
             .par_sort_unstable_by_key(|article| article.meta.pub_date);
@@ -136,6 +138,7 @@ impl Entity for Issue {
                 image: self.cover.as_deref().map(Cow::Borrowed),
             },
         );
+        context.insert("intro", &self.intro);
         engine::render("issue.jinja", &context, issue_dir)?;
         Ok(())
     }
