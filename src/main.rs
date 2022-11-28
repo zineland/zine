@@ -25,6 +25,7 @@ pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
 
 pub static ZINE_FILE: &str = "zine.toml";
+pub static ZINE_CONTENT_DIR: &str = "content";
 pub static ZINE_BANNER: &str = r"
 
 ███████╗██╗███╗   ██╗███████╗

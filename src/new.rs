@@ -11,18 +11,19 @@ url = "http://localhost"
 name = "{name}"
 description = ""
 
-[[issue]]
-slug = "issue1"
-number = 1
-title = "Issue 1"
-dir = "content/issue-1"
+[authors]
+zine-team = { name ="Zine Team" }
 "#;
 
 static TEMPLATE_ISSUE_FILE: &str = r#"
+slug = "issue1"
+number = 1
+title = "Issue 1"
+
 [[article]]
 file = "1-first.md"
 title = "First article"
-author = ""
+author = "zine-team"
 cover = ""
 pub_date = "{pub_date}"
 publish = true
@@ -46,7 +47,7 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
     )?;
 
     // Create issue dir and issue zine.toml
-    let issue_dir = dir.join("content/issue-1");
+    let issue_dir = dir.join(crate::ZINE_CONTENT_DIR).join("issue-1");
     fs::create_dir_all(&issue_dir)?;
     let format = format_description::parse("[year]-[month]-[day]")?;
     let today = OffsetDateTime::now_utc().format(&format)?;
