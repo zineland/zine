@@ -47,7 +47,11 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
 
             loop {
                 match rx.recv() {
-                    Ok(_) => build(&mut engine, true)?,
+                    Ok(_) => {
+                        if let Err(err) = build(&mut engine, true) {
+                            println!("build error: {:?}", &err);
+                        }
+                    }
                     Err(err) => println!("watch error: {:?}", &err),
                 }
             }
