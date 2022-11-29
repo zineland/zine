@@ -16,7 +16,7 @@ Zine - a simple and opinionated tool to build your own magazine.
 - Theme customizable, extend friendly.
 - RSS Feed supported.
 - Open Graph Protocol supported.
-- I18n and o11n supported.
+- I18n and l10n supported.
 - Build into a static website, hosting anywhere.
 
 ## Installation
@@ -134,9 +134,6 @@ highlight_theme = "ayu-light"
 The issue `zine.toml` file list all your articles of this issue.
 
 ```toml
-# the slug of this issue: https://your-domain.com/s1.
-# optional. Fallback to `path` if missing. 
-slug = "s1"
 # the number of this issue
 number = 1
 # issue title
@@ -221,6 +218,8 @@ it will render the UI as expected, otherwise it fallback into the raw code UI.
 #### Callout
 
 #### Article link
+
+#### Quote
 
 #### URL preview
 
