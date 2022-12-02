@@ -1,4 +1,4 @@
-use std::{env, io, net::SocketAddr, path::Path};
+use std::{env, fs, io, net::SocketAddr, path::Path};
 
 use crate::{build::watch_build, ZINE_BANNER};
 use anyhow::Result;
@@ -12,6 +12,11 @@ static TEMP_ZINE_BUILD_DIR: &str = "__zine_build";
 
 pub async fn run_serve(source: String, port: u16) -> Result<()> {
     let tmp_dir = env::temp_dir().join(TEMP_ZINE_BUILD_DIR);
+    if tmp_dir.exists() {
+        // Remove cached build directory to invalidate the old cache.
+        fs::remove_dir_all(&tmp_dir)?;
+    }
+
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     let service = ServiceBuilder::new()
         .and_then(
