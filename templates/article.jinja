@@ -13,20 +13,20 @@
                 <span class="ml-2 text-gray-700">/ {{ fluent(key = "article-number", number = number) }}</span>
             </div>
             <div>
-                {% set translation_length = i18n | length -%}
                 {% set common_style = "py-1 my-1 rounded hover:bg-gray-100" -%}
                 <div class="flex items-center">
+                    {% if i18n -%}
+                    <div id="i18n-menu" class="ml-1 md:ml-2 p-2 cursor-pointer rounded hover:bg-gray-200">
+                       <img src="/static/i18n.svg" alt="translation">
+                    </div>
+                    {% endif -%}
                     {% if site.edit_url -%}
                     <a class="ml-1 md:ml-2 p-2 rounded hover:bg-gray-200"
                        href="{{ site.edit_url }}/content/{{ issue.dir }}/{{ article.file }}">
                         <img src="/static/edit.svg" alt="edit">
                     </a>
                     {% endif -%}
-                    {% if translation_length > 1 -%}
-                    <div id="i18n-menu" class="ml-1 md:ml-2 p-2 cursor-pointer rounded hover:bg-gray-200">
-                       <img src="/static/i18n.svg" alt="translation">
-                    </div>
-                    {% endif -%}
+                    {% if toc -%}
                     <div id="toc-menu" class="ml-1 md:ml-2 p-2 cursor-pointer rounded hover:bg-gray-200">
                        <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
                             data-view-component="true">
@@ -35,8 +35,9 @@
                             </path>
                         </svg>
                     </div>
+                    {% endif -%}
                 </div>
-                {% if translation_length > 1 -%}
+                {% if i18n -%}
                 <div id="i18n-list"
                     class="absolute hidden right-5 px-2 flex flex-col py-2 my-4 border bg-white rounded z-[99999] shadow-xl">
                     {% for translation in i18n -%}
@@ -50,6 +51,7 @@
                         {% endfor -%}
                 </div>
                 {% endif -%}
+                {% if toc -%}
                 <div id="toc-list"
                     class="absolute hidden right-0 flex flex-col max-w-screen-sm max-h-96 w-60 py-2 my-4 border bg-white rounded z-[99999] shadow-xl">
                     <div class="px-2 overflow-y-auto">
@@ -69,6 +71,7 @@
                         {% endfor -%}
                     </div>
                 </div>
+                {% endif -%}
             </div>
         </div>
     </div>
