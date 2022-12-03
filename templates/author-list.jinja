@@ -1,7 +1,7 @@
 {% extends "base.jinja" -%}
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-    <div class="max-w-[65ch] mx-auto">
+    <div class="max-w-prose mx-auto">
         <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="author-list") }}</div>
         <div class="flex flex-wrap flex-col sm:flex-row justify-center">
             {% for author in authors | sort(attribute="article_count") | reverse -%}
