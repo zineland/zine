@@ -129,7 +129,11 @@ impl Zine {
                     .iter()
                     .map(|article| FeedEntry {
                         title: &article.meta.title,
-                        url: format!("{}/{}/{}", self.site.url, issue.slug, article.slug()),
+                        url: if let Some(path) = article.meta.path.as_ref() {
+                            format!("{}{}", self.site.url, path)
+                        } else {
+                            format!("{}/{}/{}", self.site.url, issue.slug, article.slug())
+                        },
                         content: &article.markdown,
                         author: &article.meta.author,
                         date: &article.meta.pub_date,
@@ -154,12 +158,13 @@ impl Zine {
         // Issues and articles
         for issue in &self.issues {
             entries.push(format!("{}/{}/", base_url, issue.slug));
-            entries.par_extend(
-                issue
-                    .articles
-                    .par_iter()
-                    .map(|article| format!("{}/{}/{}/", base_url, issue.slug, article.slug())),
-            )
+            entries.par_extend(issue.articles.par_iter().map(|article| {
+                if let Some(path) = article.meta.path.as_ref() {
+                    format!("{}{}", base_url, path)
+                } else {
+                    format!("{}/{}/{}", base_url, issue.slug, article.slug())
+                }
+            }));
         }
 
         // Authors
