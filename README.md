@@ -10,6 +10,8 @@
 
 Zine - a simple and opinionated tool to build your own magazine.
 
+https://zineland.github.io
+
 - Mobile-first.
 - Intuitive and elegant magazine design.
 - Best reading experiences.
@@ -52,11 +54,11 @@ $ zine serve
 
 ███████╗██╗███╗   ██╗███████╗
 ╚══███╔╝██║████╗  ██║██╔════╝
-  ███╔╝ ██║██╔██╗ ██║█████╗  
- ███╔╝  ██║██║╚██╗██║██╔══╝  
+  ███╔╝ ██║██╔██╗ ██║█████╗
+ ███╔╝  ██║██║╚██╗██║██╔══╝
 ███████╗██║██║ ╚████║███████╗
 ╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
-                             
+
 listening on http://127.0.0.1:3000
 ```
 
@@ -69,172 +71,21 @@ $ zine build
 Build success! The build directory is `build`.
 ```
 
-## Dive into deep
-
-A Zine project mainly consists of two kind `zine.toml` files and a bunch of markdown files.
-
-### Root `zine.toml`
-
-This root `zine.toml` file describes your site meta and all your issue's info.
-
-```toml
-[site]
-url = "https://your-domain.com"
-name = "Your Zine Site Name"
-description = ""
-logo = "/path/to/favicon"
-# the OpenGraph social image path.
-social_image = "/path/to/social_image"
-# the repository edit url
-edit_url = "https://github.com/zineland/zine/edit/master/demo"
-# the locale to localize your Zine site. default to "en".
-# Zine has builtin supported locales, please check the `locales` directory of this repo.
-locale = "en"
-# the menu tabs
-menu = [
-    { name = "About", url = "/about" },
-    { name = "Blog", url = "/blog" },
-]
-
-# Declare authors of this magazine.
-[authors]
-# set editor to true will show the Editor badge on the author profile page
-zine_team = { name = "Zine Team", editor = true, bio = "The Zine Team." }
-
-# You can customize some theme elements in this section.
-# All of those elements are optional.
-[theme]
-# the primary color
-primary_color = "#abcdef"
-secondary_color = "#fff"
-# the main text color
-main_color = "#000"
-# the link color in article content
-link_color = "#e07312"
-# the background image
-background_image = "/static/background.png"
-# you can customize your head here, such as your css, js
-head_template = "templates/head.html"
-# you can customize your footer here
-footer_template = "templates/footer.html"
-# you can extend the article page, for example adding comment widget
-article_extend_template = "templates/article-extend.html"
-
-# You can customize some markdown styles in this section.
-# All of those elements are optional.
-[markdown]
-# enable the code highlighting. default is true
-highlight_code = true
-# custom highligh theme
-highlight_theme = "ayu-light"
-```
-
-### Issue `zine.toml`
-
-The issue `zine.toml` file list all your articles of this issue.
-
-```toml
-# the number of this issue
-number = 1
-# issue title
-title = "Issue 1"
-
-[[article]]
-# the slug of this article. E.g: https://your-domain.com/s1/1
-# optional. Fallback to `file` name if missing.
-slug = "1"
-# the markdown file path of this article
-file = "1-first.md"
-# the title of this article
-title = "First article"
-# the optional author id of this article.
-# also support multiple co-authors:
-# author = ["author1", "author2"]
-author = "zine-team"
-# the cover of this article
-cover = ""
-# the publish date of this article
-pub_date = "2022-03-20"
-# whether to publish this article or not
-publish = true
-# whether mark this article as a featured article. 
-# the featured articles will be shown on the home page
-featured = true
-# the translations of this artcle.
-# the key of syntax is `i18n.[locale]`, the value is the article object.
-i18n.fr = { file = "1-first-fr.md", title = "Premier article", pub_date = "2022-11-27" }
-i18n.zh = { file = "1-first-zh.md", title = "第一篇文章", pub_date = "2022-11-27" }
-
-# Another article
-[[article]]
-```
-
-## Advanced
-
-### Author
-
-Zine will generate a dedicated profile page for each author declared in the root `zine.toml` table.
-
-```toml
-[authors]
-# https://your-domain.com/@alice
-alice = { name = "Alice", bio = "An engineer." }
-# https://your-domain.com/@bob, the `avatar` and `bio` are optional.
-bob = { name = "Bob", avatar = "/cool/avatar.png" }
-```
-
-> The path of an author page consists of `@` and author id, for example above, the path are `@alice` and `@bob`.
->
-> If the author of an article hasn't declared in `[authors]`, no author page will be generated for that author.
-
-### Pages
-
-Every markdown file located in `pages` will be rendered as a **Page**. Just intuitive like this:
-
-```
-$ tree pages
-pages
-├── about.md        # will be rendered as https://your-domain.com/about
-├── blog            
-│   └── first.md    # will be rendered as https://your-domain.com/blog/first
-├── blog.md         # will be rendered as https://your-domain.com/blog
-└── faq.md          # will be rendered as https://your-domain.com/faq
-
-1 directory, 4 files
-```
-
-### Code blocks
-
-Zine provides some advanced code blocks to help you write articles.
-
-#### Author
-
-The author code is designed to render the avatar-name link on the markdown page.
-
-The syntax is very simple, just write like this \`@author_id\`.
-If the `author_id` is declared in the `[authors]` table of the root `zine.toml`, 
-it will render the UI as expected, otherwise it fallback into the raw code UI.
-
-#### Callout
-
-#### Article link
-
-#### Quote
-
-#### URL preview
-
-~~~
-```urlpreview
-https://github.com/zineland/zine
-```
-~~~
-
 ## Some cool magazines powered by Zine
 
+- [https://zineland.github.io](https://zineland.github.io)
+  > The zine documentation is built by zine itself.
 - [https://2d2d.io](https://2d2d.io)
 - [https://o11y.cn](https://o11y.cn)
 - [https://rustpr.github.io](https://rustpr.github.io)
 - [https://thewhitepaper.github.io](https://thewhitepaper.github.io)
+
+## Docmentations
+
+- [Getting started](https://zineland.github.io/getting-started)
+- [Customization](https://zineland.github.io/customization)
+- [Code blocks](https://zineland.github.io/code-blocks)
+- [Advanced](https://zineland.github.io/advanced)
 
 ## TODO
 
@@ -251,6 +102,8 @@ https://github.com/zineland/zine
 - [x] Support table of content
 
 - [x] Support i18n
+
+- [ ] `zine serve` support live reload
 
 ## License
 
