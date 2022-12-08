@@ -20,6 +20,7 @@ mod locales;
 mod markdown;
 mod new;
 mod serve;
+mod ws;
 
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;

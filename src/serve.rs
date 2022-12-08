@@ -1,9 +1,8 @@
 use std::{env, fs, io, net::SocketAddr, path::Path};
 
-use crate::{build::watch_build, ZINE_BANNER};
+use crate::{build::watch_build, ws, ZINE_BANNER};
 use anyhow::Result;
-use http_body::Full;
-use hyper::{body::Bytes, service::service_fn, Body, Request, Response, StatusCode};
+use hyper::{service::service_fn, Body, Method, Request, Response, StatusCode};
 use tower_http::services::ServeDir;
 
 // The temporal build dir, mainly for `zine serve` command.
@@ -17,7 +16,7 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
     }
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    let serve_dir = ServeDir::new(&tmp_dir).not_found_service(service_fn(serve_dir_not_found));
+    let serve_dir = ServeDir::new(&tmp_dir).fallback(service_fn(handle_fallback_request));
 
     tokio::spawn(async move {
         watch_build(Path::new(&source), tmp_dir.as_path(), true)
@@ -34,13 +33,18 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
     Ok(())
 }
 
-async fn serve_dir_not_found(
-    _req: Request<Body>,
-) -> std::result::Result<Response<Full<Bytes>>, io::Error> {
-    let body = Full::from("404 Not Found");
-    let resp = Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .body(body)
-        .unwrap();
-    Ok(resp)
+async fn handle_fallback_request(
+    req: Request<Body>,
+) -> std::result::Result<Response<Body>, io::Error> {
+    match (req.method(), req.uri().path()) {
+        (&Method::GET, "/live_reload") => Ok(ws::handle_request(req).await.unwrap()),
+        _ => {
+            // Return 404 not found response.
+            let resp = Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body(Body::from("404 Not Found"))
+                .unwrap();
+            Ok(resp)
+        }
+    }
 }

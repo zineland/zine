@@ -25,6 +25,7 @@ html5ever = "0.25"
 http-body = "0.4"
 hyper = { version = "0.14", features = ["client", "server", "tcp", "http1"] }
 hyper-tls = "0.5"
+hyper-tungstenite = "0.9.0"
 include_dir = "0.7"
 intl-memoizer = "0.5"
 lol_html = "0.3"
