@@ -29,14 +29,9 @@ pub async fn handle_request(mut request: Request<Body>) -> Result<Response<Body>
 async fn serve_websocket(websocket: HyperWebsocket) -> Result<(), Error> {
     let mut websocket = websocket.await?;
     while let Some(message) = websocket.next().await {
-        match message? {
-            Message::Text(msg) => {
-                println!("Received text message: {}", msg);
-                websocket.send(Message::text("reload")).await?;
-            }
-            _ => {
-                // ignore
-            }
+        if let Message::Text(msg) = message? {
+            println!("Received text message: {}", msg);
+            websocket.send(Message::text("reload")).await?;
         }
     }
     Ok(())
