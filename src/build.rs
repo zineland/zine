@@ -7,9 +7,15 @@ use std::{
 use crate::{data, entity::Zine, error::ZineError, ZineEngine};
 use anyhow::{anyhow, Context, Result};
 use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+use tokio::sync::broadcast::Sender;
 use walkdir::WalkDir;
 
-pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Result<()> {
+pub async fn watch_build<P: AsRef<Path>>(
+    source: P,
+    dest: P,
+    watch: bool,
+    sender: Option<Sender<()>>,
+) -> Result<()> {
     // Use zine.toml to find root path
     let (source, zine) = locate_root_zine_folder(std::fs::canonicalize(source)?)?
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
@@ -48,11 +54,16 @@ pub async fn watch_build<P: AsRef<Path>>(source: P, dest: P, watch: bool) -> Res
 
             loop {
                 match rx.recv() {
-                    Ok(_) => {
-                        if let Err(err) = build(&mut engine, true) {
+                    Ok(_) => match build(&mut engine, true) {
+                        Ok(_) => {
+                            if let Some(sender) = sender.as_ref() {
+                                sender.send(())?;
+                            }
+                        }
+                        Err(err) => {
                             println!("build error: {:?}", &err);
                         }
-                    }
+                    },
                     Err(err) => println!("watch error: {:?}", &err),
                 }
             }

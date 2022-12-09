@@ -20,7 +20,6 @@ mod locales;
 mod markdown;
 mod new;
 mod serve;
-mod ws;
 
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
@@ -115,7 +114,7 @@ async fn main() -> Result<()> {
         } => {
             set_current_mode(Mode::Build);
             let dest = dest.unwrap_or_else(|| "build".into());
-            watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch).await?;
+            watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch, None).await?;
             println!("Build success! The build directory is `{}`.", dest);
         }
         Commands::Serve { source, port } => {
