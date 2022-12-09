@@ -280,6 +280,10 @@ impl Entity for Zine {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        context.insert(
+            "live_reload",
+            &matches!(crate::current_mode(), crate::Mode::Serve),
+        );
         context.insert("theme", &self.theme);
         context.insert("site", &self.site);
 
