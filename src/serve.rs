@@ -1,10 +1,20 @@
-use std::{env, fs, io, net::SocketAddr, path::Path};
+use std::{
+    env, fs,
+    future::Future,
+    io,
+    net::SocketAddr,
+    path::Path,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 use crate::{build::watch_build, ZINE_BANNER};
 use anyhow::Result;
 use futures::SinkExt;
 use hyper::{Body, Method, Request, Response, StatusCode};
+use hyper_tungstenite::tungstenite::Message;
 use tokio::sync::broadcast::{self, Sender};
+use tower::Service;
 use tower_http::services::ServeDir;
 
 // The temporal build dir, mainly for `zine serve` command.
@@ -36,29 +46,26 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
     Ok(())
 }
 
+// A fallback service to handle websocket request and ServeDir's 404 request.
 #[derive(Clone)]
 struct FallbackService {
     tx: Sender<()>,
 }
 
-impl tower::Service<Request<Body>> for FallbackService {
+impl Service<Request<Body>> for FallbackService {
     type Response = Response<Body>;
     type Error = io::Error;
-    type Future = std::pin::Pin<
-        Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>,
-    >;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
-    fn poll_ready(
-        &mut self,
-        _cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Result<(), Self::Error>> {
-        std::task::Poll::Ready(Ok(()))
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
     }
 
     fn call(&mut self, mut req: Request<Body>) -> Self::Future {
         let mut reload_rx = self.tx.subscribe();
         let fut = async move {
-            match (req.method(), req.uri().path()) {
+            let path = req.uri().path();
+            match (req.method(), path) {
                 (&Method::GET, "/live_reload") => {
                     println!("GET /live_reload");
                     // Check if the request is a websocket upgrade request.
@@ -71,9 +78,7 @@ impl tower::Service<Request<Body>> for FallbackService {
                             let mut websocket = websocket.await.unwrap();
                             while reload_rx.recv().await.is_ok() {
                                 // Ignore the send failure, the reason could be: Broken pipe
-                                let _ = websocket
-                                    .send(hyper_tungstenite::tungstenite::Message::text("reload"))
-                                    .await;
+                                let _ = websocket.send(Message::text("reload")).await;
                             }
                         });
 
