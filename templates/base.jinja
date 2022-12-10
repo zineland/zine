@@ -67,4 +67,26 @@
 </body>
 <script src="/static/medium-zoom.min.js"></script>
 <script src="/static/zine.js"></script>
+{% if live_reload -%}
+<script>
+    const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsAddress = wsProtocol + "//" + location.host + "/live_reload";
+    const socket = new WebSocket(wsAddress);
+    socket.onopen = function () {
+        console.log("[open] Live reload connection established");
+    };
+    socket.onmessage = function (event) {
+        if (event.data === "reload") {
+            socket.close();
+            location.reload();
+        }
+    };
+    socket.onclose = function(event) {
+        console.log("[close] Live reload connection closed");
+    };
+    window.onbeforeunload = function() {
+        socket.close();
+    }
+</script>
+{% endif -%}
 </html>
