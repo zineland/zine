@@ -81,6 +81,12 @@ impl Zine {
                 issue
                     .articles
                     .iter()
+                    .flat_map(|article| {
+                        let mut articles = vec![article];
+                        // including translation articles
+                        articles.extend(article.i18n.values());
+                        articles
+                    })
                     .filter_map(|article| {
                         if article.is_author(author_id) {
                             Some(AuthorArticle {
