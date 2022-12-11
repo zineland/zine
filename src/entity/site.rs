@@ -5,7 +5,6 @@ pub struct Site {
     /// The absolute url of this site.
     pub url: String,
     pub name: String,
-    pub logo: Option<String>,
     pub description: Option<String>,
     /// The repository edit url of this zine website.
     /// For example: https://github.com/zineland/zine/edit/master/demo/

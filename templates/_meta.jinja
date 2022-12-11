@@ -17,9 +17,6 @@
 <meta property="og:description" content="{{ description }}">
 <meta name="twitter:title" content="{{ title }}">
 <meta name="twitter:description" content="{{ description }}">
-{% if site.logo -%}
-<link rel="shortcut icon" href="{{ site.logo }}">
-{% endif -%}
 {% if meta and meta.url -%}
 {% if page_type and page_type == "article" -%}
 {% set path = issue.slug ~ "/" ~ meta.url -%}
