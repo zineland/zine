@@ -7,6 +7,7 @@ const colors = require('tailwindcss/colors');
 module.exports = {
     content: [
         './templates/**/*.jinja',
+        './templates/tailwindcss.html',
     ],
     theme: {
         extend: {
