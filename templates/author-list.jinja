@@ -7,9 +7,9 @@
             {% for author in authors | sort(attribute="article_count") | reverse -%}
             <a href="/@{{ author.id | lower }}">
                 <div class="p-6 my-4 text-center hover:bg-gray-100">
-                    <img class="zine-avatar mx-auto w-40 h-32 object-cover rounded border" src="{{ author.avatar }}"
+                    <img class="zine-avatar mx-auto w-40 h-40 object-cover rounded-full border" src="{{ author.avatar }}"
                         alt="Avatar" loading="lazy">
-                    <div class="zine-author-name relative m-3 font-bold text-2xl text-black">
+                    <div class="zine-author-name mx-auto w-40 relative m-3 font-bold text-2xl text-black">
                         {% if author.name -%}
                         {{ author.name }}
                         {% else -%}
