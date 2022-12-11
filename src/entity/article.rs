@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
-use anyhow::{Context as _, Result};
+use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
@@ -33,6 +33,7 @@ pub struct MetaArticle {
     pub cover: Option<String>,
     /// The publish date. Format like YYYY-MM-dd.
     #[serde(with = "crate::helpers::serde_date")]
+    #[serde(default = "MetaArticle::default_pub_date")]
     pub pub_date: Date,
 }
 
@@ -65,6 +66,16 @@ struct Translations<'a> {
     slug: &'a String,
     // Article path.
     path: &'a Option<String>,
+}
+
+impl MetaArticle {
+    fn default_pub_date() -> Date {
+        Date::MIN
+    }
+
+    fn is_default_pub_date(&self) -> bool {
+        self.pub_date == Date::MIN
+    }
 }
 
 impl std::fmt::Debug for Article {
@@ -190,12 +201,22 @@ impl Article {
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
         Article::parse(self, source)?;
+        ensure!(
+            !self.meta.is_default_pub_date(),
+            "`pub_date` is required for article `{}`",
+            self.meta.title
+        );
+
         for article in self.i18n.values_mut() {
             if article.meta.author.is_none() {
                 article.meta.author = self.meta.author.clone();
             }
             if article.meta.cover.is_none() {
                 article.meta.cover = self.meta.cover.clone();
+            }
+            // Fallback to original article date if the `pub_date` is missing
+            if article.meta.is_default_pub_date() {
+                article.meta.pub_date = self.meta.pub_date;
             }
             Article::parse(article, source)?;
         }
