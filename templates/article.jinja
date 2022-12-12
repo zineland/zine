@@ -84,6 +84,13 @@
                 <span>{{ article.pub_date }}</span>
                 {{ macros::author_link(author = article.author) }}
             </div>
+            {% if article.topics -%}
+            <div class="bg-secondary my-2 px-4 py-2 text-center">
+                {% for topic in article.topics %}
+                    <a href="/topic/{{ topic }}">#{{ topic }}</a>
+                {% endfor %}
+            </div>
+            {% endif -%}
         </div>
         <article class="prose mx-auto my-12">
             {{ html | safe }}

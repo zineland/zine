@@ -12,9 +12,9 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
+use crate::{data, engine, entity::topic, error::ZineError, feed::FeedEntry, Entity};
 
-use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme};
+use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
 /// The root zine entity config.
 ///
@@ -29,6 +29,8 @@ pub struct Zine {
     #[serde(default)]
     #[serde(rename = "issue")]
     pub issues: Vec<Issue>,
+    #[serde(default)]
+    pub topics: BTreeMap<String, Topic>,
     #[serde(rename = "page")]
     #[serde(default)]
     pub pages: Vec<Page>,
@@ -210,6 +212,11 @@ impl Entity for Zine {
             })?;
         }
 
+        self.topics.iter_mut().try_for_each(|(id, topic)| {
+            topic.id = id.clone();
+            topic.parse(source)
+        })?;
+
         let content_dir = source.join(crate::ZINE_CONTENT_DIR);
         ensure!(
             content_dir.exists(),
@@ -319,6 +326,11 @@ impl Entity for Zine {
 
         // Render all issues pages.
         self.issues.render(context.clone(), dest)?;
+
+        // Render all topic pages
+        self.topics
+            .values()
+            .try_for_each(|topic| topic.render(context.clone(), dest))?;
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;

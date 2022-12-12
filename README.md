@@ -90,20 +90,14 @@ Build success! The build directory is `build`.
 ## TODO
 
 - [x] Support RSS Feed
-
 - [x] Support render OGP meta
-
 - [x] Support l10n
-
 - [x] Support sitemap.xml
-
 - [x] Support code syntax highlight
-
 - [x] Support table of content
-
 - [x] Support i18n
-
-- [ ] `zine serve` support live reload
+- [x] `zine serve` support live reload
+- [ ] Support article topic
 
 ## License
 

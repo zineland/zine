@@ -10,6 +10,7 @@ mod markdown;
 mod page;
 mod site;
 mod theme;
+mod topic;
 mod zine;
 
 pub use self::zine::Zine;
@@ -20,6 +21,7 @@ pub use markdown::MarkdownConfig;
 pub use page::Page;
 pub use site::Site;
 pub use theme::Theme;
+pub use topic::Topic;
 
 /// A trait represents the entity of zine config file.
 ///
