@@ -337,10 +337,12 @@ impl Entity for Zine {
             topic.render(context, &topic_dest)
         })?;
 
-        // Render topic list page
-        let mut context = context.clone();
-        context.insert("topics", &self.topics.values().collect::<Vec<_>>());
-        engine::render("topic-list.jinja", &context, dest.join("topics"))?;
+        if !self.topics.is_empty() {
+            // Render topic list page
+            let mut context = context.clone();
+            context.insert("topics", &self.topics.values().collect::<Vec<_>>());
+            engine::render("topic-list.jinja", &context, dest.join("topics"))?;
+        }
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;

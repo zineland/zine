@@ -14,3 +14,7 @@ author-list = 作者列表
 author-article-count = { $number } 篇文章
 
 editor = 责任编辑
+
+topic-article-title = { $number } 篇文章
+
+topic-list = 话题列表

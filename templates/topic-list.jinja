@@ -2,7 +2,7 @@
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="max-w-prose mx-auto">
-        <div class="text-4xl text-center font-extrabold my-8">Topic list</div>
+        <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="topic-list") }}</div>
         <div class="flex flex-col justify-center">
             {% for topic in topics -%}
             <a href="/topic/{{ topic.id | lower }}">

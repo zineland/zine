@@ -14,3 +14,7 @@ author-list = Authors list
 author-article-count = { $number } articles
 
 editor = Editor
+
+topic-article-title = { $number } article(s)
+
+topic-list = Topic list

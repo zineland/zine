@@ -10,20 +10,27 @@
     </div>
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="max-w-prose mx-auto">
-        <div class="flex flex-col sm:flex-row py-6">
-            <div class="m-4 sm:m-8 text-center">
+        <div class="py-6">
+            <div class="flex justify-center items-center m-4 sm:m-8 text-center">
+                <div class="bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl">#</div>
+                <div class="zine-topic-name text-center text-2xl sm:text-4xl font-bold pl-4 sm:pl-8 text-center">
+                {{ topic.name }}
+                </div>
             </div>
-            <div class="prose my-2 sm:m-8 grow">
-                <div class="zine-author-name text-center text-4xl font-bold py-2 text-center">{{ topic.name }}</div>
-                {% if topic.description -%}
-                <div class="zine-author-bio text-center sm:text-start">{{ markdown_to_html(markdown = topic.description) | safe }}</div>
-                {% endif -%}
+            {% if topic.description -%}
+            <div class="zine-topic-bio prose text-center my-2 sm:m-8 grow">
+                {{ markdown_to_html(markdown = topic.description) | safe }}
             </div>
+            {% endif -%}
         </div>
+        {% set article_count = articles | length -%}
+        {% if article_count > 0 %}
+        
         <div class="my-4 sm:my-6 text-2xl font-bold">
             <span class="w-4 h-4 border-4 border-primary"></span>
-            {# <span class="px-2">{{ fluent(key = "author-article-title", number = articles | length) }}</span> #}
+            <span class="px-2">{{ fluent(key = "topic-article-title", number = article_count) }}</span>
         </div>
+        {% endif %}
         <div>
             {% for item in articles -%}
             {% set article = item.article -%}
@@ -33,21 +40,21 @@
                 {% else -%}
                 <a href="/{{ item.issue_slug }}/{{ article.slug }}">
                 {% endif -%}
-                    <div class="flex">
-                        <img class="zine-thumbnail w-28 h-18 sm:w-40 sm:h-28 object-cover" src="{{ article.cover }}"
-                            alt="{{ article.title }}" loading="lazy">
-                        <div
-                            class="flex flex-col justify-between ml-4 sm:ml-8 text-base sm:text-lg text-black grow">
-                            <div class="zine-card-title py-2 font-bold line-clamp-2">{{ article.title }}</div>
-                            <div class="relative text-base text-gray-500 flex justify-between items-center">
-                                <span class="zine-card-date">{{ article.pub_date }}</span>
-                                <span
-                                    class="zine-diamond mx-4 my-2 before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block">
-                                    <span class="relative text-main text-xs">{{ item.issue_title }}</span>
-                                </span>
-                            </div>
+                <div class="flex">
+                    <img class="zine-thumbnail w-28 h-18 sm:w-40 sm:h-28 object-cover" src="{{ article.cover }}"
+                        alt="{{ article.title }}" loading="lazy">
+                    <div
+                        class="flex flex-col justify-between ml-4 sm:ml-8 text-base sm:text-lg text-black grow">
+                        <div class="zine-card-title py-2 font-bold line-clamp-2">{{ article.title }}</div>
+                        <div class="relative text-base text-gray-500 flex justify-between items-center">
+                            <span class="zine-card-date">{{ article.pub_date }}</span>
+                            <span
+                                class="zine-diamond mx-4 my-2 before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block">
+                                <span class="relative text-main text-xs">{{ item.issue_title }}</span>
+                            </span>
                         </div>
                     </div>
+                </div>
                 </a>
             </div>
             {% if not loop.last -%}
