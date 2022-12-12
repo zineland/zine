@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
 
-use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
+use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
 /// The root zine entity config.
 ///
@@ -327,10 +327,10 @@ impl Entity for Zine {
 
         // Render all authors pages.
         let authors = self.authors();
-        let mut author_list = AuthorList::default();
+        let mut author_list = List::author_list();
         authors.iter().try_for_each(|author| {
             let articles = self.get_articles_by_author(&author.id);
-            author_list.record_author(author, articles.len());
+            author_list.push_author(author, articles.len());
 
             let mut context = context.clone();
             context.insert("articles", &articles);
