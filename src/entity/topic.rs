@@ -41,11 +41,7 @@ impl Entity for Topic {
             },
         );
         context.insert("topic", &self);
-        engine::render(
-            "topic.jinja",
-            &context,
-            dest.join("topic").join(self.id.to_lowercase()),
-        )?;
+        engine::render("topic.jinja", &context, dest.join(self.id.to_lowercase()))?;
         Ok(())
     }
 }

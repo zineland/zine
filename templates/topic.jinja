@@ -6,7 +6,7 @@
             href="/topics">
             <div class="relative text-main px-4">Topics</div>
         </a>
-        <span class="ml-2 text-gray-700 leading-loose">/ {{ name }}</span>
+        <span class="ml-2 text-gray-700 leading-loose">/ {{ topic.name }}</span>
     </div>
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="max-w-prose mx-auto">
@@ -14,15 +14,15 @@
             <div class="m-4 sm:m-8 text-center">
             </div>
             <div class="prose my-2 sm:m-8 grow">
-                <div class="zine-author-name text-center text-4xl font-bold py-2 text-center">{{ author_name }}</div>
-                {% if author.bio -%}
-                <div class="zine-author-bio text-center sm:text-start">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
+                <div class="zine-author-name text-center text-4xl font-bold py-2 text-center">{{ topic.name }}</div>
+                {% if topic.description -%}
+                <div class="zine-author-bio text-center sm:text-start">{{ markdown_to_html(markdown = topic.description) | safe }}</div>
                 {% endif -%}
             </div>
         </div>
         <div class="my-4 sm:my-6 text-2xl font-bold">
             <span class="w-4 h-4 border-4 border-primary"></span>
-            <span class="px-2">{{ fluent(key = "author-article-title", number = articles | length) }}</span>
+            {# <span class="px-2">{{ fluent(key = "author-article-title", number = articles | length) }}</span> #}
         </div>
         <div>
             {% for item in articles -%}

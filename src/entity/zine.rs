@@ -12,9 +12,11 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, entity::topic, error::ZineError, feed::FeedEntry, Entity};
+use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
 
-use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
+use super::{
+    Article, Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic,
+};
 
 /// The root zine entity config.
 ///
@@ -31,8 +33,7 @@ pub struct Zine {
     pub issues: Vec<Issue>,
     #[serde(default)]
     pub topics: BTreeMap<String, Topic>,
-    #[serde(rename = "page")]
-    #[serde(default)]
+    #[serde(skip)]
     pub pages: Vec<Page>,
     #[serde(default)]
     #[serde(rename = "markdown")]
@@ -328,9 +329,18 @@ impl Entity for Zine {
         self.issues.render(context.clone(), dest)?;
 
         // Render all topic pages
-        self.topics
-            .values()
-            .try_for_each(|topic| topic.render(context.clone(), dest))?;
+        let topic_dest = dest.join("topic");
+        self.topics.values().try_for_each(|topic| {
+            let mut context = context.clone();
+            let articles: Vec<Article> = vec![];
+            context.insert("articles", &articles);
+            topic.render(context, &topic_dest)
+        })?;
+
+        // Render topic list page
+        let mut context = context.clone();
+        context.insert("topics", &self.topics.values().collect::<Vec<_>>());
+        engine::render("topic-list.jinja", &context, dest.join("topics"))?;
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;
