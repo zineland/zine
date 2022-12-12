@@ -85,9 +85,9 @@
                 {{ macros::author_link(author = article.author) }}
             </div>
             {% if article.topics -%}
-            <div class="bg-secondary my-2 px-4 py-2 text-center">
+            <div class="zine-topic bg-secondary my-2 py-2 px-2 text-center">
                 {% for topic in article.topics %}
-                    <a href="/topic/{{ topic }}">#{{ topic }}</a>
+                    <a class="p-2 !text-main" href="/topic/{{ topic }}">#{{ topic }}</a>
                 {% endfor %}
             </div>
             {% endif -%}
