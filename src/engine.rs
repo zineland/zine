@@ -33,6 +33,10 @@ fn init_tera(source: &Path, zine: &Zine) {
         let mut tera = Tera::default();
         #[cfg(not(debug_assertions))]
         tera.add_raw_templates(vec![
+            (
+                "_article_ref.jinja",
+                include_str!("../templates/_article_ref.jinja"),
+            ),
             ("_macros.jinja", include_str!("../templates/_macros.jinja")),
             ("_meta.jinja", include_str!("../templates/_meta.jinja")),
             ("heading.jinja", include_str!("../templates/heading.jinja")),

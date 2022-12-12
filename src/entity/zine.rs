@@ -14,9 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
 
-use super::{
-    Article, Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic,
-};
+use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
 /// The root zine entity config.
 ///
@@ -50,8 +48,10 @@ impl std::fmt::Debug for Zine {
     }
 }
 
+// A [`MetaArticle`] and issue info pair.
+// Naming is hard, give it a better name?
 #[derive(Serialize)]
-struct AuthorArticle<'a> {
+struct ArticleRef<'a> {
     article: &'a MetaArticle,
     issue_title: &'a String,
     issue_slug: &'a String,
@@ -75,8 +75,8 @@ impl Zine {
         })?)
     }
 
-    // Query the article metadata list by author id, sorted by descending order of publishing date.
-    fn query_articles_by_author(&self, author_id: &str) -> Vec<AuthorArticle> {
+    // Get the article metadata list by author id, sorted by descending order of publishing date.
+    fn get_articles_by_author(&self, author_id: &str) -> Vec<ArticleRef> {
         let mut items = self
             .issues
             .par_iter()
@@ -92,7 +92,7 @@ impl Zine {
                     })
                     .filter_map(|article| {
                         if article.is_author(author_id) {
-                            Some(AuthorArticle {
+                            Some(ArticleRef {
                                 article: &article.meta,
                                 issue_title: &issue.title,
                                 issue_slug: &issue.slug,
@@ -106,6 +106,30 @@ impl Zine {
             .collect::<Vec<_>>();
         items.par_sort_unstable_by(|a, b| b.article.pub_date.cmp(&a.article.pub_date));
         items
+    }
+
+    // Get the article meta list by topic id
+    fn get_articles_by_topic(&self, topic: &str) -> Vec<ArticleRef> {
+        self.issues
+            .par_iter()
+            .flat_map(|issue| {
+                issue
+                    .articles
+                    .iter()
+                    .filter_map(|article| {
+                        if article.topics.iter().any(|t| t == topic) {
+                            Some(ArticleRef {
+                                article: &article.meta,
+                                issue_title: &issue.title,
+                                issue_slug: &issue.slug,
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>()
     }
 
     // Get author list.
@@ -305,7 +329,7 @@ impl Entity for Zine {
         let authors = self.authors();
         let mut author_list = AuthorList::default();
         authors.iter().try_for_each(|author| {
-            let articles = self.query_articles_by_author(&author.id);
+            let articles = self.get_articles_by_author(&author.id);
             author_list.record_author(author, articles.len());
 
             let mut context = context.clone();
@@ -332,7 +356,7 @@ impl Entity for Zine {
         let topic_dest = dest.join("topic");
         self.topics.values().try_for_each(|topic| {
             let mut context = context.clone();
-            let articles: Vec<Article> = vec![];
+            let articles = self.get_articles_by_topic(&topic.id);
             context.insert("articles", &articles);
             topic.render(context, &topic_dest)
         })?;
