@@ -50,6 +50,10 @@ fn init_tera(source: &Path, zine: &Zine) {
                 include_str!("../templates/author-list.jinja"),
             ),
             ("topic.jinja", include_str!("../templates/topic.jinja")),
+            (
+                "topic-list.jinja",
+                include_str!("../templates/topic-list.jinja"),
+            ),
             ("page.jinja", include_str!("../templates/page.jinja")),
             ("feed.jinja", include_str!("../templates/feed.jinja")),
             ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),

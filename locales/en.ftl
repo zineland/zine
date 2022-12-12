@@ -11,7 +11,7 @@ author-article-title = Published { $number } article(s)
 
 author-list = Authors list
 
-author-article-count = { $number } articles
+article-count = { $number } articles
 
 editor = Editor
 

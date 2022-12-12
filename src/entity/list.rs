@@ -6,7 +6,7 @@ use tera::Context;
 
 use crate::{engine, html::Meta, Entity};
 
-use super::Author;
+use super::{Author, Topic};
 
 #[derive(Serialize)]
 pub struct List<'a, E> {
@@ -35,7 +35,7 @@ impl<'a, E> List<'a, E> {
 }
 
 impl<'a> List<'a, Author> {
-    pub fn author_list() -> Self {
+    pub(super) fn author_list() -> Self {
         List {
             entities: Default::default(),
             name: "authors",
@@ -44,9 +44,27 @@ impl<'a> List<'a, Author> {
         }
     }
 
-    pub fn push_author(&mut self, author: &'a Author, article_count: usize) {
+    pub(super) fn push_author(&mut self, author: &'a Author, article_count: usize) {
         self.entities.push(EntityExt {
             entity: author,
+            article_count,
+        });
+    }
+}
+
+impl<'a> List<'a, Topic> {
+    pub(super) fn topic_list() -> Self {
+        List {
+            entities: Default::default(),
+            name: "topics",
+            template: "topic-list.jinja",
+            fluent_key: "topic-list",
+        }
+    }
+
+    pub(super) fn push_topic(&mut self, topic: &'a Topic, article_count: usize) {
+        self.entities.push(EntityExt {
+            entity: topic,
             article_count,
         });
     }

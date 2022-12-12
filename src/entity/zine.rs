@@ -110,7 +110,8 @@ impl Zine {
 
     // Get the article meta list by topic id
     fn get_articles_by_topic(&self, topic: &str) -> Vec<ArticleRef> {
-        self.issues
+        let mut items = self
+            .issues
             .par_iter()
             .flat_map(|issue| {
                 issue
@@ -129,7 +130,9 @@ impl Zine {
                     })
                     .collect::<Vec<_>>()
             })
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+        items.par_sort_unstable_by(|a, b| b.article.pub_date.cmp(&a.article.pub_date));
+        items
     }
 
     // Get author list.
@@ -354,19 +357,16 @@ impl Entity for Zine {
 
         // Render all topic pages
         let topic_dest = dest.join("topic");
+        let mut topic_list = List::topic_list();
         self.topics.values().try_for_each(|topic| {
             let mut context = context.clone();
             let articles = self.get_articles_by_topic(&topic.id);
+            topic_list.push_topic(topic, articles.len());
             context.insert("articles", &articles);
             topic.render(context, &topic_dest)
         })?;
-
-        if !self.topics.is_empty() {
-            // Render topic list page
-            let mut context = context.clone();
-            context.insert("topics", &self.topics.values().collect::<Vec<_>>());
-            engine::render("topic-list.jinja", &context, dest.join("topics"))?;
-        }
+        // Render topic list page
+        topic_list.render(context.clone(), dest)?;
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;
