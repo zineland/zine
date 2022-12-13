@@ -74,11 +74,10 @@ Build success! The build directory is `build`.
 
 ## Some cool magazines powered by Zine
 
-- [https://zineland.github.io](https://zineland.github.io)
-  > The zine documentation is built by zine itself.
+- [https://zineland.github.io](https://zineland.github.io) The zine documentation is built by zine itself.
+- [https://rustmagazine.github.io](https://rustmagazine.github.io) The Rust Magazine.
 - [https://2d2d.io](https://2d2d.io)
 - [https://o11y.cn](https://o11y.cn)
-- [https://rustpr.github.io](https://rustpr.github.io)
 - [https://thewhitepaper.github.io](https://thewhitepaper.github.io)
 
 ## Docmentations
