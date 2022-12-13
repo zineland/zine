@@ -1,0 +1,37 @@
+{% extends "base.jinja" -%}
+{% block content -%}
+<div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+    <div class="max-w-prose mx-auto">
+        <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="topic-list") }}</div>
+        <div class="flex flex-col justify-center">
+            {% for topic in topics -%}
+            <a href="/topic/{{ topic.id | lower }}">
+                <div class="flex p-6 hover:bg-gray-100">
+                    <div class="bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl">#</div>
+                    <div class="pl-4 sm:pl-8">
+                        <div class="flex flex-col sm:flex-row sm:items-center">
+                            <div class="zine-topic-name relative font-bold text-xl text-black">
+                                {% if topic.name -%}
+                                {{ topic.name }}
+                                {% else -%}
+                                {{ topic.id | capitalize }}
+                                {% endif -%}
+                            </div>
+                            <div class="sm:pl-4 text-sm text-gray-500">
+                                {{ fluent(key="article-count", number=topic.article_count) }}
+                            </div>
+                        </div>
+                        <div class="py-3 text-sm text-gray-500">
+                            {% if topic.description -%}
+                            {{ markdown_to_html(markdown = topic.description ) }}
+                            {% endif -%}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor -%}
+        </div>
+    </div>
+</div>
+</div>
+{% endblock content -%}

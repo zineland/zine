@@ -34,20 +34,6 @@ pub struct Author {
     pub is_editor: bool,
 }
 
-// A [`Author`] struct with additional `article_count` field.
-#[derive(Debug, Serialize)]
-struct AuthorExt<'a> {
-    #[serde(flatten)]
-    author: &'a Author,
-    // How many articles this author has.
-    article_count: usize,
-}
-
-#[derive(Default, Serialize)]
-pub struct AuthorList<'a> {
-    authors: Vec<AuthorExt<'a>>,
-}
-
 impl AuthorId {
     pub fn is_author(&self, id: &str) -> bool {
         match self {
@@ -56,19 +42,6 @@ impl AuthorId {
                 .iter()
                 .any(|author_id| author_id.eq_ignore_ascii_case(id)),
         }
-    }
-}
-
-impl<'a> AuthorList<'a> {
-    pub fn record_author(&mut self, author: &'a Author, article_count: usize) {
-        self.authors.push(AuthorExt {
-            author,
-            article_count,
-        });
-    }
-
-    fn render_title(&self) -> Result<String> {
-        engine::render_str(r#"{{ fluent(key="author-list") }}"#, &Context::new())
     }
 }
 
@@ -105,23 +78,6 @@ impl Entity for Author {
         );
         context.insert("author", &self);
         engine::render("author.jinja", &context, dest.join(slug))?;
-        Ok(())
-    }
-}
-
-impl<'a> Entity for AuthorList<'a> {
-    fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
-        context.insert(
-            "meta",
-            &Meta {
-                title: Cow::Owned(self.render_title()?),
-                description: Cow::Owned(String::new()),
-                url: Some(Cow::Borrowed("authors")),
-                image: None,
-            },
-        );
-        context.insert("authors", &self.authors);
-        engine::render("author-list.jinja", &context, dest.join("authors"))?;
         Ok(())
     }
 }

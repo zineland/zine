@@ -11,6 +11,10 @@ author-article-title = 已发布 { $number } 篇文章
 
 author-list = 作者列表
 
-author-article-count = { $number } 篇文章
+article-count = { $number } 篇文章
 
 editor = 责任编辑
+
+topic-article-title = { $number } 篇文章
+
+topic-list = 话题列表

@@ -44,6 +44,10 @@ pub struct Article {
     /// The article's markdown content.
     #[serde(default, skip_serializing)]
     pub markdown: String,
+    /// The optional topics of this article.
+    #[serde(default)]
+    #[serde(rename(deserialize = "topic"))]
+    pub topics: Vec<String>,
     /// Whether the article is an featured article.
     /// Featured article will display in home page.
     #[serde(default, skip_serializing)]

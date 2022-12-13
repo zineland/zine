@@ -12,3 +12,7 @@ menu = [
 [authors]
 zine-team = { name = "Zine Team", bio = "The Zine Team.", editor = true }
 admin = { name = "Admin" }
+
+[topics]
+async = {}
+game = { name = "Game development", description = "Topic of rust game development." }

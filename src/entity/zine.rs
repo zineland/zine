@@ -14,7 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
 
-use super::{Author, AuthorList, Issue, MarkdownConfig, MetaArticle, Page, Site, Theme};
+use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
 /// The root zine entity config.
 ///
@@ -29,8 +29,9 @@ pub struct Zine {
     #[serde(default)]
     #[serde(rename = "issue")]
     pub issues: Vec<Issue>,
-    #[serde(rename = "page")]
     #[serde(default)]
+    pub topics: BTreeMap<String, Topic>,
+    #[serde(skip)]
     pub pages: Vec<Page>,
     #[serde(default)]
     #[serde(rename = "markdown")]
@@ -47,8 +48,10 @@ impl std::fmt::Debug for Zine {
     }
 }
 
+// A [`MetaArticle`] and issue info pair.
+// Naming is hard, give it a better name?
 #[derive(Serialize)]
-struct AuthorArticle<'a> {
+struct ArticleRef<'a> {
     article: &'a MetaArticle,
     issue_title: &'a String,
     issue_slug: &'a String,
@@ -72,8 +75,8 @@ impl Zine {
         })?)
     }
 
-    // Query the article metadata list by author id, sorted by descending order of publishing date.
-    fn query_articles_by_author(&self, author_id: &str) -> Vec<AuthorArticle> {
+    // Get the article metadata list by author id, sorted by descending order of publishing date.
+    fn get_articles_by_author(&self, author_id: &str) -> Vec<ArticleRef> {
         let mut items = self
             .issues
             .par_iter()
@@ -89,7 +92,34 @@ impl Zine {
                     })
                     .filter_map(|article| {
                         if article.is_author(author_id) {
-                            Some(AuthorArticle {
+                            Some(ArticleRef {
+                                article: &article.meta,
+                                issue_title: &issue.title,
+                                issue_slug: &issue.slug,
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        items.par_sort_unstable_by(|a, b| b.article.pub_date.cmp(&a.article.pub_date));
+        items
+    }
+
+    // Get the article meta list by topic id
+    fn get_articles_by_topic(&self, topic: &str) -> Vec<ArticleRef> {
+        let mut items = self
+            .issues
+            .par_iter()
+            .flat_map(|issue| {
+                issue
+                    .articles
+                    .iter()
+                    .filter_map(|article| {
+                        if article.topics.iter().any(|t| t == topic) {
+                            Some(ArticleRef {
                                 article: &article.meta,
                                 issue_title: &issue.title,
                                 issue_slug: &issue.slug,
@@ -210,6 +240,11 @@ impl Entity for Zine {
             })?;
         }
 
+        self.topics.iter_mut().try_for_each(|(id, topic)| {
+            topic.id = id.clone();
+            topic.parse(source)
+        })?;
+
         let content_dir = source.join(crate::ZINE_CONTENT_DIR);
         ensure!(
             content_dir.exists(),
@@ -295,10 +330,10 @@ impl Entity for Zine {
 
         // Render all authors pages.
         let authors = self.authors();
-        let mut author_list = AuthorList::default();
+        let mut author_list = List::author_list();
         authors.iter().try_for_each(|author| {
-            let articles = self.query_articles_by_author(&author.id);
-            author_list.record_author(author, articles.len());
+            let articles = self.get_articles_by_author(&author.id);
+            author_list.push_author(author, articles.len());
 
             let mut context = context.clone();
             context.insert("articles", &articles);
@@ -319,6 +354,19 @@ impl Entity for Zine {
 
         // Render all issues pages.
         self.issues.render(context.clone(), dest)?;
+
+        // Render all topic pages
+        let topic_dest = dest.join("topic");
+        let mut topic_list = List::topic_list();
+        self.topics.values().try_for_each(|topic| {
+            let mut context = context.clone();
+            let articles = self.get_articles_by_topic(&topic.id);
+            topic_list.push_topic(topic, articles.len());
+            context.insert("articles", &articles);
+            topic.render(context, &topic_dest)
+        })?;
+        // Render topic list page
+        topic_list.render(context.clone(), dest)?;
 
         // Render other pages.
         self.pages.render(context.clone(), dest)?;
