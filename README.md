@@ -97,7 +97,7 @@ Build success! The build directory is `build`.
 - [x] Support table of content
 - [x] Support i18n
 - [x] `zine serve` support live reload
-- [ ] Support article topic
+- [x] Support article topic
 
 ## License
 

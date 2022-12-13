@@ -72,6 +72,11 @@ impl<'a> List<'a, Topic> {
 
 impl<'a, E: Serialize> Entity for List<'a, E> {
     fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
+        if self.entities.is_empty() {
+            // Do nothing if the entities is empty.
+            return Ok(());
+        }
+
         context.insert(
             "meta",
             &Meta {

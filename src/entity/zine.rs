@@ -211,6 +211,16 @@ impl Zine {
                 .map(|(id, _)| format!("{}/@{}/", base_url, id.to_lowercase())),
         );
 
+        // Topics
+        if !self.topics.is_empty() {
+            entries.push(format!("{}/topics/", base_url));
+            entries.par_extend(
+                self.topics
+                    .par_iter()
+                    .map(|(id, _)| format!("{}/topic/{}/", base_url, id.to_lowercase())),
+            );
+        }
+
         // Pages
         entries.par_extend(
             self.pages
