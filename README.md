@@ -18,6 +18,7 @@ https://zineland.github.io
 - Theme customizable, extend friendly.
 - RSS Feed supported.
 - Open Graph Protocol supported.
+- Article topic supported.
 - I18n and l10n supported.
 - Build into a static website, hosting anywhere.
 

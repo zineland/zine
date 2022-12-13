@@ -212,6 +212,8 @@ impl Entity for Article {
         );
 
         for article in self.i18n.values_mut() {
+            // Extend topics from the origin article
+            article.topics = self.topics.clone();
             if article.meta.author.is_none() {
                 article.meta.author = self.meta.author.clone();
             }
