@@ -335,6 +335,10 @@ impl Entity for Zine {
             "live_reload",
             &matches!(crate::current_mode(), crate::Mode::Serve),
         );
+        context.insert(
+            "zine_version",
+            option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
+        );
         context.insert("theme", &self.theme);
         context.insert("site", &self.site);
 
