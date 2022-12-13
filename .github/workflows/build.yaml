@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: 'master'
+        submodules: 'recursive'
     - name: Install Rust toolchain
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -30,12 +33,12 @@ jobs:
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
         cargo publish --dry-run
-    - name: Install zine and build demo
+    - name: Install zine and build docs
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
         cargo install --path .
-        # Test build demo
-        cd demo; zine build
+        # Test build docs
+        cd docs; zine build
         # Test new empty project then build
         zine new test; cd test; zine build
     

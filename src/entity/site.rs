@@ -7,7 +7,6 @@ pub struct Site {
     pub name: String,
     pub description: Option<String>,
     /// The repository edit url of this zine website.
-    /// For example: https://github.com/zineland/zine/edit/master/demo/
     pub edit_url: Option<String>,
     /// The OpenGraph social image.
     pub social_image: Option<String>,
