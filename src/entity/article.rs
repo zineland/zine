@@ -210,6 +210,16 @@ impl Entity for Article {
             "`pub_date` is required for article `{}`",
             self.meta.title
         );
+        {
+            let zine_data = data::read();
+            for topic in &self.topics {
+                ensure!(
+                    zine_data.is_valid_topic(topic),
+                    "the topic `{}` is invalid, please declare it in the root `zine.toml`",
+                    topic
+                )
+            }
+        }
 
         for article in self.i18n.values_mut() {
             // Extend topics from the origin article
