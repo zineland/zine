@@ -255,6 +255,13 @@ impl Entity for Zine {
             topic.parse(source)
         })?;
 
+        {
+            let mut zine_data = data::write();
+            zine_data
+                .set_site(self.site.clone())
+                .set_topics(self.topics.keys().cloned().collect());
+        }
+
         let content_dir = source.join(crate::ZINE_CONTENT_DIR);
         ensure!(
             content_dir.exists(),
@@ -360,10 +367,7 @@ impl Entity for Zine {
 
         {
             let mut zine_data = data::write();
-            zine_data
-                .set_site(self.site.clone())
-                .set_authors(authors)
-                .set_articles(self.articles());
+            zine_data.set_authors(authors).set_articles(self.articles());
         }
 
         // Render all issues pages.

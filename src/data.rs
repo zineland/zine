@@ -114,6 +114,9 @@ pub struct ZineData {
     // Issue slug and article pair list.
     #[serde(skip)]
     articles: Vec<(String, MetaArticle)>,
+    // The topic name list.
+    #[serde(skip)]
+    topics: Vec<String>,
     #[serde(skip)]
     site: Site,
     #[serde(skip)]
@@ -161,6 +164,7 @@ impl ZineData {
             Ok(ZineData {
                 authors: Vec::default(),
                 articles: Vec::default(),
+                topics: Vec::default(),
                 site: Site::default(),
                 markdown_config: MarkdownConfig::default(),
                 theme: Theme::default(),
@@ -218,6 +222,11 @@ impl ZineData {
         self
     }
 
+    pub fn set_topics(&mut self, topics: Vec<String>) -> &mut Self {
+        self.topics = topics;
+        self
+    }
+
     pub fn set_articles(&mut self, articles: Vec<(String, MetaArticle)>) -> &mut Self {
         self.articles = articles;
         self
@@ -269,6 +278,10 @@ impl ZineData {
 
     pub fn get_theme(&self) -> &Theme {
         &self.theme
+    }
+
+    pub fn is_valid_topic(&self, topic: &str) -> bool {
+        self.topics.iter().any(|t| t.eq_ignore_ascii_case(topic))
     }
 
     fn export_to_json(&self) -> Result<String> {
