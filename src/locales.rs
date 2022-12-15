@@ -29,7 +29,7 @@ impl FluentLoader {
                         .unwrap_or_else(|err| panic!("{file} read failed: {}", err));
                     FluentResource::try_new(translation)
                 } else {
-                    println!("`{file}` does not exist, please add your translation to this file.");
+                    println!("Warning: `{file}` does not exist, please add your translation to this file.");
                     println!("fallback to default `en` locale.");
 
                     locale = "en";
@@ -53,7 +53,7 @@ fn json_to_fluent(json: &Value) -> FluentValue {
         Value::Number(n) if n.is_f64() => FluentValue::from(n.as_f64().unwrap()),
         Value::String(s) => FluentValue::String(s.into()),
         _ => {
-            println!("Invalid value to convert to fluent: {}", &json);
+            println!("Warning: invalid value to convert to fluent: {}", &json);
             FluentValue::None
         }
     }

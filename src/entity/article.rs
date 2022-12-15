@@ -212,13 +212,14 @@ impl Entity for Article {
         );
         {
             let zine_data = data::read();
-            for topic in &self.topics {
-                ensure!(
-                    zine_data.is_valid_topic(topic),
-                    "the topic `{}` is invalid, please declare it in the root `zine.toml`",
-                    topic
-                )
-            }
+            self.topics.iter().for_each(|topic| {
+                if !zine_data.is_valid_topic(topic) {
+                    println!(
+                        "Warning: the topic `{}` is invalid, please declare it in the root `zine.toml`",
+                        topic
+                    )
+                }
+            });
         }
 
         for article in self.i18n.values_mut() {

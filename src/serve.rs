@@ -67,7 +67,6 @@ impl Service<Request<Body>> for FallbackService {
             let path = req.uri().path();
             match (req.method(), path) {
                 (&Method::GET, "/live_reload") => {
-                    println!("GET /live_reload");
                     // Check if the request is a websocket upgrade request.
                     if hyper_tungstenite::is_upgrade_request(&req) {
                         let (response, websocket) =

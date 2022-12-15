@@ -242,7 +242,7 @@ impl Entity for Zine {
         }
 
         if self.authors.is_empty() {
-            println!("Warn: no author specified in [authors] of root `zine.toml`.");
+            println!("Warning: no author specified in [authors] of root `zine.toml`.");
         } else {
             self.authors.iter_mut().try_for_each(|(id, author)| {
                 author.id = id.clone();
