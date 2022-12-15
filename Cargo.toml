@@ -1,13 +1,13 @@
 [package]
 name = "zine"
-version = "0.8.1"
+version = "0.9.0"
 description = "A simple and opinionated tool to build your own magazine."
 authors = ["Folyd"]
 homepage = "https://github.com/zineland/zine"
 repository = "https://github.com/zineland/zine"
 license = "Apache-2.0"
 edition = "2021"
-exclude = ["demo", "tailwind.config.js", "zine-entry.css"]
+exclude = ["tailwind.config.js", "tailwindcss.html", "zine-entry.css"]
 readme = "README.md"
 
 [features]

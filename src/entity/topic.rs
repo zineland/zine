@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tera::Context;
 
-use crate::{engine, helpers::capitalize, html::Meta, markdown};
+use crate::{engine, helpers::capitalize, html::Meta};
 
 use super::Entity;
 
@@ -30,12 +30,7 @@ impl Entity for Topic {
             "meta",
             &Meta {
                 title: Cow::Borrowed(self.name.as_deref().unwrap_or(&self.id)),
-                description: Cow::Owned(
-                    self.description
-                        .as_ref()
-                        .map(|bio| markdown::extract_description(bio))
-                        .unwrap_or_default(),
-                ),
+                description: Cow::Borrowed(self.description.as_deref().unwrap_or("")),
                 url: Some(format!("/topic/{}", self.id.to_lowercase()).into()),
                 image: None,
             },
