@@ -28,7 +28,7 @@ pub(super) struct EntityExt<'a, E> {
 impl<'a, E> List<'a, E> {
     fn render_title(&self) -> Result<String> {
         engine::render_str(
-            &format!(r#"{{ fluent(key="{}") }}"#, self.fluent_key),
+            &format!(r#"{{{{ fluent(key="{}") }}}}"#, self.fluent_key),
             &Context::new(),
         )
     }
