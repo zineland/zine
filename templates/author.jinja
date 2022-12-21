@@ -41,7 +41,7 @@
             <div class="prose my-2 sm:m-8 grow">
                 <div class="zine-author-name text-center text-4xl font-bold py-2 text-center">{{ author_name }}</div>
                 {% if author.bio -%}
-                <div class="zine-author-bio text-center sm:text-start">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
+                <div class="zine-author-bio">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
                 {% endif -%}
             </div>
         </div>
