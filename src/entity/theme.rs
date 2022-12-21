@@ -5,21 +5,28 @@ use serde::{Deserialize, Serialize};
 
 use super::Entity;
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ThemeColor {
+    // The primary color.
+    #[serde(default = "ThemeColor::default_primary_color")]
+    pub primary_color: String,
+    // The text main color.
+    #[serde(default = "ThemeColor::default_main_color")]
+    pub main_color: String,
+    // The article's link color.
+    #[serde(default = "ThemeColor::default_link_color")]
+    pub link_color: String,
+    // The background color.
+    #[serde(default = "ThemeColor::default_secondary_color")]
+    pub secondary_color: String,
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct Theme {
-    // The primary color.
-    #[serde(default = "Theme::default_primary_color")]
-    pub primary_color: String,
-    // The text main color.
-    #[serde(default = "Theme::default_main_color")]
-    pub main_color: String,
-    // The article's link color.
-    #[serde(default = "Theme::default_link_color")]
-    pub link_color: String,
-    // The background color.
-    #[serde(default = "Theme::default_secondary_color")]
-    pub secondary_color: String,
+    #[serde(flatten)]
+    pub color: ThemeColor,
+    pub dark: ThemeColor,
     // The background image url.
     #[serde(default)]
     pub background_image: Option<String>,
@@ -34,13 +41,22 @@ pub struct Theme {
     pub default_avatar: Option<String>,
 }
 
-impl Default for Theme {
+impl Default for ThemeColor {
     fn default() -> Self {
         Self {
             primary_color: Self::default_primary_color(),
             main_color: Self::default_main_color(),
             link_color: Self::default_link_color(),
             secondary_color: Self::default_secondary_color(),
+        }
+    }
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            color: ThemeColor::default(),
+            dark: ThemeColor::default(),
             background_image: None,
             head_template: None,
             footer_template: None,
@@ -54,10 +70,8 @@ impl Default for Theme {
 impl std::fmt::Debug for Theme {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Theme")
-            .field("primary_color", &self.primary_color)
-            .field("main_color", &self.main_color)
-            .field("link_color", &self.link_color)
-            .field("secondary_color", &self.secondary_color)
+            .field("color", &self.color)
+            .field("dark_color", &self.dark)
             .field("background_image", &self.background_image)
             .field("head_template", &self.head_template.is_some())
             .field("footer_template", &self.footer_template.is_some())
@@ -71,7 +85,7 @@ impl std::fmt::Debug for Theme {
     }
 }
 
-impl Theme {
+impl ThemeColor {
     const DEFAULT_PRIMARY_COLOR: &'static str = "#2563eb";
     const DEFAULT_MAIN_COLOR: &'static str = "#ffffff";
     const DEFAULT_LINK_COLOR: &'static str = "#2563eb";
