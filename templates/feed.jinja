@@ -16,8 +16,8 @@
     <entry>
         <title>{{ entry.title }}</title>
         <link rel="alternate" href="{{ entry.url }}" type="text/html" title="{{ entry.title }}" />
-        <published>{{ entry.date }}</published>
-        <updated>{{ entry.date }}</updated>
+        <published>{{ entry.date }}T00:00:00+00:00</published>
+        <updated>{{ entry.date }}T00:00:00+00:00</updated>
         <id>{{ entry.url }}</id>
         <content type="html" xml:base="{{ entry.url }}">
             <![CDATA[{{ markdown_to_html(markdown = entry.content) }}]]>
