@@ -30,6 +30,10 @@ static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
 pub struct MarkdownRender<'a> {
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
+    // Whether we are processing image parsing
+    processing_image: bool,
+    // The alt of the processing image
+    image_alt: Option<String>,
     heading: Option<Heading<'a>>,
     levels: BTreeSet<usize>,
     /// Table of content.
@@ -106,6 +110,8 @@ impl<'a> MarkdownRender<'a> {
         MarkdownRender {
             markdown_config,
             code_block_fenced: None,
+            processing_image: false,
+            image_alt: None,
             heading: None,
             levels: BTreeSet::new(),
             toc: Vec::new(),
@@ -167,11 +173,9 @@ impl<'a> MarkdownRender<'a> {
                 self.code_block_fenced = Some(name.clone());
                 Visiting::Ignore
             }
-            Tag::Image(_, src, title) => {
-                // Add loading="lazy" attribute for markdown image.
-                Visiting::Event(Event::Html(
-                    format!("<img src=\"{}\" alt=\"{}\" loading=\"lazy\">", src, title).into(),
-                ))
+            Tag::Image(..) => {
+                self.processing_image = true;
+                Visiting::Ignore
             }
             Tag::Heading(level, id, _) => {
                 self.heading = Some(Heading::new(*level as usize, *id));
@@ -190,6 +194,16 @@ impl<'a> MarkdownRender<'a> {
 
     fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
         match tag {
+            Tag::Image(_, src, title) => {
+                let alt = self.image_alt.take().unwrap_or_default();
+                self.processing_image = false;
+
+                // Add loading="lazy" attribute for markdown image.
+                Visiting::Event(Event::Html(
+                    format!("<img src=\"{src}\" alt=\"{alt}\" title=\"{title}\" loading=\"lazy\">")
+                        .into(),
+                ))
+            }
             Tag::CodeBlock(_) => {
                 self.code_block_fenced = None;
                 Visiting::Ignore
@@ -221,6 +235,11 @@ impl<'a> MarkdownRender<'a> {
             heading
                 .push_text(text.as_ref())
                 .push_event(Event::Text(text.to_owned()));
+            return Visiting::Ignore;
+        }
+
+        if self.processing_image {
+            self.image_alt = Some(text.to_string());
             return Visiting::Ignore;
         }
 
