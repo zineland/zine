@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct Site {
     /// The absolute url of this site.
     pub url: String,
+    pub cdn: Option<String>,
     pub name: String,
     pub description: Option<String>,
     /// The repository edit url of this zine website.

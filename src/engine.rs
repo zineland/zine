@@ -9,6 +9,7 @@ use crate::{
     entity::{Entity, Zine},
     helpers::copy_dir,
     html::rewrite_html_base_url,
+    html::rewrite_html_cdn_url,
     locales::FluentLoader,
     markdown::MarkdownRender,
     Mode,
@@ -121,6 +122,12 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     // 1. in build run mode
     // 2. site url has a path
     if matches!(current_mode(), Mode::Build) {
+        if let Some(Value::String(cdn_url)) = context.get("site").and_then(|site| site.get("cdn")) {
+            let _ = cdn_url.parse::<Uri>().expect("Invalid cdn url.");
+            let html = rewrite_html_cdn_url(&buf, cdn_url)?;
+            fs::write(dest, html)?;
+            return Ok(());
+        }
         if let Some(Value::String(site_url)) = context.get("site").and_then(|site| site.get("url"))
         {
             let uri = site_url.parse::<Uri>().expect("Invalid site url.");
