@@ -38,9 +38,10 @@ pub fn rewrite_html_base_url(
     cdn_url: Option<&str>,
 ) -> Result<Vec<u8>> {
     let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
-        if let Some(attr) = el.get_attribute(attr_name) {
+        if let Some(mut attr) = el.get_attribute(attr_name) {
             let mut base_url = "";
             if attr.starts_with("/static") {
+                attr = attr.replacen("/static", "", 1);
                 if let Some(url) = cdn_url {
                     base_url = url;
                 }
@@ -75,13 +76,14 @@ pub fn rewrite_html_base_url(
                 ),
                 // Rewrite background image url.
                 element!("body>div.bg-primary.text-main", |el| {
-                    if let Some(attr) = el.get_attribute("style") {
+                    if let Some(mut attr) = el.get_attribute("style") {
                         if attr.starts_with("background-image: url('/") {
                             let mut base_url = "";
                             if let Some(url) = site_url {
                                 base_url = url;
                             }
                             if attr.starts_with("background-image: url('/static") {
+                                attr = attr.replacen("/static", "", 1);
                                 if let Some(url) = cdn_url {
                                     base_url = url;
                                 }
@@ -233,7 +235,7 @@ mod tests {
     use test_case::test_case;
 
     const SITE_URL: &str = "https://github.com";
-    const CDN_URL: &str = "https://example-cdn.net";
+    const CDN_URL: &str = "https://cdn-example.net";
 
     #[test_case(
         r#"
@@ -248,6 +250,22 @@ mod tests {
                 &rewrite_html_base_url(html.as_bytes(), Some(SITE_URL), Some(CDN_URL)).unwrap()
             ),
             html.replace("/test.png", &format!("{}/test.png", SITE_URL))
+        );
+    }
+
+    #[test_case(
+        r#"
+        <body class="h-full bg-secondary">
+            <div class="bg-primary text-main" style="background-image: url('/static/test.png')"></div>
+        </body>
+        "#
+    )]
+    fn test_rewrite_cdn_background_image_url(html: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.as_bytes(), Some(SITE_URL), Some(CDN_URL)).unwrap()
+            ),
+            html.replace("/static/test.png", &format!("{}/test.png", CDN_URL))
         );
     }
 
@@ -335,7 +353,7 @@ mod tests {
                 )
                 .unwrap()
             ),
-            html.replace("{}", &format!("{}{}", CDN_URL, path))
+            html.replace("{}", &format!("{}{}", CDN_URL, &path[7..]))
         );
     }
 
