@@ -33,7 +33,7 @@ pub struct MarkdownRender<'a> {
     // Whether we are processing image parsing
     processing_image: bool,
     // The alt of the processing image
-    image_alt: Option<String>,
+    image_alt: Option<CowStr<'a>>,
     heading: Option<Heading<'a>>,
     levels: BTreeSet<usize>,
     /// Table of content.
@@ -195,7 +195,7 @@ impl<'a> MarkdownRender<'a> {
     fn visit_end_tag(&mut self, tag: &Tag<'a>) -> Visiting {
         match tag {
             Tag::Image(_, src, title) => {
-                let alt = self.image_alt.take().unwrap_or_default();
+                let alt = self.image_alt.take().unwrap_or_else(|| CowStr::from(""));
                 self.processing_image = false;
 
                 // Add loading="lazy" attribute for markdown image.
@@ -239,7 +239,7 @@ impl<'a> MarkdownRender<'a> {
         }
 
         if self.processing_image {
-            self.image_alt = Some(text.to_string());
+            self.image_alt = Some(text.clone());
             return Visiting::Ignore;
         }
 
