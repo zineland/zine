@@ -33,8 +33,8 @@ featured = true
 "#;
 
 struct ZineScaffold {
-    dir: PathBuf,
-    path: Cow<'static, str>,
+    source: PathBuf,
+    issue_dir: Cow<'static, str>,
     number: usize,
     title: Cow<'static, str>,
 }
@@ -46,7 +46,7 @@ impl ZineScaffold {
 
         // Generate project zine.toml
         fs::write(
-            self.dir.join(ZINE_FILE),
+            self.source.join(ZINE_FILE),
             Tera::one_off(TEMPLATE_PROJECT_FILE, &context, true)?,
         )?;
 
@@ -58,15 +58,15 @@ impl ZineScaffold {
     // Create issue dir and issue zine.toml
     fn create_issue(&self) -> Result<()> {
         let issue_dir = self
-            .dir
+            .source
             .join(crate::ZINE_CONTENT_DIR)
-            .join(self.path.as_ref());
+            .join(self.issue_dir.as_ref());
         fs::create_dir_all(&issue_dir)?;
         let format = format_description::parse("[year]-[month]-[day]")?;
         let today = OffsetDateTime::now_utc().format(&format)?;
 
         let mut context = Context::new();
-        context.insert("slug", &self.path);
+        context.insert("slug", &self.issue_dir);
         context.insert("number", &self.number);
         context.insert("title", &self.title);
         context.insert("pub_date", &today);
@@ -83,18 +83,18 @@ impl ZineScaffold {
 }
 
 pub fn new_zine_project(name: Option<String>) -> Result<()> {
-    let dir = if let Some(name) = name.as_ref() {
+    let source = if let Some(name) = name.as_ref() {
         env::current_dir()?.join(name)
     } else {
         env::current_dir()?
     };
-    if !dir.exists() {
-        fs::create_dir_all(&dir)?;
+    if !source.exists() {
+        fs::create_dir_all(&source)?;
     }
 
     let scaffold = ZineScaffold {
-        dir,
-        path: "issue-1".into(),
+        source,
+        issue_dir: "issue-1".into(),
         number: 1,
         title: "Issue 1".into(),
     };
@@ -107,22 +107,22 @@ pub fn new_zine_issue() -> Result<()> {
     // Use zine.toml to find root path
     let (source, mut zine) = crate::locate_root_zine_folder(env::current_dir()?)?
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
-
     zine.parse_issue_from_dir(&source)?;
+
     let next_issue_number = zine.issues.len() + 1;
-    let path: String = prompt_default(
-        "What your issue path name?",
+    let issue_dir = prompt_default(
+        "What is your issue directory name?",
         format!("issue{next_issue_number}"),
     )?;
-    let number = prompt_default("What your issue number?", next_issue_number)?;
-    let title: String = prompt_default(
-        "What your issue title?",
+    let number = prompt_default("What is your issue number?", next_issue_number)?;
+    let title = prompt_default(
+        "What is your issue title?",
         format!("Issue-{next_issue_number}"),
     )?;
 
     let scaffold = ZineScaffold {
-        dir: source,
-        path: path.into(),
+        source,
+        issue_dir: issue_dir.into(),
         number,
         title: title.into(),
     };
