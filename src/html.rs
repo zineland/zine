@@ -31,18 +31,30 @@ impl<'a> Meta<'a> {
     }
 }
 
-/// Rewrite root path URL in `raw_html` with `base_url`.
+/// Rewrite root path URL in `raw_html` with `site_url` and `cdn_url`.
 pub fn rewrite_html_base_url(
     raw_html: &[u8],
-    base_url: &str,
-    prefix_path: &str,
+    site_url: Option<&str>,
+    cdn_url: Option<&str>,
 ) -> Result<Vec<u8>> {
     let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
         if let Some(attr) = el.get_attribute(attr_name) {
-            if attr.starts_with(prefix_path) {
-                el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
-                    .expect("Set attribute failed");
+            let mut base_url = "";
+            if attr.starts_with("/static") {
+                if let Some(url) = cdn_url {
+                    base_url = url;
+                }
+            } else if attr.starts_with("/") {
+                if let Some(url) = site_url {
+                    base_url = url;
+                }
             }
+            if base_url == "" {
+                return;
+            }
+
+            el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
+                .expect("Set attribute failed");
         }
     };
 
@@ -65,6 +77,15 @@ pub fn rewrite_html_base_url(
                 element!("body>div.bg-primary.text-main", |el| {
                     if let Some(attr) = el.get_attribute("style") {
                         if attr.starts_with("background-image: url('/") {
+                            let mut base_url = "";
+                            if let Some(url) = site_url {
+                                base_url = url;
+                            }
+                            if attr.starts_with("background-image: url('/static") {
+                                if let Some(url) = cdn_url {
+                                    base_url = url;
+                                }
+                            }
                             el.set_attribute(
                                 "style",
                                 &attr.replace(
@@ -211,10 +232,8 @@ mod tests {
     use super::rewrite_html_base_url;
     use test_case::test_case;
 
-    const BASE_URL: &str = "https://github.com";
-    const BASE_PREFIX_PATH: &str = "/";
-    const CDN_URL: &str = "https://example-cdn.com";
-    const CDN_PREFIX_PATH: &str = "/static";
+    const SITE_URL: &str = "https://github.com";
+    const CDN_URL: &str = "https://example-cdn.net";
 
     #[test_case(
         r#"
@@ -226,9 +245,9 @@ mod tests {
     fn test_rewrite_background_image_url(html: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.as_bytes(), BASE_URL, BASE_PREFIX_PATH).unwrap()
+                &rewrite_html_base_url(html.as_bytes(), Some(SITE_URL), Some(CDN_URL)).unwrap()
             ),
-            html.replace("/test.png", &format!("{}/test.png", BASE_URL))
+            html.replace("/test.png", &format!("{}/test.png", SITE_URL))
         );
     }
 
@@ -246,12 +265,12 @@ mod tests {
             String::from_utf8_lossy(
                 &rewrite_html_base_url(
                     html.replace("{}", path).as_bytes(),
-                    BASE_URL,
-                    BASE_PREFIX_PATH
+                    Some(SITE_URL),
+                    Some(CDN_URL)
                 )
                 .unwrap()
             ),
-            html.replace("{}", &format!("{}{}", BASE_URL, path))
+            html.replace("{}", &format!("{}{}", SITE_URL, path))
         );
     }
 
@@ -265,13 +284,13 @@ mod tests {
     #[test_case("<video src=\"{}\"/>", "/hello.mp4"; "video")]
     #[test_case("<iframe src=\"{}\"></iframe>", "/hello.html"; "iframe")]
     fn test_not_rewrite_html_base_url(html: &str, path: &str) {
-        let whole_url = format!("{}{}", BASE_URL, path);
+        let whole_url = format!("{}{}", SITE_URL, path);
         assert_eq!(
             String::from_utf8_lossy(
                 &rewrite_html_base_url(
                     html.replace("{}", &whole_url).as_bytes(),
-                    BASE_URL,
-                    BASE_PREFIX_PATH
+                    Some(SITE_URL),
+                    Some(CDN_URL)
                 )
                 .unwrap()
             ),
@@ -291,8 +310,8 @@ mod tests {
             String::from_utf8_lossy(
                 &rewrite_html_base_url(
                     html.replace("{}", path).as_bytes(),
-                    BASE_URL,
-                    BASE_PREFIX_PATH
+                    Some(SITE_URL),
+                    Some(CDN_URL)
                 )
                 .unwrap()
             ),
@@ -311,8 +330,8 @@ mod tests {
             String::from_utf8_lossy(
                 &rewrite_html_base_url(
                     html.replace("{}", path).as_bytes(),
-                    CDN_URL,
-                    CDN_PREFIX_PATH
+                    Some(SITE_URL),
+                    Some(CDN_URL)
                 )
                 .unwrap()
             ),
@@ -332,8 +351,8 @@ mod tests {
             String::from_utf8_lossy(
                 &rewrite_html_base_url(
                     html.replace("{}", &whole_url).as_bytes(),
-                    CDN_URL,
-                    CDN_PREFIX_PATH
+                    Some(SITE_URL),
+                    Some(CDN_URL)
                 )
                 .unwrap()
             ),
@@ -352,8 +371,8 @@ mod tests {
             String::from_utf8_lossy(
                 &rewrite_html_base_url(
                     html.replace("{}", path).as_bytes(),
-                    CDN_URL,
-                    CDN_PREFIX_PATH
+                    Some(SITE_URL),
+                    Some(CDN_URL)
                 )
                 .unwrap()
             ),

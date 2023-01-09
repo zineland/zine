@@ -121,24 +121,24 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     // 1. in build run mode
     // 2. site url has a path
     if matches!(current_mode(), Mode::Build) {
-        if let Some(Value::String(cdn_url)) = context.get("site").and_then(|site| site.get("cdn")) {
-            let _ = cdn_url.parse::<Uri>().expect("Invalid cdn url.");
-            let prefix_path = "/static";
-            let html = rewrite_html_base_url(&buf, cdn_url, prefix_path)?;
-            fs::write(dest, html)?;
-            return Ok(());
+        let mut site_url: Option<&str> = None;
+        let mut cdn_url: Option<&str> = None;
+
+        if let Some(Value::String(url)) = context.get("site").and_then(|site| site.get("cdn")) {
+            let _ = url.parse::<Uri>().expect("Invalid cdn url.");
+            cdn_url = Some(url);
         }
-        if let Some(Value::String(site_url)) = context.get("site").and_then(|site| site.get("url"))
-        {
-            let uri = site_url.parse::<Uri>().expect("Invalid site url.");
+        if let Some(Value::String(url)) = context.get("site").and_then(|site| site.get("url")) {
+            let uri = url.parse::<Uri>().expect("Invalid site url.");
             // We don't need to rewrite links if the site url has a root path.
             if uri.path() != "/" {
-                let prefix_path = "/";
-                let html = rewrite_html_base_url(&buf, site_url, prefix_path)?;
-                fs::write(dest, html)?;
-                return Ok(());
+                site_url = Some(url);
             }
         }
+
+        let html = rewrite_html_base_url(&buf, site_url, cdn_url)?;
+        fs::write(dest, html)?;
+        return Ok(());
     }
 
     fs::write(dest, buf)?;
