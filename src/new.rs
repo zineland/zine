@@ -1,7 +1,7 @@
 use std::{borrow::Cow, env, fs, path::PathBuf};
 
-use anyhow::Result;
-use promptly::prompt;
+use anyhow::{Context as _, Result};
+use promptly::prompt_default;
 use tera::{Context, Tera};
 use time::{format_description, OffsetDateTime};
 
@@ -104,14 +104,24 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
 }
 
 pub fn new_zine_issue() -> Result<()> {
-    let path: String = prompt("What your issue path name?")?;
-    let number = prompt("What your issue number?")?;
-    let title: String = prompt("What your issue title?")?;
+    // Use zine.toml to find root path
+    let (source, mut zine) = crate::locate_root_zine_folder(env::current_dir()?)?
+        .with_context(|| "Failed to find the root zine.toml file".to_string())?;
 
-    // TODO: dynamic determine the dir?
-    let dir = env::current_dir()?;
+    zine.parse_issue_from_dir(&source)?;
+    let next_issue_number = zine.issues.len() + 1;
+    let path: String = prompt_default(
+        "What your issue path name?",
+        format!("issue{next_issue_number}"),
+    )?;
+    let number = prompt_default("What your issue number?", next_issue_number)?;
+    let title: String = prompt_default(
+        "What your issue title?",
+        format!("Issue-{next_issue_number}"),
+    )?;
+
     let scaffold = ZineScaffold {
-        dir,
+        dir: source,
         path: path.into(),
         number,
         title: title.into(),

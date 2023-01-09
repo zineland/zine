@@ -75,6 +75,51 @@ impl Zine {
         })?)
     }
 
+    /// Parsing issue entities from dir.
+    pub fn parse_issue_from_dir(&mut self, source: &Path) -> Result<()> {
+        let content_dir = source.join(crate::ZINE_CONTENT_DIR);
+        ensure!(
+            content_dir.exists(),
+            "`{}` fold not found.",
+            crate::ZINE_CONTENT_DIR
+        );
+
+        for entry in WalkDir::new(&content_dir).contents_first(true).into_iter() {
+            let entry = entry?;
+            if entry.file_name() != crate::ZINE_FILE {
+                continue;
+            }
+            let content = fs::read_to_string(entry.path()).with_context(|| {
+                format!(
+                    "Failed to parse `zine.toml` of `{}`",
+                    entry.path().display()
+                )
+            })?;
+            let mut issue = toml::from_str::<Issue>(&content)?;
+            let dir = entry
+                .path()
+                .components()
+                .fold(Vec::new(), |mut dir, component| {
+                    let name = component.as_os_str();
+                    if !dir.is_empty() && name != crate::ZINE_FILE {
+                        dir.push(name.to_string_lossy().to_string());
+                        return dir;
+                    }
+
+                    if matches!(component, Component::Normal(c) if c == crate::ZINE_CONTENT_DIR ) {
+                        // a empty indicator we should start collect the components
+                        dir.push(String::new());
+                    }
+                    dir
+                });
+            // skip the first empty indicator
+            issue.dir = dir[1..].join("/");
+            self.issues.push(issue);
+        }
+
+        Ok(())
+    }
+
     // Get the article metadata list by author id, sorted by descending order of publishing date.
     fn get_articles_by_author(&self, author_id: &str) -> Vec<ArticleRef> {
         let mut items = self
@@ -262,45 +307,7 @@ impl Entity for Zine {
                 .set_topics(self.topics.keys().cloned().collect());
         }
 
-        let content_dir = source.join(crate::ZINE_CONTENT_DIR);
-        ensure!(
-            content_dir.exists(),
-            "`{}` fold not found.",
-            crate::ZINE_CONTENT_DIR
-        );
-
-        for entry in WalkDir::new(&content_dir).contents_first(true).into_iter() {
-            let entry = entry?;
-            if entry.file_name() != crate::ZINE_FILE {
-                continue;
-            }
-            let content = fs::read_to_string(entry.path()).with_context(|| {
-                format!(
-                    "Failed to parse `zine.toml` of `{}`",
-                    entry.path().display()
-                )
-            })?;
-            let mut issue = toml::from_str::<Issue>(&content)?;
-            let dir = entry
-                .path()
-                .components()
-                .fold(Vec::new(), |mut dir, component| {
-                    let name = component.as_os_str();
-                    if !dir.is_empty() && name != crate::ZINE_FILE {
-                        dir.push(name.to_string_lossy().to_string());
-                        return dir;
-                    }
-
-                    if matches!(component, Component::Normal(c) if c == crate::ZINE_CONTENT_DIR ) {
-                        // a empty indicator we should start collect the components
-                        dir.push(String::new());
-                    }
-                    dir
-                });
-            // skip the first empty indicator
-            issue.dir = dir[1..].join("/");
-            self.issues.push(issue);
-        }
+        self.parse_issue_from_dir(source)?;
 
         self.issues.parse(source)?;
         // Sort all issues by number.

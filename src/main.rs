@@ -1,9 +1,14 @@
-use anyhow::Result;
+use std::path::{Path, PathBuf};
+
+use anyhow::{anyhow, Result};
 use build::watch_build;
 use clap::{Parser, Subcommand};
+use entity::Zine;
+use error::ZineError;
 use new::{new_zine_issue, new_zine_project};
 use parking_lot::RwLock;
 use serve::run_serve;
+use walkdir::WalkDir;
 
 mod build;
 mod code_blocks;
@@ -105,6 +110,41 @@ enum Commands {
     },
     /// Prints the app version.
     Version,
+}
+
+/// Find the root zine file in current dir and try to parse it
+fn parse_root_zine_file<P: AsRef<Path>>(path: P) -> Result<Option<Zine>> {
+    // Find the name in current dir
+    if WalkDir::new(&path).max_depth(1).into_iter().any(|entry| {
+        let entry = entry.as_ref().unwrap();
+        entry.file_name() == crate::ZINE_FILE
+    }) {
+        // Try to parse the root zine.toml as Zine instance
+        return Ok(Some(Zine::parse_from_toml(path)?));
+    }
+
+    Ok(None)
+}
+
+/// Locate folder contains the root `zine.toml`, and return path info and Zine instance.
+pub fn locate_root_zine_folder<P: AsRef<Path>>(path: P) -> Result<Option<(PathBuf, Zine)>> {
+    match parse_root_zine_file(&path) {
+        Ok(Some(zine)) => return Ok(Some((path.as_ref().to_path_buf(), zine))),
+        Err(err) => match err.downcast::<ZineError>() {
+            // Found a root zine.toml, but it has invalid format
+            Ok(inner_err @ ZineError::InvalidRootTomlFile(_)) => return Err(anyhow!(inner_err)),
+            // Found a zine.toml, but it isn't a root zine.toml
+            Ok(ZineError::NotRootTomlFile) => {}
+            // No zine.toml file found
+            _ => {}
+        },
+        _ => {}
+    }
+
+    match path.as_ref().parent() {
+        Some(parent_path) => locate_root_zine_folder(parent_path),
+        None => Ok(None),
+    }
 }
 
 #[tokio::main]
