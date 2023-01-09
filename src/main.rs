@@ -1,7 +1,7 @@
 use anyhow::Result;
 use build::watch_build;
 use clap::{Parser, Subcommand};
-use new::new_zine_project;
+use new::{new_zine_issue, new_zine_project};
 use parking_lot::RwLock;
 use serve::run_serve;
 
@@ -91,6 +91,9 @@ enum Commands {
     New {
         /// The project name.
         name: Option<String>,
+        /// New issue.
+        #[arg(short)]
+        issue: bool,
     },
     /// Lint Zine project.
     Lint {
@@ -121,7 +124,13 @@ async fn main() -> Result<()> {
             set_current_mode(Mode::Serve);
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
-        Commands::New { name } => new_zine_project(name)?,
+        Commands::New { name, issue } => {
+            if issue {
+                new_zine_issue()?;
+            } else {
+                new_zine_project(name)?
+            }
+        }
         Commands::Lint { source, ci } => {
             let success = lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?;
             if ci && !success {
