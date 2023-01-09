@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context as _, Result};
+use anyhow::{Context as _, Result};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     slice::ParallelSliceMut,
@@ -78,11 +78,13 @@ impl Zine {
     /// Parsing issue entities from dir.
     pub fn parse_issue_from_dir(&mut self, source: &Path) -> Result<()> {
         let content_dir = source.join(crate::ZINE_CONTENT_DIR);
-        ensure!(
-            content_dir.exists(),
-            "`{}` fold not found.",
-            crate::ZINE_CONTENT_DIR
-        );
+        if !content_dir.exists() {
+            println!(
+                "`{}` fold not found, creating it...",
+                crate::ZINE_CONTENT_DIR
+            );
+            fs::create_dir_all(&content_dir)?;
+        }
 
         for entry in WalkDir::new(&content_dir).contents_first(true).into_iter() {
             let entry = entry?;
