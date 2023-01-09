@@ -29,6 +29,7 @@
 {% if image -%}
 {% if site.cdn and image is starting_with("/static") -%}
 {% set image_url = site.cdn -%}
+{% set image = image | trim_start_matches(pat="/static") -%}
 {% else -%}
 {% set image_url = site.url -%}
 {% endif -%}
