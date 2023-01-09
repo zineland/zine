@@ -31,50 +31,15 @@ impl<'a> Meta<'a> {
     }
 }
 
-/// Rewrite root path URL of static files in `raw_html` with `cdn_url`.
-pub fn rewrite_html_cdn_url(raw_html: &[u8], cdn_url: &str) -> Result<Vec<u8>> {
-    let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
-        if let Some(attr) = el.get_attribute(attr_name) {
-            if attr.starts_with("/static") {
-                el.set_attribute(attr_name, &format!("{}{}", &cdn_url, attr))
-                    .expect("Set attribute failed");
-            }
-        }
-    };
-
-    let mut html = vec![];
-    let mut html_rewriter = HtmlRewriter::new(
-        Settings {
-            element_content_handlers: vec![
-                element!("link[rel=stylesheet][href]", |el| {
-                    rewrite_url_in_attr(el, "href");
-                    Ok(())
-                }),
-                element!("script[src], img[src], audio[src], video[src]", |el| {
-                    rewrite_url_in_attr(el, "src");
-                    Ok(())
-                }),
-                element!("meta[content]", |el| {
-                    rewrite_url_in_attr(el, "content");
-                    Ok(())
-                }),
-            ],
-            ..Default::default()
-        },
-        |c: &[u8]| {
-            html.extend_from_slice(c);
-        },
-    );
-    html_rewriter.write(raw_html)?;
-
-    Ok(html)
-}
-
 /// Rewrite root path URL in `raw_html` with `base_url`.
-pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>> {
+pub fn rewrite_html_base_url(
+    raw_html: &[u8],
+    base_url: &str,
+    prefix_path: &str,
+) -> Result<Vec<u8>> {
     let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
         if let Some(attr) = el.get_attribute(attr_name) {
-            if attr.starts_with('/') {
+            if attr.starts_with(prefix_path) {
                 el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
                     .expect("Set attribute failed");
             }
@@ -110,6 +75,10 @@ pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>>
                             .expect("Rewrite background-image failed.")
                         }
                     }
+                    Ok(())
+                }),
+                element!("meta[content]", |el| {
+                    rewrite_url_in_attr(el, "content");
                     Ok(())
                 }),
             ],
@@ -240,11 +209,12 @@ fn walk(handle: &Handle, meta: &mut Meta) {
 #[cfg(test)]
 mod tests {
     use super::rewrite_html_base_url;
-    use super::rewrite_html_cdn_url;
     use test_case::test_case;
 
     const BASE_URL: &str = "https://github.com";
+    const BASE_PREFIX_PATH: &str = "/";
     const CDN_URL: &str = "https://example-cdn.com";
+    const CDN_PREFIX_PATH: &str = "/static";
 
     #[test_case(
         r#"
@@ -255,7 +225,9 @@ mod tests {
     )]
     fn test_rewrite_background_image_url(html: &str) {
         assert_eq!(
-            String::from_utf8_lossy(&rewrite_html_base_url(html.as_bytes(), BASE_URL).unwrap()),
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.as_bytes(), BASE_URL, BASE_PREFIX_PATH).unwrap()
+            ),
             html.replace("/test.png", &format!("{}/test.png", BASE_URL))
         );
     }
@@ -272,7 +244,12 @@ mod tests {
     fn test_rewrite_html_base_url(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", path).as_bytes(), BASE_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    BASE_URL,
+                    BASE_PREFIX_PATH
+                )
+                .unwrap()
             ),
             html.replace("{}", &format!("{}{}", BASE_URL, path))
         );
@@ -291,8 +268,12 @@ mod tests {
         let whole_url = format!("{}{}", BASE_URL, path);
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", &whole_url).as_bytes(), BASE_URL)
-                    .unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", &whole_url).as_bytes(),
+                    BASE_URL,
+                    BASE_PREFIX_PATH
+                )
+                .unwrap()
             ),
             html.replace("{}", &whole_url)
         );
@@ -308,7 +289,12 @@ mod tests {
     fn test_not_rewrite_html_base_url_relative_path(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", path).as_bytes(), BASE_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    BASE_URL,
+                    BASE_PREFIX_PATH
+                )
+                .unwrap()
             ),
             html.replace("{}", path)
         );
@@ -323,7 +309,12 @@ mod tests {
     fn test_rewrite_html_cdn_url(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_cdn_url(html.replace("{}", path).as_bytes(), CDN_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    CDN_URL,
+                    CDN_PREFIX_PATH
+                )
+                .unwrap()
             ),
             html.replace("{}", &format!("{}{}", CDN_URL, path))
         );
@@ -339,7 +330,12 @@ mod tests {
         let whole_url = format!("{}{}", CDN_URL, path);
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_cdn_url(html.replace("{}", &whole_url).as_bytes(), BASE_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", &whole_url).as_bytes(),
+                    CDN_URL,
+                    CDN_PREFIX_PATH
+                )
+                .unwrap()
             ),
             html.replace("{}", &whole_url)
         );
@@ -354,7 +350,12 @@ mod tests {
     fn test_not_rewrite_html_cdn_url_relative_path(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_cdn_url(html.replace("{}", path).as_bytes(), CDN_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    CDN_URL,
+                    CDN_PREFIX_PATH
+                )
+                .unwrap()
             ),
             html.replace("{}", path)
         );

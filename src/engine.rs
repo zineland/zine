@@ -9,7 +9,6 @@ use crate::{
     entity::{Entity, Zine},
     helpers::copy_dir,
     html::rewrite_html_base_url,
-    html::rewrite_html_cdn_url,
     locales::FluentLoader,
     markdown::MarkdownRender,
     Mode,
@@ -124,7 +123,8 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
     if matches!(current_mode(), Mode::Build) {
         if let Some(Value::String(cdn_url)) = context.get("site").and_then(|site| site.get("cdn")) {
             let _ = cdn_url.parse::<Uri>().expect("Invalid cdn url.");
-            let html = rewrite_html_cdn_url(&buf, cdn_url)?;
+            let prefix_path = "/static";
+            let html = rewrite_html_base_url(&buf, cdn_url, prefix_path)?;
             fs::write(dest, html)?;
             return Ok(());
         }
@@ -133,7 +133,8 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
             let uri = site_url.parse::<Uri>().expect("Invalid site url.");
             // We don't need to rewrite links if the site url has a root path.
             if uri.path() != "/" {
-                let html = rewrite_html_base_url(&buf, site_url)?;
+                let prefix_path = "/";
+                let html = rewrite_html_base_url(&buf, site_url, prefix_path)?;
                 fs::write(dest, html)?;
                 return Ok(());
             }
