@@ -41,7 +41,10 @@ pub fn rewrite_html_base_url(
         if let Some(mut attr) = el.get_attribute(attr_name) {
             let mut base_url = "";
             if attr.starts_with("/static") {
-                attr = attr.replacen("/static", "", 1);
+                attr = match attr.strip_prefix("/static") {
+                    Some(new_attr) => new_attr.to_string(),
+                    _ => attr,
+                };
                 if let Some(url) = cdn_url {
                     base_url = url;
                 }
