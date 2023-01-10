@@ -38,26 +38,18 @@ pub fn rewrite_html_base_url(
     cdn_url: Option<&str>,
 ) -> Result<Vec<u8>> {
     let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
-        if let Some(mut attr) = el.get_attribute(attr_name) {
-            let mut base_url = "";
-            if attr.starts_with("/static") {
-                attr = match attr.strip_prefix("/static") {
-                    Some(new_attr) => new_attr.to_string(),
-                    _ => attr,
+        if let Some(attr) = el.get_attribute(attr_name) {
+            let dest_url =
+                if let (Some(cdn_url), Some(attr)) = (cdn_url, attr.strip_prefix("/static")) {
+                    format!("{}{}", &cdn_url, attr)
+                } else if let (true, Some(site_url)) = (attr.starts_with("/"), site_url) {
+                    format!("{}{}", &site_url, attr)
+                } else {
+                    // no need to rewrite
+                    return;
                 };
-                if let Some(url) = cdn_url {
-                    base_url = url;
-                }
-            } else if attr.starts_with("/") {
-                if let Some(url) = site_url {
-                    base_url = url;
-                }
-            }
-            if base_url == "" {
-                return;
-            }
 
-            el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
+            el.set_attribute(attr_name, &dest_url)
                 .expect("Set attribute failed");
         }
     };
