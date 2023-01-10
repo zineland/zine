@@ -117,7 +117,7 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
 
     get_tera().render_to(template, context, &mut buf)?;
 
-    // Rewrite root path links with site url if and only if:
+    // Rewrite some site url and cdn links if and only if:
     // 1. in build run mode
     // 2. site url has a path
     if matches!(current_mode(), Mode::Build) {

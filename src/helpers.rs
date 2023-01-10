@@ -7,6 +7,7 @@ use hyper::{
 use hyper_tls::HttpsConnector;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use std::{
+    collections::HashMap,
     fs,
     io::{self, ErrorKind, Read},
     path::Path,
@@ -30,6 +31,30 @@ pub fn capitalize(text: &str) -> String {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase(),
     }
+}
+
+/// Split styles into string pair.
+///
+/// ```rust
+/// use zine::helpers::split_styles;
+///
+/// let pair = split_styles("color: #abcdef; font-size: 14px; background-image: url('/test.png');");
+/// assert_eq!(pair.get("color").unwrap(), &"#abcdef");
+/// assert_eq!(pair.get("font-size").unwrap(), &"14px");
+/// assert_eq!(pair.get("background-image").unwrap(), &"url('/test.png')");
+/// assert_eq!(pair.get("width"), None);
+/// ```
+pub fn split_styles(style: &str) -> HashMap<&str, &str> {
+    style
+        .split(';')
+        .filter_map(|pair| {
+            let mut v = pair.split(':').take(2);
+            match (v.next(), v.next()) {
+                (Some(key), Some(value)) => Some((key.trim(), value.trim())),
+                _ => None,
+            }
+        })
+        .collect::<HashMap<_, _>>()
 }
 
 pub async fn fetch_url(url: &str) -> Result<impl Read> {
