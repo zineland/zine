@@ -31,14 +31,34 @@ impl<'a> Meta<'a> {
     }
 }
 
-/// Rewrite root path URL in `raw_html` with `base_url`.
-pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>> {
+/// Rewrite root path URL in `raw_html` with `site_url` and `cdn_url`.
+pub fn rewrite_html_base_url(
+    raw_html: &[u8],
+    site_url: Option<&str>,
+    cdn_url: Option<&str>,
+) -> Result<Vec<u8>> {
     let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
-        if let Some(attr) = el.get_attribute(attr_name) {
-            if attr.starts_with('/') {
-                el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
-                    .expect("Set attribute failed");
+        if let Some(mut attr) = el.get_attribute(attr_name) {
+            let mut base_url = "";
+            if attr.starts_with("/static") {
+                attr = match attr.strip_prefix("/static") {
+                    Some(new_attr) => new_attr.to_string(),
+                    _ => attr,
+                };
+                if let Some(url) = cdn_url {
+                    base_url = url;
+                }
+            } else if attr.starts_with("/") {
+                if let Some(url) = site_url {
+                    base_url = url;
+                }
             }
+            if base_url == "" {
+                return;
+            }
+
+            el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
+                .expect("Set attribute failed");
         }
     };
 
@@ -59,8 +79,18 @@ pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>>
                 ),
                 // Rewrite background image url.
                 element!("body>div.bg-primary.text-main", |el| {
-                    if let Some(attr) = el.get_attribute("style") {
+                    if let Some(mut attr) = el.get_attribute("style") {
                         if attr.starts_with("background-image: url('/") {
+                            let mut base_url = "";
+                            if let Some(url) = site_url {
+                                base_url = url;
+                            }
+                            if attr.starts_with("background-image: url('/static") {
+                                attr = attr.replacen("/static", "", 1);
+                                if let Some(url) = cdn_url {
+                                    base_url = url;
+                                }
+                            }
                             el.set_attribute(
                                 "style",
                                 &attr.replace(
@@ -71,6 +101,10 @@ pub fn rewrite_html_base_url(raw_html: &[u8], base_url: &str) -> Result<Vec<u8>>
                             .expect("Rewrite background-image failed.")
                         }
                     }
+                    Ok(())
+                }),
+                element!("meta[content]", |el| {
+                    rewrite_url_in_attr(el, "content");
                     Ok(())
                 }),
             ],
@@ -203,7 +237,8 @@ mod tests {
     use super::rewrite_html_base_url;
     use test_case::test_case;
 
-    const BASE_URL: &str = "https://github.com";
+    const SITE_URL: &str = "https://github.com";
+    const CDN_URL: &str = "https://cdn-example.net";
 
     #[test_case(
         r#"
@@ -214,8 +249,26 @@ mod tests {
     )]
     fn test_rewrite_background_image_url(html: &str) {
         assert_eq!(
-            String::from_utf8_lossy(&rewrite_html_base_url(html.as_bytes(), BASE_URL).unwrap()),
-            html.replace("/test.png", &format!("{}/test.png", BASE_URL))
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.as_bytes(), Some(SITE_URL), Some(CDN_URL)).unwrap()
+            ),
+            html.replace("/test.png", &format!("{}/test.png", SITE_URL))
+        );
+    }
+
+    #[test_case(
+        r#"
+        <body class="h-full bg-secondary">
+            <div class="bg-primary text-main" style="background-image: url('/static/test.png')"></div>
+        </body>
+        "#
+    )]
+    fn test_rewrite_cdn_background_image_url(html: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(html.as_bytes(), Some(SITE_URL), Some(CDN_URL)).unwrap()
+            ),
+            html.replace("/static/test.png", &format!("{}/test.png", CDN_URL))
         );
     }
 
@@ -231,9 +284,14 @@ mod tests {
     fn test_rewrite_html_base_url(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", path).as_bytes(), BASE_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    Some(SITE_URL),
+                    Some(CDN_URL)
+                )
+                .unwrap()
             ),
-            html.replace("{}", &format!("{}{}", BASE_URL, path))
+            html.replace("{}", &format!("{}{}", SITE_URL, path))
         );
     }
 
@@ -247,11 +305,15 @@ mod tests {
     #[test_case("<video src=\"{}\"/>", "/hello.mp4"; "video")]
     #[test_case("<iframe src=\"{}\"></iframe>", "/hello.html"; "iframe")]
     fn test_not_rewrite_html_base_url(html: &str, path: &str) {
-        let whole_url = format!("{}{}", BASE_URL, path);
+        let whole_url = format!("{}{}", SITE_URL, path);
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", &whole_url).as_bytes(), BASE_URL)
-                    .unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", &whole_url).as_bytes(),
+                    Some(SITE_URL),
+                    Some(CDN_URL)
+                )
+                .unwrap()
             ),
             html.replace("{}", &whole_url)
         );
@@ -267,7 +329,73 @@ mod tests {
     fn test_not_rewrite_html_base_url_relative_path(html: &str, path: &str) {
         assert_eq!(
             String::from_utf8_lossy(
-                &rewrite_html_base_url(html.replace("{}", path).as_bytes(), BASE_URL).unwrap()
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    Some(SITE_URL),
+                    Some(CDN_URL)
+                )
+                .unwrap()
+            ),
+            html.replace("{}", path)
+        );
+    }
+
+    #[test_case("<link rel=\"stylesheet\" href=\"{}\" />", "/static/hello.css"; "link")]
+    #[test_case("<img src=\"{}\" />", "/static/hello.png"; "img")]
+    #[test_case("<script src=\"{}\" />", "/static/hello.js"; "script")]
+    #[test_case("<audio src=\"{}\" />", "/static/hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\" />", "/static/hello.mp4"; "video")]
+    #[test_case("<meta content=\"{}\" />", "/static/zine-placeholder.svg"; "meta")]
+    fn test_rewrite_html_cdn_url(html: &str, path: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    Some(SITE_URL),
+                    Some(CDN_URL)
+                )
+                .unwrap()
+            ),
+            html.replace("{}", &format!("{}{}", CDN_URL, &path[7..]))
+        );
+    }
+
+    #[test_case("<link rel=\"stylesheet\" src=\"{}\"/>", "/static/hello.css"; "link")]
+    #[test_case("<img src=\"{}\"/>", "/static/hello.png"; "img")]
+    #[test_case("<script src=\"{}\"/>", "/static/hello.js"; "script")]
+    #[test_case("<audio src=\"{}\"/>", "/static/hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\"/>", "/static/hello.mp4"; "video")]
+    #[test_case("<meta content=\"{}\" />", "/static/zine-placeholder.svg"; "meta")]
+    fn test_not_rewrite_html_cdn_url(html: &str, path: &str) {
+        let whole_url = format!("{}{}", CDN_URL, path);
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(
+                    html.replace("{}", &whole_url).as_bytes(),
+                    Some(SITE_URL),
+                    Some(CDN_URL)
+                )
+                .unwrap()
+            ),
+            html.replace("{}", &whole_url)
+        );
+    }
+
+    #[test_case("<link rel=\"stylesheet\" src=\"{}\"/>", "static/hello.css"; "link")]
+    #[test_case("<img src=\"{}\"/>", "static/hello.png"; "img")]
+    #[test_case("<script src=\"{}\"/>", "static/hello.js"; "script")]
+    #[test_case("<audio src=\"{}\"/>", "static/hello.mp3"; "audio")]
+    #[test_case("<video src=\"{}\"/>", "static/hello.mp4"; "video")]
+    #[test_case("<meta content=\"{}\" />", "static/zine-placeholder.svg"; "meta")]
+    fn test_not_rewrite_html_cdn_url_relative_path(html: &str, path: &str) {
+        assert_eq!(
+            String::from_utf8_lossy(
+                &rewrite_html_base_url(
+                    html.replace("{}", path).as_bytes(),
+                    Some(SITE_URL),
+                    Some(CDN_URL)
+                )
+                .unwrap()
             ),
             html.replace("{}", path)
         );
