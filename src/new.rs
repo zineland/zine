@@ -5,7 +5,7 @@ use promptly::prompt_default;
 use tera::{Context, Tera};
 use time::{format_description, OffsetDateTime};
 
-use crate::ZINE_FILE;
+use crate::{helpers::run_command, ZINE_FILE};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -14,7 +14,7 @@ name = "{{ name }}"
 description = ""
 
 [authors]
-zine-team = { name = "Zine Team" }
+{{ author | lower }} = { name = "{{ author }}" }
 "#;
 
 static TEMPLATE_ISSUE_FILE: &str = r#"
@@ -25,7 +25,7 @@ title = "{{ title }}"
 [[article]]
 file = "1-first.md"
 title = "First article"
-author = "zine-team"
+author = "{{ author | lower }}"
 cover = ""
 pub_date = "{{ pub_date }}"
 publish = true
@@ -34,15 +34,17 @@ featured = true
 
 struct ZineScaffold {
     source: PathBuf,
+    author: String,
     issue_dir: Cow<'static, str>,
-    number: usize,
-    title: Cow<'static, str>,
+    issue_number: usize,
+    issue_title: Cow<'static, str>,
 }
 
 impl ZineScaffold {
     fn create_project(&self, name: &str) -> Result<()> {
         let mut context = Context::new();
         context.insert("name", name);
+        context.insert("author", &self.author);
 
         // Generate project zine.toml
         fs::write(
@@ -67,9 +69,10 @@ impl ZineScaffold {
 
         let mut context = Context::new();
         context.insert("slug", &self.issue_dir);
-        context.insert("number", &self.number);
-        context.insert("title", &self.title);
+        context.insert("number", &self.issue_number);
+        context.insert("title", &self.issue_title);
         context.insert("pub_date", &today);
+        context.insert("author", &self.author);
 
         fs::write(
             issue_dir.join(ZINE_FILE),
@@ -92,11 +95,13 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
         fs::create_dir_all(&source)?;
     }
 
+    let author = run_command("git", &["config", "user.name"])?;
     let scaffold = ZineScaffold {
         source,
+        author,
         issue_dir: "issue-1".into(),
-        number: 1,
-        title: "Issue 1".into(),
+        issue_number: 1,
+        issue_title: "Issue 1".into(),
     };
 
     scaffold.create_project(&name.unwrap_or_default())?;
@@ -109,22 +114,24 @@ pub fn new_zine_issue() -> Result<()> {
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
     zine.parse_issue_from_dir(&source)?;
 
+    let author = run_command("git", &["config", "user.name"])?;
     let next_issue_number = zine.issues.len() + 1;
     let issue_dir = prompt_default(
         "What is your issue directory name?",
         format!("issue{next_issue_number}"),
     )?;
-    let number = prompt_default("What is your issue number?", next_issue_number)?;
-    let title = prompt_default(
+    let issue_number = prompt_default("What is your issue number?", next_issue_number)?;
+    let issue_title = prompt_default(
         "What is your issue title?",
         format!("Issue-{next_issue_number}"),
     )?;
 
     let scaffold = ZineScaffold {
         source,
+        author,
         issue_dir: issue_dir.into(),
-        number,
-        title: title.into(),
+        issue_number,
+        issue_title: issue_title.into(),
     };
     scaffold.create_issue()?;
     Ok(())

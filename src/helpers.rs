@@ -6,7 +6,23 @@ use hyper::{
 };
 use hyper_tls::HttpsConnector;
 use rayon::iter::{ParallelBridge, ParallelIterator};
-use std::{fs, io::Read, path::Path};
+use std::{
+    fs,
+    io::{self, ErrorKind, Read},
+    path::Path,
+    process::Command,
+};
+
+pub fn run_command(program: &str, args: &[&str]) -> Result<String, io::Error> {
+    let out = Command::new(program).args(args).output()?;
+    match out.status.success() {
+        true => Ok(String::from_utf8(out.stdout).unwrap().trim().to_string()),
+        false => Err(io::Error::new(
+            ErrorKind::Other,
+            format!("run command `{program} {}` failed.", args.join(" ")),
+        )),
+    }
+}
 
 pub fn capitalize(text: &str) -> String {
     let mut chars = text.chars();
