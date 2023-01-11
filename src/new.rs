@@ -118,12 +118,12 @@ pub fn new_zine_issue() -> Result<()> {
     let next_issue_number = zine.issues.len() + 1;
     let issue_dir = prompt_default(
         "What is your issue directory name?",
-        format!("issue{next_issue_number}"),
+        format!("issue-{next_issue_number}"),
     )?;
     let issue_number = prompt_default("What is your issue number?", next_issue_number)?;
     let issue_title = prompt_default(
         "What is your issue title?",
-        format!("Issue-{next_issue_number}"),
+        format!("Issue {next_issue_number}"),
     )?;
 
     let scaffold = ZineScaffold {
