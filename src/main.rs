@@ -97,7 +97,7 @@ enum Commands {
         /// The project name.
         name: Option<String>,
         /// New issue.
-        #[arg(short)]
+        #[arg(short, long)]
         issue: bool,
     },
     /// Lint Zine project.
