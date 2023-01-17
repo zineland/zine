@@ -31,7 +31,7 @@ pub struct MetaArticle {
     /// An article can has zero, one or multiple authors.
     pub author: Option<AuthorId>,
     pub cover: Option<String>,
-    /// The publish date. Format like YYYY-MM-dd.
+    /// The publish date. Format like YYYY-MM-DD.
     #[serde(with = "crate::helpers::serde_date")]
     #[serde(default = "MetaArticle::default_pub_date")]
     pub pub_date: Date,
@@ -121,7 +121,7 @@ impl Article {
             .iter()
             .map(|(locale, article)| Translations {
                 name: i18n::get_locale_name(locale)
-                    .unwrap_or_else(|| panic!("Currently, we dosen't support locale: `{locale}`")),
+                    .unwrap_or_else(|| panic!("Currently, we don't support locale: `{locale}`")),
                 slug: article.slug(),
                 path: &article.meta.path,
             })
@@ -133,7 +133,7 @@ impl Article {
             // Add default locale.
             translations.push(Translations {
                 name: i18n::get_locale_name(&site.locale).unwrap_or_else(|| {
-                    panic!("Currently, we dosen't support locale: `{}`", site.locale)
+                    panic!("Currently, we don't support locale: `{}`", site.locale)
                 }),
                 slug: self.slug(),
                 path: &self.meta.path,
