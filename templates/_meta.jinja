@@ -18,13 +18,8 @@
 <meta name="twitter:title" content="{{ title }}">
 <meta name="twitter:description" content="{{ description }}">
 {% if meta and meta.url -%}
-{% if page_type and page_type == "article" -%}
-{% set path = issue.slug ~ "/" ~ meta.url -%}
-{% else -%}
-{% set path = meta.url -%}
-{% endif -%}
-<meta property="og:url" content="{{ site.url ~ "/" ~ path }}">
-<meta property="twitter:url" content="{{ site.url ~ "/" ~ path }}">
+<meta property="og:url" content="{{ site.url ~ '/' ~ meta.url }}">
+<meta property="twitter:url" content="{{ site.url ~ '/' ~ meta.url }}">
 {% endif -%}
 {% if image -%}
 {% if site.cdn and image is starting_with("/static") -%}

@@ -48,12 +48,12 @@ pub fn rewrite_html_base_url(
                 if let Some(url) = cdn_url {
                     base_url = url;
                 }
-            } else if attr.starts_with("/") {
+            } else if attr.starts_with('/') {
                 if let Some(url) = site_url {
                     base_url = url;
                 }
             }
-            if base_url == "" {
+            if base_url.is_empty() {
                 return;
             }
 

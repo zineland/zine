@@ -215,7 +215,7 @@ impl Zine {
                         url: if let Some(path) = article.meta.path.as_ref() {
                             format!("{}{}", self.site.url, path)
                         } else {
-                            format!("{}/{}/{}", self.site.url, issue.slug, article.slug())
+                            format!("{}/{}/{}", self.site.url, issue.slug, article.meta.slug)
                         },
                         content: &article.markdown,
                         author: &article.meta.author,
@@ -245,7 +245,7 @@ impl Zine {
                 if let Some(path) = article.meta.path.as_ref() {
                     format!("{}{}", base_url, path)
                 } else {
-                    format!("{}/{}/{}", base_url, issue.slug, article.slug())
+                    format!("{}/{}/{}", base_url, issue.slug, article.meta.slug)
                 }
             }));
         }
