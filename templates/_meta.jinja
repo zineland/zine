@@ -32,3 +32,10 @@
 <meta property="og:image" content="{{ image_url ~ image }}">
 <meta name="twitter:image" content="{{ image_url ~ image }}">
 {% endif -%}
+{% if page_type and page_type == "article" -%}
+{% if canonical_url -%}
+<link rel="canonical" href="{{ canonical_url }}">
+{% else -%}
+<link rel="canonical" href="{{ site.url ~ '/' ~ meta.url }}">
+{% endif -%}
+{% endif -%}
