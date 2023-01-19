@@ -14,7 +14,9 @@ name = "{{ name }}"
 description = ""
 
 [authors]
+{% if author -%}
 {{ author | lower }} = { name = "{{ author }}" }
+{% endif -%}
 "#;
 
 static TEMPLATE_ISSUE_FILE: &str = r#"

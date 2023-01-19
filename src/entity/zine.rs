@@ -58,15 +58,15 @@ struct ArticleRef<'a> {
 }
 
 impl Zine {
-    /// Parse Zine instance from the root zine.toml file.
+    /// Parse Zine instance from the root zine.toml file.li
     pub fn parse_from_toml<P: AsRef<Path>>(source: P) -> Result<Zine> {
-        let source = source.as_ref();
-        let content = fs::read_to_string(source.join(crate::ZINE_FILE)).with_context(|| {
-            format!("Failed to parse root `zine.toml` of `{}`", source.display())
-        })?;
+        let source = source.as_ref().join(crate::ZINE_FILE);
+        let content = fs::read_to_string(&source)
+            .with_context(|| format!("Failed to read `{}`", source.display()))?;
 
         Ok(toml::from_str::<Zine>(&content).map_err(|err| {
-            let value = toml::from_str::<toml::Value>(&content).expect("This shouldn't happen.");
+            let value = toml::from_str::<toml::Value>(&content)
+                .unwrap_or_else(|_| panic!("Parse `{}` failed", source.display()));
             if value.get("site").is_some() {
                 ZineError::InvalidRootTomlFile(err)
             } else {
