@@ -43,7 +43,7 @@ pub fn capitalize(text: &str) -> String {
 /// assert_eq!(pair.get("font-size").unwrap(), &"14px");
 /// assert_eq!(pair.get("background-image").unwrap(), &"url('/test.png')");
 /// assert_eq!(pair.get("width"), None);
-/// 
+///
 /// let pair = split_styles("invalid");
 /// assert!(pair.is_empty());
 /// ```
