@@ -95,7 +95,9 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
         fs::create_dir_all(&source)?;
     }
 
-    let author = run_command("git", &["config", "user.name"])?;
+    let author = run_command("git", &["config", "user.name"])
+        .ok()
+        .unwrap_or_default();
     let scaffold = ZineScaffold {
         source,
         author,
@@ -114,7 +116,9 @@ pub fn new_zine_issue() -> Result<()> {
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
     zine.parse_issue_from_dir(&source)?;
 
-    let author = run_command("git", &["config", "user.name"])?;
+    let author = run_command("git", &["config", "user.name"])
+        .ok()
+        .unwrap_or_default();
     let next_issue_number = zine.issues.len() + 1;
     let issue_dir = prompt_default(
         "What is your issue directory name?",
