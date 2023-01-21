@@ -111,10 +111,6 @@ impl Article {
         self.publish || matches!(current_mode(), Mode::Serve)
     }
 
-    pub fn slug(&self) -> &String {
-        &self.meta.slug
-    }
-
     fn get_translations(&self) -> Vec<Translations<'_>> {
         let mut translations = self
             .i18n
@@ -122,7 +118,7 @@ impl Article {
             .map(|(locale, article)| Translations {
                 name: i18n::get_locale_name(locale)
                     .unwrap_or_else(|| panic!("Currently, we don't support locale: `{locale}`")),
-                slug: article.slug(),
+                slug: &article.meta.slug,
                 path: &article.meta.path,
             })
             .collect::<Vec<_>>();
@@ -135,7 +131,7 @@ impl Article {
                 name: i18n::get_locale_name(&site.locale).unwrap_or_else(|| {
                     panic!("Currently, we don't support locale: `{}`", site.locale)
                 }),
-                slug: self.slug(),
+                slug: &self.meta.slug,
                 path: &self.meta.path,
             });
             translations.sort_by_key(|t| t.name);
@@ -172,7 +168,24 @@ impl Article {
             &Meta {
                 title: Cow::Borrowed(&self.meta.title),
                 description: Cow::Owned(markdown::extract_description(&self.markdown)),
-                url: Some(Cow::Borrowed(self.slug())),
+                url: Some(
+                    if let Some(path) = self
+                        .meta
+                        .path
+                        .as_ref()
+                        // Remove the prefix slash
+                        .and_then(|path| path.strip_prefix('/'))
+                    {
+                        Cow::Borrowed(path)
+                    } else {
+                        let issue_slug = context
+                            .get("issue")
+                            .and_then(|issue| issue.get("slug"))
+                            .and_then(|v| v.as_str())
+                            .unwrap_or_default();
+                        Cow::Owned(format!("{}/{}", issue_slug, self.meta.slug))
+                    },
+                ),
                 image: self.meta.cover.as_deref().map(Cow::Borrowed),
             },
         );
@@ -197,7 +210,7 @@ impl Article {
                 dest.join(path.trim_start_matches('/')),
             )
         } else {
-            engine::render("article.jinja", &context, dest.join(self.slug()))
+            engine::render("article.jinja", &context, dest.join(&self.meta.slug))
         }
     }
 }
