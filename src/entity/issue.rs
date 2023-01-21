@@ -11,7 +11,7 @@ use super::{article::Article, Entity};
 
 /// The issue entity config.
 /// It parsed from issue directory's `zine.toml`.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Issue {
     /// The slug after this issue rendered.
     /// Fallback to issue path name if no slug specified.
@@ -49,6 +49,26 @@ impl std::fmt::Debug for Issue {
 }
 
 impl Issue {
+    fn new() -> Self {
+        Self {
+            ..Default::default()
+
+
+        }
+    }
+    fn set_issue_number(&mut self, number: u32) -> &mut Self {
+        self.number = number;
+        self
+    }
+    fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
+        self.title = title.into();
+        self.dir = self.title.clone().to_lowercase().replace(" ", "-");
+        self
+    }
+    fn set_intro(&mut self, intro: impl Into<String>) -> &mut Self {
+        self.intro = Some(intro.into());
+        self
+    }
     // Get the description of this issue.
     // Mainly for html meta description tag.
     fn description(&self) -> String {
@@ -141,5 +161,21 @@ impl Entity for Issue {
         context.insert("intro", &self.intro);
         engine::render("issue.jinja", &context, issue_dir)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::entity::issue::Issue;
+
+    #[test]
+    fn defaults() {
+
+        let mut issue = Issue::new();
+        issue.set_issue_number(1)
+              .set_title("Some Magical Title")
+              .set_intro("Some magical introduction to some amazing Issue");
+        println!("{:?}", issue);
     }
 }
