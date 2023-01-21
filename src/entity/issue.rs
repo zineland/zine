@@ -174,8 +174,8 @@ mod tests {
 
         let mut issue = Issue::new();
         issue.set_issue_number(1)
-              .set_title("Some Magical Title")
-              .set_intro("Some magical introduction to some amazing Issue");
+             .set_title("Some Magical Title")
+             .set_intro("Some magical introduction to some amazing Issue");
         println!("{:?}", issue);
     }
 }
