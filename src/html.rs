@@ -9,6 +9,8 @@ use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 use serde::Serialize;
 
+use crate::helpers;
+
 /// The meta info of the HTML page.
 #[derive(Debug, Default, Serialize)]
 pub struct Meta<'a> {
@@ -38,26 +40,18 @@ pub fn rewrite_html_base_url(
     cdn_url: Option<&str>,
 ) -> Result<Vec<u8>> {
     let rewrite_url_in_attr = |el: &mut Element, attr_name: &str| {
-        if let Some(mut attr) = el.get_attribute(attr_name) {
-            let mut base_url = "";
-            if attr.starts_with("/static") {
-                attr = match attr.strip_prefix("/static") {
-                    Some(new_attr) => new_attr.to_string(),
-                    _ => attr,
+        if let Some(attr) = el.get_attribute(attr_name) {
+            let dest_url =
+                if let (Some(attr), Some(cdn_url)) = (attr.strip_prefix("/static"), cdn_url) {
+                    format!("{}{}", &cdn_url, attr)
+                } else if let (true, Some(site_url)) = (attr.starts_with('/'), site_url) {
+                    format!("{}{}", &site_url, attr)
+                } else {
+                    // no need to rewrite
+                    return;
                 };
-                if let Some(url) = cdn_url {
-                    base_url = url;
-                }
-            } else if attr.starts_with("/") {
-                if let Some(url) = site_url {
-                    base_url = url;
-                }
-            }
-            if base_url == "" {
-                return;
-            }
 
-            el.set_attribute(attr_name, &format!("{}{}", &base_url, attr))
+            el.set_attribute(attr_name, &dest_url)
                 .expect("Set attribute failed");
         }
     };
@@ -79,27 +73,40 @@ pub fn rewrite_html_base_url(
                 ),
                 // Rewrite background image url.
                 element!("body>div.bg-primary.text-main", |el| {
-                    if let Some(mut attr) = el.get_attribute("style") {
-                        if attr.starts_with("background-image: url('/") {
-                            let mut base_url = "";
-                            if let Some(url) = site_url {
-                                base_url = url;
-                            }
-                            if attr.starts_with("background-image: url('/static") {
-                                attr = attr.replacen("/static", "", 1);
-                                if let Some(url) = cdn_url {
-                                    base_url = url;
+                    if let Some(style) = el.get_attribute("style") {
+                        let mut pairs = helpers::split_styles(&style);
+                        let backgrond_image_url = match pairs.get("background-image") {
+                            Some(value) if value.starts_with("url('/static") => {
+                                if let Some(cdn_url) = cdn_url {
+                                    value.replacen("/static", cdn_url, 1)
+                                } else {
+                                    return Ok(());
                                 }
                             }
-                            el.set_attribute(
-                                "style",
-                                &attr.replace(
-                                    "background-image: url('",
-                                    &format!("background-image: url('{}", base_url),
-                                ),
-                            )
+                            Some(value) if value.starts_with("url('/") => {
+                                if let Some(site_url) = site_url {
+                                    value.replacen('/', &format!("{site_url}/"), 1)
+                                } else {
+                                    return Ok(());
+                                }
+                            }
+                            _ => {
+                                // no need to rewrite
+                                return Ok(());
+                            }
+                        };
+
+                        pairs.insert("background-image", &backgrond_image_url);
+                        let new_style = pairs.into_iter().map(|(k, v)| format!("{k}: {v}")).fold(
+                            String::new(),
+                            |mut acc, pair| {
+                                acc.push_str(&pair);
+                                acc.push(';');
+                                acc
+                            },
+                        );
+                        el.set_attribute("style", &new_style)
                             .expect("Rewrite background-image failed.")
-                        }
                     }
                     Ok(())
                 }),
@@ -240,13 +247,7 @@ mod tests {
     const SITE_URL: &str = "https://github.com";
     const CDN_URL: &str = "https://cdn-example.net";
 
-    #[test_case(
-        r#"
-        <body class="h-full bg-secondary">
-            <div class="bg-primary text-main" style="background-image: url('/test.png')"></div>
-        </body>
-        "#
-    )]
+    #[test_case(r#"<body><div class="bg-primary text-main" style="background-image: url('/test.png');"></div></body>"#)]
     fn test_rewrite_background_image_url(html: &str) {
         assert_eq!(
             String::from_utf8_lossy(
@@ -256,13 +257,8 @@ mod tests {
         );
     }
 
-    #[test_case(
-        r#"
-        <body class="h-full bg-secondary">
-            <div class="bg-primary text-main" style="background-image: url('/static/test.png')"></div>
-        </body>
-        "#
-    )]
+    #[test_case(r#"<body><div class="bg-primary text-main" style="background-image: url('/static/test.png');"></div></body>"#)]
+    // #[test_case(r#"<body><div class="bg-primary text-main" style="background-image: URL('/static/test.png');"></div></body>"#; "uppercase")]
     fn test_rewrite_cdn_background_image_url(html: &str) {
         assert_eq!(
             String::from_utf8_lossy(
