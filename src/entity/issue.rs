@@ -1,4 +1,11 @@
-use std::{borrow::Cow, fs, path::Path};
+use std::io::prelude::*;
+use std::{
+    borrow::Cow,
+    fs,
+    path::{Path, PathBuf},
+};
+
+use crate::ZINE_FILE;
 
 use anyhow::{Context as _, Result};
 use rayon::slice::ParallelSliceMut;
@@ -52,8 +59,6 @@ impl Issue {
     fn new() -> Self {
         Self {
             ..Default::default()
-
-
         }
     }
     fn set_issue_number(&mut self, number: u32) -> &mut Self {
@@ -63,11 +68,28 @@ impl Issue {
     fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = title.into();
         self.dir = self.title.clone().to_lowercase().replace(" ", "-");
+        self.slug = self.dir.clone();
         self
     }
     fn set_intro(&mut self, intro: impl Into<String>) -> &mut Self {
         self.intro = Some(intro.into());
         self
+    }
+    // Appends the issue to the top level zine.toml file
+    fn write_new_issue(&self, path: &PathBuf) -> Result<()> {
+        if path.join(ZINE_FILE).exists() {
+            Err(anyhow::anyhow!("Issue already Exists"))?
+        }
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&path.join(ZINE_FILE))?;
+
+        let toml_str = toml::to_string(&self)?;
+
+        file.write_all(&toml_str.as_bytes())?;
+
+        Ok(())
     }
     // Get the description of this issue.
     // Mainly for html meta description tag.
@@ -169,13 +191,20 @@ mod tests {
 
     use crate::entity::issue::Issue;
 
+    use std::env;
+
     #[test]
     fn defaults() {
-
         let mut issue = Issue::new();
-        issue.set_issue_number(1)
-             .set_title("Some Magical Title")
-             .set_intro("Some magical introduction to some amazing Issue");
-        println!("{:?}", issue);
+        issue
+            .set_issue_number(1)
+            .set_title("Some Magical Title")
+            .set_intro("Some magical introduction to some amazing Issue");
+
+        let work_space = std::path::Path::new("/tmp");
+        let path = work_space.to_path_buf();
+        assert!(env::set_current_dir(&work_space).is_ok());
+        assert!(issue.write_new_issue(&path).is_ok());
+        assert!(issue.write_new_issue(&path).is_err());
     }
 }
