@@ -1,9 +1,9 @@
-use std::{env, path::PathBuf};
-use std::io::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::io::prelude::*;
+use std::{env, path::PathBuf};
 use toml;
 
-use anyhow::{Result};
+use anyhow::Result;
 
 use crate::ZINE_FILE;
 
@@ -18,7 +18,6 @@ struct SiteBuilder {
 impl SiteBuilder {
     // Defines a new site with default settings while providing a new an optional site `name`
     fn new(name: Option<String>) -> std::result::Result<Self, anyhow::Error> {
-
         let source = if let Some(name) = name.as_ref() {
             env::current_dir()?.join(name)
         } else {
@@ -36,7 +35,6 @@ impl SiteBuilder {
         })
     }
     fn create_new_zine_dir(&self) -> std::result::Result<PathBuf, anyhow::Error> {
-
         if !self.source.exists() {
             std::fs::create_dir_all(&self.source)?
         }
@@ -52,7 +50,6 @@ mod site_builder {
 
     #[test]
     fn site_to_build() {
-
         let work_space = std::path::Path::new("/tmp");
         assert!(env::set_current_dir(&work_space).is_ok());
 
@@ -62,21 +59,18 @@ mod site_builder {
         assert_eq!(site.author, "");
         assert_eq!(site.site.url, "http://localhost");
         assert!(site.create_new_zine_dir().is_ok());
-        assert!(site.site.write_toml(site.source).is_ok());
-
+        assert!(site.site.write_toml(&site.source).is_ok());
     }
 
     #[test]
     fn test_site_builder_new() {
-
         let new_site = SiteBuilder::new(Some("test".to_string()));
 
         if let Ok(new_site) = new_site {
             assert_eq!(new_site.name, Some("test".to_string()));
             assert_eq!(new_site.site.name, "test".to_string());
             assert!(new_site.create_new_zine_dir().is_ok());
-            assert!(new_site.site.write_toml(new_site.source).is_ok());
-
+            assert!(new_site.site.write_toml(&new_site.source).is_ok());
         }
     }
 }
@@ -117,12 +111,10 @@ impl Default for Site {
 }
 
 impl Site {
-
-    fn write_toml(&self, path: PathBuf) -> Result<()>{
-
+    fn write_toml(&self, path: &PathBuf) -> Result<()> {
         let mut file = std::fs::OpenOptions::new()
-            .append(true)
-            .create(true)
+            .write(true)
+            .create_new(true)
             .open(&path.join(ZINE_FILE))?;
 
         let toml_str = toml::to_string(&self)?;
@@ -131,7 +123,6 @@ impl Site {
 
         Ok(())
     }
-    
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
