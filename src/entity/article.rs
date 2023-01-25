@@ -1,9 +1,18 @@
-use std::{borrow::Cow, collections::HashMap, fs, path::Path};
+use std::io::prelude::*;
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
+use toml;
+
+use crate::error::ZineError;
 
 use crate::{
     current_mode, data, engine,
@@ -37,7 +46,96 @@ pub struct MetaArticle {
     pub pub_date: Date,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+impl MetaArticle {
+    /// Create a new MetaAtricle using Defaults::defaults()
+    fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    /// Set the Title for the article and also set the file based on the Title.
+    fn set_title(&mut self, title: &str) -> &mut Self {
+        self.title = title.into();
+        self.file = self.title.clone().to_lowercase().replace(" ", "-");
+        self
+    }
+    /// Set the Author Ids by parsing a provided string. Names should be simply listed with spaces
+    fn set_authors(&mut self, authors: &str) -> std::result::Result<&mut Self, ZineError> {
+        if let Ok(authors) = authors.to_string().parse::<AuthorId>() {
+            self.author = Some(authors);
+            return Ok(self);
+        };
+        Err(ZineError::ParseAuthorIdError(authors.into()))
+    }
+    fn finalize(&self) -> Self {
+        self.to_owned()
+    }
+    fn default_pub_date() -> Date {
+        Date::MIN
+    }
+
+    fn is_default_pub_date(&self) -> bool {
+        self.pub_date == Date::MIN
+    }
+}
+
+impl std::fmt::Debug for Article {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Article")
+            .field("meta", &self.meta)
+            .field("i18n", &self.i18n)
+            .field("publish", &self.publish)
+            .finish()
+    }
+}
+
+impl Default for MetaArticle {
+    fn default() -> Self {
+        Self {
+            file: "Give-this-file-a-name".into(),
+            // Need more information on what this should be
+            slug: "1".into(),
+            title: "Give me a Title.".into(),
+            path: None,
+            author: None,
+            cover: None,
+            pub_date: Date::MIN,
+        }
+    }
+}
+
+#[cfg(test)]
+mod meta_article_tests {
+
+    use crate::entity::{article::MetaArticle, author::AuthorId};
+    use time::Date;
+
+    #[test]
+    fn test_meta_article_default() {
+        let meta_defaults = MetaArticle::default();
+
+        assert_eq!(meta_defaults.file, "Give-this-file-a-name");
+        assert_eq!(meta_defaults.slug, "1");
+        assert_eq!(meta_defaults.path, None);
+        assert_eq!(meta_defaults.title, "Give me a Title.");
+        assert_eq!(meta_defaults.cover, None);
+        assert_eq!(meta_defaults.pub_date, Date::MIN);
+    }
+    #[test]
+    fn test_meta_article_new() {
+        let mut m_a = MetaArticle::new();
+        assert_eq!(m_a.file, "Give-this-file-a-name");
+        m_a.set_title("This is a test");
+        assert_eq!(m_a.title, "This is a test");
+        assert_eq!(m_a.file, "this-is-a-test");
+        m_a.set_authors("Bob Bas-Man").unwrap();
+        //let a = AuthorId::List(vec![String::from("Alice"), String::from("Bob")]);
+        assert!(matches!(m_a.author.unwrap(),
+                AuthorId::List(names) if names == vec![String::from("Bob"), String::from("Bas-Man")],));
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Article {
     #[serde(flatten)]
     pub meta: MetaArticle,
@@ -64,38 +162,46 @@ pub struct Article {
     pub i18n: HashMap<String, Article>,
 }
 
-/// The translation info of an article.
-#[derive(Serialize)]
-struct Translations<'a> {
-    // The locale name.
-    name: &'static str,
-    // Article slug.
-    slug: &'a String,
-    // Article path.
-    path: &'a Option<String>,
-}
-
-impl MetaArticle {
-    fn default_pub_date() -> Date {
-        Date::MIN
-    }
-
-    fn is_default_pub_date(&self) -> bool {
-        self.pub_date == Date::MIN
-    }
-}
-
-impl std::fmt::Debug for Article {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Article")
-            .field("meta", &self.meta)
-            .field("i18n", &self.i18n)
-            .field("publish", &self.publish)
-            .finish()
-    }
-}
-
 impl Article {
+    fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    /// If you call set_meta. You do not need to call set_title as MetaArticle
+    /// contains all the related details.
+    fn set_meta(&mut self, article_meta: MetaArticle) -> &mut Self {
+        self.meta = article_meta;
+        self
+    }
+    fn set_title(&mut self, title: &str) -> &mut Self {
+        self.meta.set_title(title);
+        self
+    }
+    fn set_featured_to_true(&mut self) -> &mut Self {
+        self.featured = true;
+        self
+    }
+    fn set_published_to_true(&mut self) -> &mut Self {
+        self.publish = true;
+        self
+    }
+    fn append_article_to_toml(&self, path: PathBuf) -> Result<()> {
+        // Article zine.toml file must exist
+        if !path.exists() {
+            Err(anyhow::anyhow!("Issue toml file does not already exists"))?
+        };
+
+        let mut file = std::fs::OpenOptions::new().append(true).open(&path)?;
+
+        let toml_str = toml::to_string(&self)?;
+
+        // Code fix as the section does not appear to be added by default.
+        file.write("[[article]]\n".as_bytes())?;
+        file.write_all(&toml_str.as_bytes())?;
+
+        Ok(())
+    }
     /// Check whether `author` name is the author of this article.
     pub fn is_author(&self, author: &str) -> bool {
         self.meta
@@ -219,6 +325,48 @@ impl Article {
     }
 }
 
+#[cfg(test)]
+mod tests_artile_impl {
+
+    use crate::entity::article::{Article, MetaArticle};
+    use std::env;
+
+    #[test]
+    fn test_default() {
+        let article = Article::new();
+
+        assert_eq!(article.featured, false);
+        assert_eq!(article.publish, false);
+        assert_eq!(article.meta.title, "Give me a Title.");
+    }
+
+    #[test]
+    fn test_pass_meta() {
+        let meta = MetaArticle::new()
+            .set_title("This is a great Article")
+            .finalize();
+        let mut article = Article::new();
+
+        article.set_meta(meta);
+
+        assert_eq!(article.meta.title, "This is a great Article");
+    }
+
+    #[test]
+    fn test_append_to_file() {
+        let meta = MetaArticle::new()
+            .set_title("This is a great Article")
+            .finalize();
+        let mut article = Article::new();
+
+        article.set_meta(meta);
+        let work_space = std::path::Path::new("/tmp");
+        let path = work_space.to_path_buf().join("test.toml");
+        assert!(env::set_current_dir(&work_space).is_ok());
+        assert!(std::fs::write(&path, "\n").is_ok());
+        assert!(article.append_article_to_toml(path).is_ok())
+    }
+}
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
         Article::parse(self, source)?;
@@ -266,4 +414,15 @@ impl Entity for Article {
 
         Ok(())
     }
+}
+
+/// The translation info of an article.
+#[derive(Serialize)]
+struct Translations<'a> {
+    // The locale name.
+    name: &'static str,
+    // Article slug.
+    slug: &'a String,
+    // Article path.
+    path: &'a Option<String>,
 }
