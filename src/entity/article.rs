@@ -37,6 +37,83 @@ pub struct MetaArticle {
     pub pub_date: Date,
 }
 
+
+impl MetaArticle {
+    fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    fn set_title(&mut self, title: &str) -> &mut Self {
+        self.title = title.into();
+        self.file = self.title.clone().to_lowercase().replace(" ", "-");
+        self
+    }
+    fn set_authors(&mut self, authors: &str) -> &mut Self {
+        todo!("This will require the FromStr trait to be implemented in author.rs for the Enum AuthorId.");
+        self
+    }
+    fn default_pub_date() -> Date {
+        Date::MIN
+    }
+
+    fn is_default_pub_date(&self) -> bool {
+        self.pub_date == Date::MIN
+    }
+}
+
+impl std::fmt::Debug for Article {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Article")
+            .field("meta", &self.meta)
+            .field("i18n", &self.i18n)
+            .field("publish", &self.publish)
+            .finish()
+    }
+}
+
+impl Default for MetaArticle {
+    fn default() -> Self {
+        Self {
+            file: "Give-this-file-a-name".into(),
+            // Need more information on what this should be
+            slug: "1".into(),
+            title: "Give me a Title.".into(),
+            path: None,
+            author: None,
+            cover: None,
+            pub_date: Date::MIN,
+        }
+    }
+}
+
+#[cfg(test)]
+mod meta_article_tests {
+
+    use crate::entity::article::MetaArticle;
+    use time::Date;
+
+    #[test]
+    fn test_meta_article_default() {
+        let meta_defaults = MetaArticle::default();
+
+        assert_eq!(meta_defaults.file, "Give-this-file-a-name");
+        assert_eq!(meta_defaults.slug, "1");
+        assert_eq!(meta_defaults.path, None);
+        assert_eq!(meta_defaults.title, "Give me a Title.");
+        assert_eq!(meta_defaults.cover, None);
+        assert_eq!(meta_defaults.pub_date, Date::MIN);
+    }
+    #[test]
+    fn test_meta_article_new() {
+        let mut m_a = MetaArticle::new();
+        assert_eq!(m_a.file, "Give-this-file-a-name");
+        m_a.set_title("This is a test");
+        assert_eq!(m_a.title, "This is a test");
+        assert_eq!(m_a.file, "this-is-a-test");
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Article {
     #[serde(flatten)]
@@ -70,26 +147,6 @@ struct Translations<'a> {
     slug: &'a String,
     // Article path.
     path: &'a Option<String>,
-}
-
-impl MetaArticle {
-    fn default_pub_date() -> Date {
-        Date::MIN
-    }
-
-    fn is_default_pub_date(&self) -> bool {
-        self.pub_date == Date::MIN
-    }
-}
-
-impl std::fmt::Debug for Article {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Article")
-            .field("meta", &self.meta)
-            .field("i18n", &self.i18n)
-            .field("publish", &self.publish)
-            .finish()
-    }
 }
 
 impl Article {
