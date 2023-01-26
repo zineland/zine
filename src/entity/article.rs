@@ -4,6 +4,7 @@ use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
+use crate::error::ZineError;
 
 use crate::{
     current_mode, data, engine,
@@ -49,9 +50,13 @@ impl MetaArticle {
         self.file = self.title.clone().to_lowercase().replace(" ", "-");
         self
     }
-    fn set_authors(&mut self, authors: &str) -> &mut Self {
-        todo!("This will require the FromStr trait to be implemented in author.rs for the Enum AuthorId.");
-        self
+    fn set_authors(&mut self, authors: &str) -> std::result::Result<&mut Self, ZineError> {
+        if let Ok(authors) = authors.to_string().parse::<AuthorId>() {
+            self.author = Some(authors);
+            return Ok(self);
+        };
+        Err(ZineError::ParseAuthorIdError(authors.into()))
+
     }
     fn default_pub_date() -> Date {
         Date::MIN
