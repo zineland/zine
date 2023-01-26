@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 use tera::Context;
 
-use crate::{data, engine, helpers::capitalize, html::Meta, markdown, Entity, error::ZineError};
+use crate::{data, engine, error::ZineError, helpers::capitalize, html::Meta, markdown, Entity};
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.
@@ -20,7 +20,6 @@ impl std::str::FromStr for AuthorId {
     type Err = ZineError;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-
         let mut author_id_vec = vec![];
         if s.contains(" ") {
             let s_inter = s.split_whitespace().into_iter();
@@ -30,7 +29,7 @@ impl std::str::FromStr for AuthorId {
                     return Err(ZineError::ParseAuthorIdError(author_id.to_string()));
                 };
                 author_id_vec.push(author_id.into());
-            };
+            }
             Ok::<AuthorId, ZineError>(AuthorId::List(author_id_vec))
         } else {
             Ok::<AuthorId, ZineError>(AuthorId::One(s.into()))
@@ -169,19 +168,19 @@ mod tests {
     #[test]
     fn test_author_name() {
         assert!(matches!(
-            serde_json::from_str::<AuthorId>("\"Alice\"").unwrap(),
+                serde_json::from_str::<AuthorId>("\"Alice\"").unwrap(),
             AuthorId::One(name) if name == *"Alice",
         ));
         assert!(matches!(
-            serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\"]").unwrap(),
+                serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\"]").unwrap(),
             AuthorId::List(names) if names == vec![String::from("Alice"), String::from("Bob")],
         ));
         assert!(matches!(
-            serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\", \"Alice\"]").unwrap(),
+                serde_json::from_str::<AuthorId>("[\"Alice\",\"Bob\", \"Alice\"]").unwrap(),
             AuthorId::List(names) if names == vec![String::from("Alice"), String::from("Bob")],
         ));
         assert!(matches!(
-            serde_json::from_str::<AuthorId>("[]").unwrap(),
+                serde_json::from_str::<AuthorId>("[]").unwrap(),
             AuthorId::List(names) if names.is_empty(),
         ));
 
@@ -199,7 +198,10 @@ mod tests {
         assert!(a.is_author("Alice"));
         assert!(!a.is_author("John"));
         assert_eq!("[\"Alice\",\"Bob\"]", serde_json::to_string(&a).unwrap());
+    }
 
+    #[test]
+    fn author_id_parser() {
         assert!(matches!(
                 "Alice".parse().unwrap(),
                 AuthorId::One(name) if name == *"Alice",
