@@ -57,6 +57,9 @@ pub struct Article {
     /// generate HTML file in this mode.
     #[serde(default)]
     pub publish: bool,
+    /// The canonical link of this article.
+    /// See issue: https://github.com/zineland/zine/issues/141
+    pub canonical: Option<String>,
     #[serde(default, skip_serializing)]
     pub i18n: HashMap<String, Article>,
 }
@@ -191,6 +194,7 @@ impl Article {
         );
         context.insert("page_type", "article");
         context.insert("article", &self);
+        context.insert("canonical_url", &self.canonical);
 
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
