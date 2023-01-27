@@ -1,9 +1,17 @@
-use std::{borrow::Cow, collections::HashMap, fs, path::Path};
+use std::io::prelude::*;
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
+use toml;
+
 use crate::error::ZineError;
 
 use crate::{
@@ -38,7 +46,6 @@ pub struct MetaArticle {
     pub pub_date: Date,
 }
 
-
 impl MetaArticle {
     /// Create a new MetaAtricle using Defaults::defaults()
     fn new() -> Self {
@@ -59,7 +66,6 @@ impl MetaArticle {
             return Ok(self);
         };
         Err(ZineError::ParseAuthorIdError(authors.into()))
-
     }
     fn finalize(&self) -> Self {
         self.to_owned()
@@ -176,6 +182,22 @@ impl Article {
     fn set_published_to_true(&mut self) -> &mut Self {
         self.publish = true;
         self
+    }
+    fn append_article_to_toml(&self, path: PathBuf) -> Result<()> {
+        // Article zine.toml file must exist
+        if !path.exists() {
+            Err(anyhow::anyhow!("Issue toml file does not already exists"))?
+        };
+
+        let mut file = std::fs::OpenOptions::new().append(true).open(&path)?;
+
+        let toml_str = toml::to_string(&self)?;
+
+        // Code fix as the section does not appear to be added by default.
+        file.write("[[article]]\n".as_bytes())?;
+        file.write_all(&toml_str.as_bytes())?;
+
+        Ok(())
     }
     /// Check whether `author` name is the author of this article.
     pub fn is_author(&self, author: &str) -> bool {
@@ -302,7 +324,8 @@ impl Article {
 #[cfg(test)]
 mod tests_artile_impl {
 
-    use crate::entity::{article::{Article, MetaArticle}, author::AuthorId};
+    use crate::entity::article::{Article, MetaArticle};
+    use std::env;
 
     #[test]
     fn test_default() {
@@ -315,8 +338,9 @@ mod tests_artile_impl {
 
     #[test]
     fn test_pass_meta() {
-
-        let meta = MetaArticle::new().set_title("This is a great Article").finalize();
+        let meta = MetaArticle::new()
+            .set_title("This is a great Article")
+            .finalize();
         let mut article = Article::new();
 
         article.set_meta(meta);
@@ -324,6 +348,20 @@ mod tests_artile_impl {
         assert_eq!(article.meta.title, "This is a great Article");
     }
 
+    #[test]
+    fn test_append_to_file() {
+        let meta = MetaArticle::new()
+            .set_title("This is a great Article")
+            .finalize();
+        let mut article = Article::new();
+
+        article.set_meta(meta);
+        let work_space = std::path::Path::new("/tmp");
+        let path = work_space.to_path_buf().join("test.toml");
+        assert!(env::set_current_dir(&work_space).is_ok());
+        assert!(std::fs::write(&path, "\n").is_ok());
+        assert!(article.append_article_to_toml(path).is_ok())
+    }
 }
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
