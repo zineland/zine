@@ -61,6 +61,9 @@ impl MetaArticle {
         Err(ZineError::ParseAuthorIdError(authors.into()))
 
     }
+    fn finalize(&self) -> Self {
+        self.to_owned()
+    }
     fn default_pub_date() -> Date {
         Date::MIN
     }
@@ -119,14 +122,14 @@ mod meta_article_tests {
         m_a.set_title("This is a test");
         assert_eq!(m_a.title, "This is a test");
         assert_eq!(m_a.file, "this-is-a-test");
-        m_a.set_authors("Bob Basman").unwrap();
+        m_a.set_authors("Bob Bas-Man").unwrap();
         //let a = AuthorId::List(vec![String::from("Alice"), String::from("Bob")]);
         assert!(matches!(m_a.author.unwrap(),
-                AuthorId::List(names) if names == vec![String::from("Bob"), String::from("Basman")],));
+                AuthorId::List(names) if names == vec![String::from("Bob"), String::from("Bas-Man")],));
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Article {
     #[serde(flatten)]
     pub meta: MetaArticle,
@@ -150,18 +153,30 @@ pub struct Article {
     pub i18n: HashMap<String, Article>,
 }
 
-/// The translation info of an article.
-#[derive(Serialize)]
-struct Translations<'a> {
-    // The locale name.
-    name: &'static str,
-    // Article slug.
-    slug: &'a String,
-    // Article path.
-    path: &'a Option<String>,
-}
-
 impl Article {
+    fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    /// If you call set_meta. You do not need to call set_title as MetaArticle
+    /// contains all the related details.
+    fn set_meta(&mut self, article_meta: MetaArticle) -> &mut Self {
+        self.meta = article_meta;
+        self
+    }
+    fn set_title(&mut self, title: &str) -> &mut Self {
+        self.meta.set_title(title);
+        self
+    }
+    fn set_featured_to_true(&mut self) -> &mut Self {
+        self.featured = true;
+        self
+    }
+    fn set_published_to_true(&mut self) -> &mut Self {
+        self.publish = true;
+        self
+    }
     /// Check whether `author` name is the author of this article.
     pub fn is_author(&self, author: &str) -> bool {
         self.meta
@@ -284,6 +299,32 @@ impl Article {
     }
 }
 
+#[cfg(test)]
+mod tests_artile_impl {
+
+    use crate::entity::{article::{Article, MetaArticle}, author::AuthorId};
+
+    #[test]
+    fn test_default() {
+        let article = Article::new();
+
+        assert_eq!(article.featured, false);
+        assert_eq!(article.publish, false);
+        assert_eq!(article.meta.title, "Give me a Title.");
+    }
+
+    #[test]
+    fn test_pass_meta() {
+
+        let meta = MetaArticle::new().set_title("This is a great Article").finalize();
+        let mut article = Article::new();
+
+        article.set_meta(meta);
+
+        assert_eq!(article.meta.title, "This is a great Article");
+    }
+
+}
 impl Entity for Article {
     fn parse(&mut self, source: &Path) -> Result<()> {
         Article::parse(self, source)?;
@@ -331,4 +372,15 @@ impl Entity for Article {
 
         Ok(())
     }
+}
+
+/// The translation info of an article.
+#[derive(Serialize)]
+struct Translations<'a> {
+    // The locale name.
+    name: &'static str,
+    // Article slug.
+    slug: &'a String,
+    // Article path.
+    path: &'a Option<String>,
 }
