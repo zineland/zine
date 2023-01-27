@@ -18,16 +18,15 @@ pub enum AuthorId {
 
 impl std::str::FromStr for AuthorId {
     type Err = ZineError;
-
+    /// Creates a AuthorId Struct from string imput. The string should be `space` delimited
+    /// Note: Addtional checks should be added for sanity
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let mut author_id_vec = vec![];
         if s.contains(" ") {
             let s_inter = s.split_whitespace().into_iter();
 
             for author_id in s_inter {
-                if !author_id.chars().all(char::is_alphanumeric) {
-                    return Err(ZineError::ParseAuthorIdError(author_id.to_string()));
-                };
+                // Removed character checking. This needs to be reconsidered
                 author_id_vec.push(author_id.into());
             }
             Ok::<AuthorId, ZineError>(AuthorId::List(author_id_vec))

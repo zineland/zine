@@ -40,16 +40,19 @@ pub struct MetaArticle {
 
 
 impl MetaArticle {
+    /// Create a new MetaAtricle using Defaults::defaults()
     fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
+    /// Set the Title for the article and also set the file based on the Title.
     fn set_title(&mut self, title: &str) -> &mut Self {
         self.title = title.into();
         self.file = self.title.clone().to_lowercase().replace(" ", "-");
         self
     }
+    /// Set the Author Ids by parsing a provided string. Names should be simply listed with spaces
     fn set_authors(&mut self, authors: &str) -> std::result::Result<&mut Self, ZineError> {
         if let Ok(authors) = authors.to_string().parse::<AuthorId>() {
             self.author = Some(authors);
@@ -95,7 +98,7 @@ impl Default for MetaArticle {
 #[cfg(test)]
 mod meta_article_tests {
 
-    use crate::entity::article::MetaArticle;
+    use crate::entity::{article::MetaArticle, author::AuthorId};
     use time::Date;
 
     #[test]
@@ -116,6 +119,10 @@ mod meta_article_tests {
         m_a.set_title("This is a test");
         assert_eq!(m_a.title, "This is a test");
         assert_eq!(m_a.file, "this-is-a-test");
+        m_a.set_authors("Bob Basman").unwrap();
+        //let a = AuthorId::List(vec![String::from("Alice"), String::from("Bob")]);
+        assert!(matches!(m_a.author.unwrap(),
+                AuthorId::List(names) if names == vec![String::from("Bob"), String::from("Basman")],));
     }
 }
 
