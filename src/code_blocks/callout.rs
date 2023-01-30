@@ -63,11 +63,11 @@ impl<'a> CodeBlock for CalloutBlock<'a> {
             "background-color: {}; border-color: {}",
             self.bg_color, self.border_color,
         );
-        writeln!(&mut html, r#"<div class="callout" style="{}">"#, style)?;
+        writeln!(&mut html, r#"<div class="callout" style="{style}">"#)?;
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
         let block_html = MarkdownRender::new(markdown_config).render_html(self.content);
-        writeln!(&mut html, r#" <div>{}</div>"#, block_html)?;
+        writeln!(&mut html, r#" <div>{block_html}</div>"#)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)
     }

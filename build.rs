@@ -6,7 +6,7 @@ fn main() {
     let build_info: String =
         from_git().unwrap_or_else(|_| "Build info from Git not present".into());
 
-    println!("cargo:rustc-env=BUILD_INFO={}", build_info);
+    println!("cargo:rustc-env=BUILD_INFO={build_info}");
 }
 
 fn run(args: &[&str]) -> Result<String, std::io::Error> {
@@ -20,11 +20,11 @@ fn run(args: &[&str]) -> Result<String, std::io::Error> {
 fn from_git() -> Result<String, std::io::Error> {
     // Read the current git commit hash
     let rev = run(&["git", "rev-parse", "--verify", "--short", "HEAD"])?;
-    println!("cargo:rustc-env=GIT_REV={}", rev);
+    println!("cargo:rustc-env=GIT_REV={rev}");
 
     // Read the current branch name.
     let branch = run(&["git", "rev-parse", "--abbrev-ref", "HEAD"])?;
-    println!("cargo:rustc-env=GIT_BRANCH={}", branch);
+    println!("cargo:rustc-env=GIT_BRANCH={branch}");
 
     // Read date from current build branch.
     // Here is a example output:
@@ -36,7 +36,6 @@ fn from_git() -> Result<String, std::io::Error> {
 
     // Combined
     Ok(format!(
-        "build branch in \"{}\", last commit id: {}",
-        branch, rev
+        "build branch in \"{branch}\", last commit id: {rev}"
     ))
 }

@@ -22,11 +22,11 @@ impl FluentLoader {
             "zh" => FluentResource::try_new(FLUENT_ZH_CN.to_owned()),
             _ => {
                 // Not a buitlin locale, load the user translation resource.
-                let file = format!("locales/{}.ftl", locale);
+                let file = format!("locales/{locale}.ftl");
                 let path = source.join(&file);
                 if path.exists() {
                     let translation = fs::read_to_string(path)
-                        .unwrap_or_else(|err| panic!("{file} read failed: {}", err));
+                        .unwrap_or_else(|err| panic!("{file} read failed: {err}"));
                     FluentResource::try_new(translation)
                 } else {
                     println!("Warning: `{file}` does not exist, please add your translation to this file.");
@@ -69,7 +69,7 @@ impl tera::Function for FluentLoader {
         let pattern = self
             .bundle
             .get_message(key)
-            .unwrap_or_else(|| panic!("Invalid fluent key: `{}`", key))
+            .unwrap_or_else(|| panic!("Invalid fluent key: `{key}`"))
             .value()
             .expect("Missing Value.");
 

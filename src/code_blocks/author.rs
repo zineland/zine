@@ -24,8 +24,7 @@ impl<'a> CodeBlock for AuthorCode<'a> {
         if let Some(avatar) = author.avatar.as_ref() {
             writeln!(
                 &mut html,
-                r#"<img src="{}" alt="avatar" loading="lazy">"#,
-                avatar,
+                r#"<img src="{avatar}" alt="avatar" loading="lazy">"#,
             )?;
         }
         writeln!(

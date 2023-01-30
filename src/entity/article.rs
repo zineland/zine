@@ -451,8 +451,7 @@ impl Entity for Article {
             self.topics.iter().for_each(|topic| {
                 if !zine_data.is_valid_topic(topic) {
                     println!(
-                        "Warning: the topic `{}` is invalid, please declare it in the root `zine.toml`",
-                        topic
+                        "Warning: the topic `{topic}` is invalid, please declare it in the root `zine.toml`"
                     )
                 }
             });

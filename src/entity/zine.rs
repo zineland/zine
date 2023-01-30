@@ -236,14 +236,14 @@ impl Zine {
         // Sitemap URL must begin with the protocol (such as http)
         // and end with a trailing slash.
         // https://www.sitemaps.org/protocol.html
-        let mut entries = vec![format!("{}/", base_url)];
+        let mut entries = vec![format!("{base_url}/")];
 
         // Issues and articles
         for issue in &self.issues {
             entries.push(format!("{}/{}/", base_url, issue.slug));
             entries.par_extend(issue.articles().par_iter().map(|article| {
                 if let Some(path) = article.meta.path.as_ref() {
-                    format!("{}{}", base_url, path)
+                    format!("{base_url}{path}")
                 } else {
                     format!("{}/{}/{}", base_url, issue.slug, article.meta.slug)
                 }
@@ -251,7 +251,7 @@ impl Zine {
         }
 
         // Authors
-        entries.push(format!("{}/authors/", base_url));
+        entries.push(format!("{base_url}/authors/"));
         entries.par_extend(
             self.authors
                 .par_iter()
@@ -260,7 +260,7 @@ impl Zine {
 
         // Topics
         if !self.topics.is_empty() {
-            entries.push(format!("{}/topics/", base_url));
+            entries.push(format!("{base_url}/topics/"));
             entries.par_extend(
                 self.topics
                     .par_iter()
