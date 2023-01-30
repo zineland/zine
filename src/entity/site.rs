@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
-use std::{env, path::PathBuf};
+use std::{env, path::{Path, PathBuf}};
 use toml;
 
 use anyhow::Result;
@@ -111,15 +111,15 @@ impl Default for Site {
 }
 
 impl Site {
-    fn write_toml(&self, path: &PathBuf) -> Result<()> {
+    fn write_toml(&self, path: &Path) -> Result<()> {
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
-            .open(&path.join(ZINE_FILE))?;
+            .open(path.join(ZINE_FILE))?;
 
         let toml_str = toml::to_string(&self)?;
 
-        file.write_all(&toml_str.as_bytes())?;
+        file.write_all(toml_str.as_bytes())?;
 
         Ok(())
     }
