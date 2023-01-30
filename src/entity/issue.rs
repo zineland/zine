@@ -1,9 +1,5 @@
 use std::io::prelude::*;
-use std::{
-    borrow::Cow,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{borrow::Cow, fs, path::Path};
 
 use crate::ZINE_FILE;
 
@@ -67,7 +63,7 @@ impl Issue {
     }
     fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = title.into();
-        self.dir = self.title.clone().to_lowercase().replace(" ", "-");
+        self.dir = self.title.clone().to_lowercase().replace(' ', "-");
         self.slug = self.dir.clone();
         self
     }
@@ -76,18 +72,18 @@ impl Issue {
         self
     }
     // Appends the issue to the top level zine.toml file
-    fn write_new_issue(&self, path: &PathBuf) -> Result<()> {
+    fn write_new_issue(&self, path: &Path) -> Result<()> {
         if path.join(ZINE_FILE).exists() {
             Err(anyhow::anyhow!("Issue already Exists"))?
         }
         let mut file = std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open(&path.join(ZINE_FILE))?;
+            .open(path.join(ZINE_FILE))?;
 
         let toml_str = toml::to_string(&self)?;
 
-        file.write_all(&toml_str.as_bytes())?;
+        file.write_all(toml_str.as_bytes())?;
 
         Ok(())
     }
