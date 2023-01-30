@@ -22,8 +22,8 @@ impl std::str::FromStr for AuthorId {
     /// Note: Addtional checks should be added for sanity
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let mut author_id_vec = vec![];
-        if s.contains(" ") {
-            let s_inter = s.split_whitespace().into_iter();
+        if s.contains(' ') {
+            let s_inter = s.split_whitespace();
 
             for author_id in s_inter {
                 // Removed character checking. This needs to be reconsidered
