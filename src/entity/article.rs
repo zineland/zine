@@ -10,9 +10,6 @@ use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
-use toml;
-
-use crate::error::ZineError;
 
 use crate::{
     current_mode, data, engine,
@@ -56,16 +53,18 @@ impl MetaArticle {
     /// Set the Title for the article and also set the file based on the Title.
     fn set_title(&mut self, title: &str) -> &mut Self {
         self.title = title.into();
-        self.file = self.title.clone().to_lowercase().replace(" ", "-");
+        self.file = self.title.clone().to_lowercase().replace(' ', "-");
         self
     }
     /// Set the Author Ids by parsing a provided string. Names should be simply listed with spaces
-    fn set_authors(&mut self, authors: &str) -> std::result::Result<&mut Self, ZineError> {
+    fn set_authors(&mut self, authors: &str) -> Result<&mut Self> {
         if let Ok(authors) = authors.to_string().parse::<AuthorId>() {
             self.author = Some(authors);
             return Ok(self);
         };
-        Err(ZineError::ParseAuthorIdError(authors.into()))
+        Err(anyhow::anyhow!(
+            "Unable to parse string containing author names."
+        ))
     }
     fn finalize(&self) -> Self {
         self.to_owned()
@@ -197,8 +196,8 @@ impl Article {
         let toml_str = toml::to_string(&self)?;
 
         // Code fix as the section does not appear to be added by default.
-        file.write("[[article]]\n".as_bytes())?;
-        file.write_all(&toml_str.as_bytes())?;
+        file.write_all("[[article]]\n".as_bytes())?;
+        file.write_all(toml_str.as_bytes())?;
 
         Ok(())
     }
