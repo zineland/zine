@@ -17,7 +17,7 @@ struct SiteBuilder {
 
 impl SiteBuilder {
     // Defines a new site with default settings while providing a new an optional site `name`
-    fn new(name: Option<String>) -> std::result::Result<Self, anyhow::Error> {
+    fn new(name: Option<String>) -> Result<Self> {
         let source = if let Some(name) = name.as_ref() {
             env::current_dir()?.join(name)
         } else {
@@ -34,7 +34,7 @@ impl SiteBuilder {
             ..Default::default()
         })
     }
-    fn create_new_zine_dir(&self) -> std::result::Result<PathBuf, anyhow::Error> {
+    fn create_new_zine_dir(&self) -> Result<PathBuf> {
         if !self.source.exists() {
             std::fs::create_dir_all(&self.source)?
         }
