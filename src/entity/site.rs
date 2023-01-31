@@ -49,31 +49,52 @@ impl SiteBuilder {
 mod site_builder {
 
     use super::SiteBuilder;
-    use std::env;
+    use super::Site;
+    use tempfile::tempdir;
 
     #[test]
     fn site_to_build() {
-        let work_space = std::path::Path::new("/tmp");
-        assert!(env::set_current_dir(&work_space).is_ok());
 
+        let temp_dir = tempdir().unwrap();
         let site = SiteBuilder::default();
-
         assert_eq!(site.name, None);
         assert_eq!(site.author, "");
         assert_eq!(site.site.url, "http://localhost");
-        assert!(site.create_new_zine_dir().is_ok());
-        assert!(site.site.write_toml(&site.source).is_ok());
+
+        let file_path = temp_dir.path().join("dummy.toml").clone();
+        assert!(site.site.write_toml(&file_path.as_path()).is_ok());
+
+        let read_contents  = std::fs::read_to_string(&file_path).unwrap();
+        let data: Site = toml::from_str(&read_contents).unwrap();
+
+        assert_eq!(data.name, "My New Magazine Powered by Rust!");
+        assert_eq!(data.url, "http://localhost");
+
+        drop(file_path);
+        assert!(temp_dir.close().is_ok());
+
+
     }
 
     #[test]
     fn test_site_builder_new() {
         let new_site = SiteBuilder::new(Some("test".to_string()));
+        let temp_dir = tempdir().unwrap();
 
         if let Ok(new_site) = new_site {
+            let file_path = temp_dir.path().join("dummy.toml").clone();
             assert_eq!(new_site.name, Some("test".to_string()));
             assert_eq!(new_site.site.name, "test".to_string());
-            assert!(new_site.create_new_zine_dir().is_ok());
-            assert!(new_site.site.write_toml(&new_site.source).is_ok());
+            assert!(new_site.site.write_toml(&file_path).is_ok());
+
+            let read_contents  = std::fs::read_to_string(&file_path).unwrap();
+            let data: Site = toml::from_str(&read_contents).unwrap();
+
+            assert_eq!(data.name, "test");
+            assert_eq!(data.url, "http://localhost");
+
+            drop(file_path);
+            assert!(temp_dir.close().is_ok());
         }
     }
 }
@@ -118,7 +139,7 @@ impl Site {
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
-            .open(path.join(ZINE_FILE))?;
+            .open(path)?;
 
         let toml_str = toml::to_string(&self)?;
 
