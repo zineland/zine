@@ -73,16 +73,15 @@ impl Issue {
     }
     // Appends the issue to the top level zine.toml file
     fn write_new_issue(&self, path: &Path) -> Result<()> {
-        if path.join(ZINE_FILE).exists() {
+        if path.exists() {
             Err(anyhow::anyhow!("Issue already Exists"))?
         }
         let mut file = std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open(path.join(ZINE_FILE))?;
+            .open(path)?;
 
         let toml_str = toml::to_string(&self)?;
-
         file.write_all(toml_str.as_bytes())?;
 
         Ok(())
@@ -196,7 +195,7 @@ impl Entity for Issue {
 mod tests {
 
     use crate::entity::issue::Issue;
-
+    use tempfile::tempdir;
     use std::env;
 
     #[test]
@@ -207,10 +206,21 @@ mod tests {
             .set_title("Some Magical Title")
             .set_intro("Some magical introduction to some amazing Issue");
 
-        let work_space = std::path::Path::new("/tmp");
-        let path = work_space.to_path_buf();
-        assert!(env::set_current_dir(&work_space).is_ok());
-        assert!(issue.write_new_issue(&path).is_ok());
-        assert!(issue.write_new_issue(&path).is_err());
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path().join("dummy.toml");
+
+        //assert!(env::set_current_dir(&work_space.join("test.toml2")).is_ok());
+        assert!(issue.write_new_issue(&temp_path).is_ok());
+        assert!(issue.write_new_issue(&temp_path).is_err());
+
+        let contents = std::fs::read_to_string(&temp_path).unwrap();
+        let data: Issue = toml::from_str(&contents).unwrap();
+
+        assert_eq!(data.title, "Some Magical Title");
+        assert_eq!(data.number, 1);
+
+
+        drop(temp_path);
+        assert!(temp_dir.close().is_ok());
     }
 }

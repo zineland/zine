@@ -61,7 +61,7 @@ mod site_builder {
         assert_eq!(site.author, "");
         assert_eq!(site.site.url, "http://localhost");
 
-        let file_path = temp_dir.path().join("dummy.toml").clone();
+        let file_path = temp_dir.path().join("dummy.toml");
         assert!(site.site.write_toml(&file_path.as_path()).is_ok());
 
         let read_contents  = std::fs::read_to_string(&file_path).unwrap();
@@ -82,7 +82,7 @@ mod site_builder {
         let temp_dir = tempdir().unwrap();
 
         if let Ok(new_site) = new_site {
-            let file_path = temp_dir.path().join("dummy.toml").clone();
+            let file_path = temp_dir.path().join("dummy.toml");
             assert_eq!(new_site.name, Some("test".to_string()));
             assert_eq!(new_site.site.name, "test".to_string());
             assert!(new_site.site.write_toml(&file_path).is_ok());
