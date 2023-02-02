@@ -31,7 +31,7 @@ pub struct Issue {
     /// single article page.
     #[serde(skip_serializing, default)]
     #[serde(rename(deserialize = "article"))]
-    pub articles: Vec<Article>,
+    articles: Vec<Article>,
 }
 
 impl std::fmt::Debug for Issue {
@@ -74,6 +74,16 @@ impl Issue {
         self.articles
             .iter()
             .filter(|article| article.featured && article.publish)
+            .collect()
+    }
+
+    /// Get all articles need published.
+    ///
+    /// See [`Article::need_publish()`](super::Article::need_publish)
+    pub fn articles(&self) -> Vec<&Article> {
+        self.articles
+            .iter()
+            .filter(|article| article.need_publish())
             .collect()
     }
 }
