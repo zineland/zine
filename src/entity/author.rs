@@ -48,7 +48,7 @@ impl AuthorId {
 }
 
 /// The author of an article. Declared in the root `zine.toml`'s **[authors]** table.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Author {
     /// The author id, which is the key declared in `[authors]` table.
     #[serde(skip_deserializing, default)]
@@ -65,6 +65,45 @@ pub struct Author {
     pub is_editor: bool,
 }
 
+impl std::fmt::Display for Author {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} = {{ name = \"{}\", editor = {}, bio = \"\"\"\n{}\n\"\"\" }}",
+            self.id,
+            match &self.name {
+                Some(name) => name,
+                None => "",
+            },
+            match self.is_editor {
+                true => "true",
+                false => "false",
+            },
+            // This should probably stay at the end of the file for now
+            match &self.bio {
+                Some(data) => data,
+                None => "",
+            },
+        )
+    }
+}
+
+#[cfg(test)]
+mod author_tests {
+    use crate::Author;
+
+    #[test]
+    fn author() {
+        let author = Author {
+            id: "bob".into(),
+            name: Some("Bob".into()),
+            avatar: None,
+            bio: None,
+            is_editor: false,
+        };
+        println!("{}", author.to_string())
+    }
+}
 impl Entity for Author {
     fn parse(&mut self, _source: &Path) -> anyhow::Result<()> {
         // Fallback to default zine avatar if neccessary.

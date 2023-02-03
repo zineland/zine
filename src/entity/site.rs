@@ -4,8 +4,6 @@ use std::io::prelude::*;
 use std::path::Path;
 use toml;
 
-use crate::entity::author::Author;
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Site {
     /// The absolute url of this site.
@@ -50,7 +48,7 @@ impl Site {
 
         let toml_str = toml::to_string(&self)?;
 
-        file.write_all("\n[site]".as_bytes())?;
+        file.write_all("\n[site]\n".as_bytes())?;
         file.write_all(toml_str.as_bytes())?;
         Ok(())
     }

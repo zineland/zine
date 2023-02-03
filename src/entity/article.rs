@@ -1,11 +1,11 @@
 use std::io::prelude::*;
 use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
+use crate::helpers::get_date_of_today;
 use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
-use crate::helpers::get_date_of_today;
 
 use crate::{
     current_mode, data, engine,
@@ -41,19 +41,20 @@ pub struct MetaArticle {
 
 impl MetaArticle {
     /// Create a new MetaAtricle using Defaults::defaults()
+    #[allow(dead_code)]
     fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
     /// Set the Title for the article and also set the file based on the Title.
-    fn set_title(&mut self, title: &str) -> &mut Self {
+    pub(crate) fn set_title(&mut self, title: &str) -> &mut Self {
         self.title = title.into();
         self.file = self.title.clone().to_lowercase().replace(' ', "-");
         self
     }
     /// Set the Author Ids by parsing a provided string. Names should be simply listed with spaces
-    fn set_authors(&mut self, authors: &str) -> Result<&mut Self> {
+    pub(crate) fn set_authors(&mut self, authors: &str) -> Result<&mut Self> {
         if let Ok(authors) = authors.to_string().parse::<AuthorId>() {
             self.author = Some(authors);
             return Ok(self);
@@ -73,6 +74,7 @@ impl MetaArticle {
         Date::MIN
     }
 
+    // This should be removable as default date will always be the current date.
     fn is_default_pub_date(&self) -> bool {
         self.pub_date == Date::MIN
     }
@@ -161,6 +163,7 @@ pub struct Article {
 }
 
 impl Article {
+    #[allow(dead_code)]
     fn new() -> Self {
         Self {
             ..Default::default()
@@ -168,27 +171,32 @@ impl Article {
     }
     /// If you call set_meta. You do not need to call set_title as MetaArticle
     /// contains all the related details.
+    #[allow(dead_code)]
     fn set_meta(&mut self, article_meta: MetaArticle) -> &mut Self {
         self.meta = article_meta;
         self
     }
-    fn set_title(&mut self, title: &str) -> &mut Self {
+    #[allow(dead_code)]
+    pub(crate) fn set_title(&mut self, title: &str) -> &mut Self {
         self.meta.set_title(title);
         self
     }
-    fn set_featured_to_true(&mut self) -> &mut Self {
+    #[allow(dead_code)]
+    pub(crate) fn set_featured_to_true(&mut self) -> &mut Self {
         self.featured = true;
         self
     }
-    fn set_published_to_true(&mut self) -> &mut Self {
+    #[allow(dead_code)]
+    pub(crate) fn set_published_to_true(&mut self) -> &mut Self {
         self.publish = true;
         self
     }
-    fn set_canonical(&mut self, canonical: &str) -> &mut Self {
+    #[allow(dead_code)]
+    pub(crate) fn set_canonical(&mut self, canonical: &str) -> &mut Self {
         self.canonical = Some(canonical.into());
         self
     }
-    fn finalize(&self) -> Self {
+    pub(crate) fn finalize(&self) -> Self {
         self.to_owned()
     }
     pub(crate) fn append_article_to_toml(&self, path: &Path) -> Result<()> {

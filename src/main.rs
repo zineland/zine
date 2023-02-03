@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use zine::build::watch_build;
-use zine::new::{SiteBuilder, new_zine_issue};
+use zine::new::{new_zine_issue, new_zine_project};
 use zine::serve::run_serve;
 use zine::{lint, Mode};
 
@@ -74,9 +74,7 @@ async fn main() -> Result<()> {
             if issue {
                 new_zine_issue()?;
             } else {
-                let mut site = SiteBuilder::new(name)?;
-                site.create_new_zine_magazine()?;
-                //new_zine_project(name)?
+                new_zine_project(name)?
             }
         }
         Commands::Lint { source, ci } => {

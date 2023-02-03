@@ -63,9 +63,9 @@ impl Issue {
     pub(crate) fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = title.into();
         self.dir = self.title.clone().to_lowercase().replace(' ', "-");
-        self.slug = self.dir.clone();
         self
     }
+    #[allow(dead_code)]
     fn set_intro(&mut self, intro: impl Into<String>) -> &mut Self {
         self.intro = Some(intro.into());
         self
@@ -75,26 +75,28 @@ impl Issue {
         self
     }
     pub(crate) fn finalize(&mut self) -> Self {
-        self.dir = std::format!("{}-{}", &self.title, &self.number);
+        self.dir = std::format!("{}-{}", &self.dir, &self.number);
+        if self.slug.is_empty() {
+            self.slug = self.dir.clone()
+        };
         self.to_owned()
     }
+    #[allow(dead_code)]
     pub(crate) fn create_issue_dir(&self, path: &Path) -> Result<()> {
         if path.join(&self.dir).exists() {
-            Err(anyhow::anyhow!("Issue alredy Exists! Not creating a new issue."))?
+            Err(anyhow::anyhow!(
+                "Issue alredy Exists! Not creating a new issue."
+            ))?
         }
         std::fs::create_dir_all(path.join(&self.dir))?;
         Ok(())
     }
     // Appends the issue to the top level zine.toml file
     pub(crate) fn write_new_issue(&self, path: &Path) -> Result<()> {
-
         let mut file = std::fs::OpenOptions::new()
             .append(true)
             .create_new(true)
-            .open(path
-                .join(&self.dir)
-                .join(crate::ZINE_FILE)
-            )?;
+            .open(path.join(&self.dir).join(crate::ZINE_FILE))?;
 
         let toml_str = toml::to_string(&self)?;
         file.write_all(toml_str.as_bytes())?;
@@ -108,9 +110,7 @@ impl Issue {
             .write(true)
             .open(&path.join(&self.dir).join(&article.file))?;
 
-        md_file.write(
-                "Hello. Write your article here\n"
-                .as_bytes())?;
+        md_file.write("Hello. Write your article here\n".as_bytes())?;
         Ok(())
     }
     // Get the description of this issue.
@@ -239,7 +239,8 @@ mod tests {
         assert!(issue.write_new_issue(&temp_path).is_ok());
         assert!(issue.write_new_issue(&temp_path).is_err());
 
-        let contents = std::fs::read_to_string(&temp_path.join(&issue.dir).join(crate::ZINE_FILE)).unwrap();
+        let contents =
+            std::fs::read_to_string(&temp_path.join(&issue.dir).join(crate::ZINE_FILE)).unwrap();
         let data: Issue = toml::from_str(&contents).unwrap();
 
         assert_eq!(data.title, "Some Magical Title");
