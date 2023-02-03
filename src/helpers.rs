@@ -13,6 +13,7 @@ use std::{
     path::Path,
     process::Command,
 };
+use time::{format_description, OffsetDateTime};
 
 pub fn run_command(program: &str, args: &[&str]) -> Result<String, io::Error> {
     let out = Command::new(program).args(args).output()?;
@@ -23,6 +24,10 @@ pub fn run_command(program: &str, args: &[&str]) -> Result<String, io::Error> {
             format!("run command `{program} {}` failed.", args.join(" ")),
         )),
     }
+}
+
+pub fn get_date_of_today() ->  time::Date {
+      OffsetDateTime::now_utc().date()
 }
 
 pub fn capitalize(text: &str) -> String {

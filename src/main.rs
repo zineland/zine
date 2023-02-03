@@ -1,10 +1,9 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use zine::build::watch_build;
-use zine::new::{new_zine_issue, new_zine_project};
+use zine::new::{SiteBuilder, new_zine_issue};
 use zine::serve::run_serve;
 use zine::{lint, Mode};
-use zine::{SiteBuilder, Site, Issue, MetaArticle, Article};
 
 #[derive(Debug, Parser)]
 #[command(name = "zine")]

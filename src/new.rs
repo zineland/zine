@@ -6,6 +6,7 @@ use tera::{Context, Tera};
 use time::{format_description, OffsetDateTime};
 
 use crate::{helpers::run_command, ZINE_FILE};
+use crate::{AuthorId, Author, Article, Issue, Site};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -141,4 +142,122 @@ pub fn new_zine_issue() -> Result<()> {
     };
     scaffold.create_issue()?;
     Ok(())
+}
+
+#[derive(Default)]
+pub struct SiteBuilder {
+    source: PathBuf,
+    site: Site,
+}
+
+impl SiteBuilder {
+    // Defines a new site with default settings while providing a new an optional site `name`
+    pub fn new(name: Option<String>) -> Result<Self> {
+        let source = if let Some(name) = name.as_ref() {
+            env::current_dir()?.join(name)
+        } else {
+            env::current_dir()?
+        };
+        Ok(Self {
+            source,
+            site: Site {
+                name: name.unwrap_or_default(),
+                ..Site::default()
+            },
+            ..Default::default()
+        })
+    }
+    pub fn create_new_zine_magazine(&mut self) -> Result<()> {
+        // Create Root of Zine Magazine
+        if !self.source.exists() {
+            std::fs::create_dir_all(&self.source)?;
+        }
+        if !self.source.join(crate::ZINE_FILE).exists() {
+            // This requires that we add the author struct to Site
+            /*
+            let author = run_command("git", &["config", "user.name"])
+                .ok()
+                .unwrap_or_default();
+            let author_id = author.parse::<AuthorId>()?;
+            let author = Author {
+                id: serde_json::to_string(&author_id).unwrap().to_lowercase(),
+                ..Default::default()
+            };
+            self.site.authors.push(author);
+            */
+            let content_dir = &self.source.join(crate::ZINE_CONTENT_DIR);
+            self.site.write_toml(&self.source.join(crate::ZINE_FILE))?;
+            std::fs::create_dir_all(&content_dir)?;
+
+            let mut issue = Issue::new();
+            issue.set_title("issue").set_issue_number(1);
+            issue = issue.finalize();
+            issue.create_issue_dir(&content_dir)?;
+
+            let article = Article::default();
+            issue.articles.push(article);
+
+            let issue_dir = &content_dir.join(&issue.dir);
+            let toml_file = &issue_dir.join(crate::ZINE_FILE);
+            // Write Issue zine.toml
+            issue.write_new_issue(&content_dir)?;
+
+            for article in &issue.articles {
+                article.append_article_to_toml(&toml_file)?;
+            }
+
+            if !issue.articles.is_empty() {
+                issue.write_initial_markdown_file(&content_dir)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod site_builder {
+
+    use super::Site;
+    use super::SiteBuilder;
+    use tempfile::tempdir;
+
+    #[test]
+    fn site_to_build() {
+        let temp_dir = tempdir().unwrap();
+        let site = SiteBuilder::default();
+        assert_eq!(site.site.url, "http://localhost");
+
+        let file_path = temp_dir.path().join("dummy.toml");
+        assert!(site.site.write_toml(&file_path.as_path()).is_ok());
+
+        let read_contents = std::fs::read_to_string(&file_path).unwrap();
+        let data: Site = toml::from_str(&read_contents).unwrap();
+
+        assert_eq!(data.name, "My New Magazine Powered by Rust!");
+        assert_eq!(data.url, "http://localhost");
+
+        drop(file_path);
+        assert!(temp_dir.close().is_ok());
+    }
+
+    #[test]
+    fn test_site_builder_new() {
+        let new_site = SiteBuilder::new(Some("test".to_string()));
+        let temp_dir = tempdir().unwrap();
+
+        if let Ok(new_site) = new_site {
+            let file_path = temp_dir.path().join("dummy.toml");
+            assert_eq!(new_site.site.name, "test".to_string());
+            assert!(new_site.site.write_toml(&file_path).is_ok());
+
+            let read_contents = std::fs::read_to_string(&file_path).unwrap();
+            let data: Site = toml::from_str(&read_contents).unwrap();
+
+            assert_eq!(data.name, "test");
+            assert_eq!(data.url, "http://localhost");
+
+            drop(file_path);
+            assert!(temp_dir.close().is_ok());
+        }
+    }
 }

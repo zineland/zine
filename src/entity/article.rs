@@ -5,6 +5,7 @@ use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
+use crate::helpers::get_date_of_today;
 
 use crate::{
     current_mode, data, engine,
@@ -97,7 +98,7 @@ impl Default for MetaArticle {
             path: None,
             author: None,
             cover: None,
-            pub_date: Date::MIN,
+            pub_date: get_date_of_today(),
         }
     }
 }
@@ -106,23 +107,23 @@ impl Default for MetaArticle {
 mod meta_article_tests {
 
     use crate::entity::{article::MetaArticle, author::AuthorId};
-    use time::Date;
+    use crate::helpers::get_date_of_today;
 
     #[test]
     fn test_meta_article_default() {
         let meta_defaults = MetaArticle::default();
 
-        assert_eq!(meta_defaults.file, "Give-this-file-a-name");
+        assert_eq!(meta_defaults.file, "give-this-file-a-name.md");
         assert_eq!(meta_defaults.slug, "1");
         assert_eq!(meta_defaults.path, None);
         assert_eq!(meta_defaults.title, "Give me a Title.");
         assert_eq!(meta_defaults.cover, None);
-        assert_eq!(meta_defaults.pub_date, Date::MIN);
+        assert_eq!(meta_defaults.pub_date, get_date_of_today());
     }
     #[test]
     fn test_meta_article_new() {
         let mut m_a = MetaArticle::new();
-        assert_eq!(m_a.file, "Give-this-file-a-name");
+        assert_eq!(m_a.file, "give-this-file-a-name.md");
         m_a.set_title("This is a test");
         assert_eq!(m_a.title, "This is a test");
         assert_eq!(m_a.file, "this-is-a-test");
@@ -404,10 +405,10 @@ mod tests_article_impl {
             toml_str.push_str("[[article]]\n");
             toml_str.push_str(toml::to_string::<Article>(&article).unwrap().as_str());
         }
-        
+
         let issue_from_toml: Issue = toml::from_str(&toml_str).unwrap();
         assert_eq!(issue.slug, issue_from_toml.slug);
-        assert_eq!(issue.articles[0].meta.file, "Give-this-file-a-name");
+        assert_eq!(issue.articles[0].meta.file, "give-this-file-a-name.md");
         assert_eq!(
             issue.articles[0].meta.file,
             issue_from_toml.articles[0].meta.file

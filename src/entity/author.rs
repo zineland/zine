@@ -36,6 +36,17 @@ impl std::str::FromStr for AuthorId {
     }
 }
 
+impl AuthorId {
+    pub fn is_author(&self, id: &str) -> bool {
+        match self {
+            Self::One(author_id) => author_id.eq_ignore_ascii_case(id),
+            Self::List(authors) => authors
+                .iter()
+                .any(|author_id| author_id.eq_ignore_ascii_case(id)),
+        }
+    }
+}
+
 /// The author of an article. Declared in the root `zine.toml`'s **[authors]** table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Author {
@@ -52,17 +63,6 @@ pub struct Author {
     #[serde(default)]
     #[serde(rename(deserialize = "editor"))]
     pub is_editor: bool,
-}
-
-impl AuthorId {
-    pub fn is_author(&self, id: &str) -> bool {
-        match self {
-            Self::One(author_id) => author_id.eq_ignore_ascii_case(id),
-            Self::List(authors) => authors
-                .iter()
-                .any(|author_id| author_id.eq_ignore_ascii_case(id)),
-        }
-    }
 }
 
 impl Entity for Author {
