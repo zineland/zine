@@ -1,3 +1,5 @@
+use crate::{Article, Issue};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
 use std::{
@@ -5,9 +7,8 @@ use std::{
     path::{Path, PathBuf},
 };
 use toml;
-use crate::{Issue, Article};
-use anyhow::Result;
 
+use crate::{helpers::run_command, ZINE_FILE};
 #[derive(Default)]
 pub struct SiteBuilder {
     name: Option<String>,
@@ -29,46 +30,50 @@ impl SiteBuilder {
             name,
             source: source,
             site: Site {
-                name: site_name.unwrap_or("".to_string()),
+                name: site_name.unwrap_or_default(),
                 ..Site::default()
             },
             ..Default::default()
         })
     }
-    pub fn create_new_zine_magazine(&self) -> Result<()> {
+    pub fn create_new_zine_magazine(&mut self) -> Result<()> {
         // Create Root of Zine Magazine
         if !self.source.exists() {
             std::fs::create_dir_all(&self.source)?;
-            self.site.write_toml(&self.source.join(
-                    crate::ZINE_FILE)
-            )?;
-            std::fs::create_dir_all(
-                    &self.source.join(crate::ZINE_CONTENT_DIR)
-            )?;
+        }
+        if !self.source.join(crate::ZINE_FILE).exists() {
+
+            // This requires that we add the author struct to Site
+            //let author = run_command("git", &["config", "user.name"])
+            //    .ok()
+            //    .unwrap_or_default();
+            //self.author = author;
+            let content_dir = &self.source.join(crate::ZINE_CONTENT_DIR);
+            self.site.write_toml(&self.source.join(crate::ZINE_FILE))?;
+            std::fs::create_dir_all(&content_dir)?;
+
             let mut issue = Issue::new();
             issue.set_title("issue").set_issue_number(1);
             issue = issue.finalize();
-            issue.create_issue_dir(
-                    &self.source.join(crate::ZINE_CONTENT_DIR)
-                    )?;
+            issue.create_issue_dir(&content_dir)?;
+
             let article = Article::default();
             issue.articles.push(article);
-            let toml_file = &self
-                .source
-                .join(crate::ZINE_CONTENT_DIR)
-                .join(&issue.dir)
+
+            let issue_dir = &content_dir.join(&issue.dir);
+            let toml_file = &issue_dir
                 .join(crate::ZINE_FILE);
             // Write Issue zine.toml
-            issue.write_new_issue(
-                    &self
-                    .source
-                    .join(crate::ZINE_CONTENT_DIR)
-                    )?;
-            for article in issue.articles {
+            issue.write_new_issue(&content_dir)?;
+
+            for article in &issue.articles {
                 article.append_article_to_toml(&toml_file)?;
             }
-        }
 
+            if !issue.articles.is_empty() {
+                issue.write_initial_markdown_file(&content_dir)?;
+            }
+        }
         Ok(())
     }
 }

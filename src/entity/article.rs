@@ -61,7 +61,11 @@ impl MetaArticle {
             "Unable to parse string containing author names."
         ))
     }
-    fn finalize(&self) -> Self {
+    fn fix_file_name(&self) -> String {
+        std::format!("{}.md", self.title.clone().to_lowercase().replace(' ', "-"))
+    }
+    pub(crate) fn finalize(&mut self) -> Self {
+        self.path = Some(std::format!("/{}", self.fix_file_name()));
         self.to_owned()
     }
     fn default_pub_date() -> Date {
@@ -86,7 +90,7 @@ impl std::fmt::Debug for Article {
 impl Default for MetaArticle {
     fn default() -> Self {
         Self {
-            file: "Give-this-file-a-name".into(),
+            file: "give-this-file-a-name.md".into(),
             // Need more information on what this should be
             slug: "1".into(),
             title: "Give me a Title.".into(),

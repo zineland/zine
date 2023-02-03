@@ -87,12 +87,10 @@ impl Issue {
     }
     // Appends the issue to the top level zine.toml file
     pub(crate) fn write_new_issue(&self, path: &Path) -> Result<()> {
-        if path.join(crate::ZINE_FILE).exists() {
-            Err(anyhow::anyhow!("Issue already Exists"))?
-        }
+
         let mut file = std::fs::OpenOptions::new()
             .append(true)
-            .create(true)
+            .create_new(true)
             .open(path
                 .join(&self.dir)
                 .join(crate::ZINE_FILE)
@@ -101,6 +99,18 @@ impl Issue {
         let toml_str = toml::to_string(&self)?;
         file.write_all(toml_str.as_bytes())?;
 
+        Ok(())
+    }
+    pub(crate) fn write_initial_markdown_file(&mut self, path: &Path) -> Result<()> {
+        let article = self.articles[0].meta.finalize();
+        let mut md_file = std::fs::OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&path.join(&self.dir).join(&article.file))?;
+
+        md_file.write(
+                "Hello. Write your article here\n"
+                .as_bytes())?;
         Ok(())
     }
     // Get the description of this issue.
@@ -223,13 +233,13 @@ mod tests {
             .set_intro("Some magical introduction to some amazing Issue");
 
         let temp_dir = tempdir().unwrap();
-        let temp_path = temp_dir.path().join("dummy.toml");
+        let temp_path = temp_dir.path();
+        assert!(std::fs::create_dir_all(&temp_path.join(&issue.dir)).is_ok());
 
-        //assert!(env::set_current_dir(&work_space.join("test.toml2")).is_ok());
         assert!(issue.write_new_issue(&temp_path).is_ok());
         assert!(issue.write_new_issue(&temp_path).is_err());
 
-        let contents = std::fs::read_to_string(&temp_path).unwrap();
+        let contents = std::fs::read_to_string(&temp_path.join(&issue.dir).join(crate::ZINE_FILE)).unwrap();
         let data: Issue = toml::from_str(&contents).unwrap();
 
         assert_eq!(data.title, "Some Magical Title");

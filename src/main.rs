@@ -75,8 +75,8 @@ async fn main() -> Result<()> {
             if issue {
                 new_zine_issue()?;
             } else {
-                let site = SiteBuilder::new(name)?;
-                let _path_buf = site.create_new_zine_magazine();
+                let mut site = SiteBuilder::new(name)?;
+                site.create_new_zine_magazine()?;
                 //new_zine_project(name)?
             }
         }
