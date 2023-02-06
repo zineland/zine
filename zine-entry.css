@@ -19,6 +19,10 @@
     @apply inline w-4 h-4 align-middle rounded-full object-cover;
 }
 
+.author-code>span{
+    vertical-align: middle;
+}
+
 .url-preview {
     outline: #dee0e3 1px solid;
     padding: 1rem 1.25rem;
