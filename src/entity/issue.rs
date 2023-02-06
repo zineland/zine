@@ -1,8 +1,6 @@
 use std::io::prelude::*;
 use std::{borrow::Cow, fs, path::Path};
 
-use crate::ZINE_FILE;
-
 use anyhow::{Context as _, Result};
 use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
@@ -32,9 +30,10 @@ pub struct Issue {
     /// Skip serialize `articles` since a single article page would
     /// contain a issue context, the `articles` is useless for the
     /// single article page.
+    // Disable skip so that we can use the default toml::to_string() to write toml as needed.
     #[serde(skip_serializing, default)]
-    #[serde(rename(deserialize = "article"))]
-    articles: Vec<Article>,
+    #[serde(rename(deserialize = "article", serialize = "article"))]
+    pub articles: Vec<Article>,
 }
 
 impl std::fmt::Debug for Issue {
@@ -52,16 +51,16 @@ impl std::fmt::Debug for Issue {
 }
 
 impl Issue {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
-    fn set_issue_number(&mut self, number: u32) -> &mut Self {
+    pub(crate) fn set_issue_number(&mut self, number: u32) -> &mut Self {
         self.number = number;
         self
     }
-    fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
+    pub(crate) fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = title.into();
         self.dir = self.title.clone().to_lowercase().replace(' ', "-");
         self.slug = self.dir.clone();
@@ -71,15 +70,33 @@ impl Issue {
         self.intro = Some(intro.into());
         self
     }
+    pub(crate) fn add_article(&mut self, article: Article) -> &mut Self {
+        self.articles.push(article);
+        self
+    }
+    pub(crate) fn finalize(&mut self) -> Self {
+        self.dir = std::format!("{}-{}", &self.title, &self.number);
+        self.to_owned()
+    }
+    pub(crate) fn create_issue_dir(&self, path: &Path) -> Result<()> {
+        if path.join(&self.dir).exists() {
+            Err(anyhow::anyhow!("Issue alredy Exists! Not creating a new issue."))?
+        }
+        std::fs::create_dir_all(path.join(&self.dir))?;
+        Ok(())
+    }
     // Appends the issue to the top level zine.toml file
-    fn write_new_issue(&self, path: &Path) -> Result<()> {
-        if path.exists() {
+    pub(crate) fn write_new_issue(&self, path: &Path) -> Result<()> {
+        if path.join(crate::ZINE_FILE).exists() {
             Err(anyhow::anyhow!("Issue already Exists"))?
         }
         let mut file = std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open(path)?;
+            .open(path
+                .join(&self.dir)
+                .join(crate::ZINE_FILE)
+            )?;
 
         let toml_str = toml::to_string(&self)?;
         file.write_all(toml_str.as_bytes())?;
@@ -196,7 +213,6 @@ mod tests {
 
     use crate::entity::issue::Issue;
     use tempfile::tempdir;
-    use std::env;
 
     #[test]
     fn defaults() {
@@ -218,7 +234,6 @@ mod tests {
 
         assert_eq!(data.title, "Some Magical Title");
         assert_eq!(data.number, 1);
-
 
         drop(temp_path);
         assert!(temp_dir.close().is_ok());

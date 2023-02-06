@@ -5,13 +5,11 @@ use std::{
     path::{Path, PathBuf},
 };
 use toml;
-
+use crate::{Issue, Article};
 use anyhow::Result;
 
-use crate::ZINE_FILE;
-
 #[derive(Default)]
-struct SiteBuilder {
+pub struct SiteBuilder {
     name: Option<String>,
     source: PathBuf,
     author: String,
@@ -20,7 +18,7 @@ struct SiteBuilder {
 
 impl SiteBuilder {
     // Defines a new site with default settings while providing a new an optional site `name`
-    fn new(name: Option<String>) -> Result<Self> {
+    pub fn new(name: Option<String>) -> Result<Self> {
         let source = if let Some(name) = name.as_ref() {
             env::current_dir()?.join(name)
         } else {
@@ -37,24 +35,53 @@ impl SiteBuilder {
             ..Default::default()
         })
     }
-    fn create_new_zine_dir(&self) -> Result<PathBuf> {
+    pub fn create_new_zine_magazine(&self) -> Result<()> {
+        // Create Root of Zine Magazine
         if !self.source.exists() {
-            std::fs::create_dir_all(&self.source)?
+            std::fs::create_dir_all(&self.source)?;
+            self.site.write_toml(&self.source.join(
+                    crate::ZINE_FILE)
+            )?;
+            std::fs::create_dir_all(
+                    &self.source.join(crate::ZINE_CONTENT_DIR)
+            )?;
+            let mut issue = Issue::new();
+            issue.set_title("issue").set_issue_number(1);
+            issue = issue.finalize();
+            issue.create_issue_dir(
+                    &self.source.join(crate::ZINE_CONTENT_DIR)
+                    )?;
+            let article = Article::default();
+            issue.articles.push(article);
+            let toml_file = &self
+                .source
+                .join(crate::ZINE_CONTENT_DIR)
+                .join(&issue.dir)
+                .join(crate::ZINE_FILE);
+            // Write Issue zine.toml
+            issue.write_new_issue(
+                    &self
+                    .source
+                    .join(crate::ZINE_CONTENT_DIR)
+                    )?;
+            for article in issue.articles {
+                article.append_article_to_toml(&toml_file)?;
+            }
         }
-        Ok(self.source.clone())
+
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod site_builder {
 
-    use super::SiteBuilder;
     use super::Site;
+    use super::SiteBuilder;
     use tempfile::tempdir;
 
     #[test]
     fn site_to_build() {
-
         let temp_dir = tempdir().unwrap();
         let site = SiteBuilder::default();
         assert_eq!(site.name, None);
@@ -64,7 +91,7 @@ mod site_builder {
         let file_path = temp_dir.path().join("dummy.toml");
         assert!(site.site.write_toml(&file_path.as_path()).is_ok());
 
-        let read_contents  = std::fs::read_to_string(&file_path).unwrap();
+        let read_contents = std::fs::read_to_string(&file_path).unwrap();
         let data: Site = toml::from_str(&read_contents).unwrap();
 
         assert_eq!(data.name, "My New Magazine Powered by Rust!");
@@ -72,8 +99,6 @@ mod site_builder {
 
         drop(file_path);
         assert!(temp_dir.close().is_ok());
-
-
     }
 
     #[test]
@@ -87,7 +112,7 @@ mod site_builder {
             assert_eq!(new_site.site.name, "test".to_string());
             assert!(new_site.site.write_toml(&file_path).is_ok());
 
-            let read_contents  = std::fs::read_to_string(&file_path).unwrap();
+            let read_contents = std::fs::read_to_string(&file_path).unwrap();
             let data: Site = toml::from_str(&read_contents).unwrap();
 
             assert_eq!(data.name, "test");

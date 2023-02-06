@@ -1,10 +1,5 @@
 use std::io::prelude::*;
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
 use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
@@ -128,7 +123,6 @@ mod meta_article_tests {
         assert_eq!(m_a.title, "This is a test");
         assert_eq!(m_a.file, "this-is-a-test");
         m_a.set_authors("Bob Bas-Man").unwrap();
-        //let a = AuthorId::List(vec![String::from("Alice"), String::from("Bob")]);
         assert!(matches!(m_a.author.unwrap(),
                 AuthorId::List(names) if names == vec![String::from("Bob"), String::from("Bas-Man")],));
     }
@@ -185,7 +179,14 @@ impl Article {
         self.publish = true;
         self
     }
-    fn append_article_to_toml(&self, path: PathBuf) -> Result<()> {
+    fn set_canonical(&mut self, canonical: &str) -> &mut Self {
+        self.canonical = Some(canonical.into());
+        self
+    }
+    fn finalize(&self) -> Self {
+        self.to_owned()
+    }
+    pub(crate) fn append_article_to_toml(&self, path: &Path) -> Result<()> {
         // Article zine.toml file must exist
         if !path.exists() {
             Err(anyhow::anyhow!("Issue toml file does not already exists"))?
@@ -325,10 +326,11 @@ impl Article {
 }
 
 #[cfg(test)]
-mod tests_artile_impl {
+mod tests_article_impl {
 
     use crate::entity::article::{Article, MetaArticle};
-    use std::env;
+    use crate::entity::issue::Issue;
+    use tempfile::tempdir;
 
     #[test]
     fn test_default() {
@@ -359,11 +361,59 @@ mod tests_artile_impl {
         let mut article = Article::new();
 
         article.set_meta(meta);
-        let work_space = std::path::Path::new("/tmp");
-        let path = work_space.to_path_buf().join("test.toml");
-        assert!(env::set_current_dir(&work_space).is_ok());
-        assert!(std::fs::write(&path, "\n").is_ok());
-        assert!(article.append_article_to_toml(path).is_ok())
+
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path().join("dummy.toml");
+        assert!(std::fs::write(&temp_path, "").is_ok());
+        assert!(article.append_article_to_toml(&temp_path).is_ok());
+
+        let contents = std::fs::read_to_string(&temp_path).unwrap();
+
+        // Strip off [[article]] for testing
+        let massaged_contents = contents
+            .lines()
+            .skip(1)
+            .map(|x| x.to_owned())
+            .collect::<Vec<String>>()
+            .join("\n");
+        let data = toml::from_str::<Article>(&massaged_contents).unwrap();
+
+        println!("{:?}", data);
+        assert_eq!(data.meta.slug, "1");
+        assert_eq!(data.meta.title, "This is a great Article");
+        assert_eq!(data.featured, false);
+
+        drop(temp_path);
+        assert!(temp_dir.close().is_ok());
+    }
+
+    #[test]
+    fn test_append_article_to_issue() {
+        let mut issue = Issue::default();
+        let article = Article::new();
+        let article2 = Article::new().set_title("my second article").finalize();
+        issue.articles.push(article);
+        issue.articles.push(article2);
+
+        let mut toml_str = toml::to_string(&issue).unwrap();
+        for article in &issue.articles {
+            toml_str.push_str("[[article]]\n");
+            toml_str.push_str(toml::to_string::<Article>(&article).unwrap().as_str());
+        }
+        
+        let issue_from_toml: Issue = toml::from_str(&toml_str).unwrap();
+        assert_eq!(issue.slug, issue_from_toml.slug);
+        assert_eq!(issue.articles[0].meta.file, "Give-this-file-a-name");
+        assert_eq!(
+            issue.articles[0].meta.file,
+            issue_from_toml.articles[0].meta.file
+        );
+
+        assert_eq!(issue.articles[1].meta.file, "my-second-article");
+        assert_eq!(
+            issue.articles[1].meta.file,
+            issue_from_toml.articles[1].meta.file
+        );
     }
 }
 impl Entity for Article {

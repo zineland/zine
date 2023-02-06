@@ -4,6 +4,7 @@ use zine::build::watch_build;
 use zine::new::{new_zine_issue, new_zine_project};
 use zine::serve::run_serve;
 use zine::{lint, Mode};
+use zine::{SiteBuilder, Site, Issue, MetaArticle, Article};
 
 #[derive(Debug, Parser)]
 #[command(name = "zine")]
@@ -74,7 +75,9 @@ async fn main() -> Result<()> {
             if issue {
                 new_zine_issue()?;
             } else {
-                new_zine_project(name)?
+                let site = SiteBuilder::new(name)?;
+                let _path_buf = site.create_new_zine_magazine();
+                //new_zine_project(name)?
             }
         }
         Commands::Lint { source, ci } => {

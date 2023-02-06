@@ -22,6 +22,7 @@ pub use list::List;
 pub use markdown::MarkdownConfig;
 pub use page::Page;
 pub use site::Site;
+pub use site::SiteBuilder;
 pub use theme::Theme;
 pub use topic::Topic;
 
