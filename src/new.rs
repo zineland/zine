@@ -47,7 +47,6 @@ impl ZineScaffold {
             .set_title(self.issue_title.clone())
             .set_issue_number(self.issue_number)
             .finalize();
-        println!("{:?}", issue);
         fs::create_dir_all(&contents_dir.join(&issue.dir))?;
         let mut article = Article::default();
         article.meta.set_authors(&self.author)?.finalize();
