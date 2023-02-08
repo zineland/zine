@@ -214,7 +214,7 @@ impl Article {
             Err(anyhow::anyhow!("Issue toml file does not already exists"))?
         };
 
-        let mut file = std::fs::OpenOptions::new().append(true).open(&path)?;
+        let mut file = std::fs::OpenOptions::new().append(true).open(path)?;
 
         let toml_str = toml::to_string(&self)?;
 

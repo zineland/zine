@@ -118,9 +118,9 @@ impl Issue {
         let mut md_file = std::fs::OpenOptions::new()
             .create_new(true)
             .write(true)
-            .open(&path.join(&self.dir).join(&article.file))?;
+            .open(path.join(&self.dir).join(article.file))?;
 
-        md_file.write("Hello. Write your article here\n".as_bytes())?;
+        md_file.write_all("Hello. Write your article here\n".as_bytes())?;
         Ok(())
     }
     // Get the description of this issue.
