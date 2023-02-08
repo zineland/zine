@@ -15,7 +15,8 @@ pub enum AuthorId {
     // Co-authors.
     List(Vec<String>),
 }
-
+/// Provides a parser to create AuthorId Structs
+/// Strings should be in the form of a space delimited list of names
 impl std::str::FromStr for AuthorId {
     type Err = ZineError;
     /// Creates a AuthorId Struct from string imput. The string should be `space` delimited
@@ -47,7 +48,7 @@ impl AuthorId {
     }
 }
 
-/// The author of an article. Declared in the root `zine.toml`'s **[authors]** table.
+/// The author of an article. Declared in the root `zine.toml`'s **\[authors\]** table.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Author {
     /// The author id, which is the key declared in `[authors]` table.
@@ -64,7 +65,7 @@ pub struct Author {
     #[serde(rename(deserialize = "editor"))]
     pub is_editor: bool,
 }
-
+/// Implementation for Display. Will return a JSON style string for writing to the `Site` TOML file.
 impl std::fmt::Display for Author {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

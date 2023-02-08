@@ -40,6 +40,8 @@ impl Default for Site {
 }
 
 impl Site {
+    /// Writes the site TOML file in the root of the Zine magazine.
+    /// This should only be called when creating a new Zine magazine
     pub(crate) fn write_toml(&self, path: &Path) -> Result<()> {
         let mut file = std::fs::OpenOptions::new()
             .write(true)

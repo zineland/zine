@@ -51,29 +51,35 @@ impl std::fmt::Debug for Issue {
 }
 
 impl Issue {
+    /// Creates a default Issue struct
     pub(crate) fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
+    /// Set the issue number
     pub(crate) fn set_issue_number(&mut self, number: u32) -> &mut Self {
         self.number = number;
         self
     }
+    /// Set the title of the Issue
     pub(crate) fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = title.into();
         self.dir = self.title.clone().to_lowercase().replace(' ', "-");
         self
     }
     #[allow(dead_code)]
+    /// Set the text to be used for the issue's introduction
     fn set_intro(&mut self, intro: impl Into<String>) -> &mut Self {
         self.intro = Some(intro.into());
         self
     }
+    /// Add an article to the issue struct
     pub(crate) fn add_article(&mut self, article: Article) -> &mut Self {
         self.articles.push(article);
         self
     }
+    /// Finalize and return a complete Issue struct
     pub(crate) fn finalize(&mut self) -> Self {
         self.dir = std::format!("{}-{}", &self.dir, &self.number);
         if self.slug.is_empty() {
@@ -81,6 +87,8 @@ impl Issue {
         };
         self.to_owned()
     }
+    /// Create a new directory for the issue
+    /// Should be passed the path to the [ZINE_CONTENT_DIR]
     #[allow(dead_code)]
     pub(crate) fn create_issue_dir(&self, path: &Path) -> Result<()> {
         if path.join(&self.dir).exists() {
@@ -103,6 +111,8 @@ impl Issue {
 
         Ok(())
     }
+    /// Create an emtpy markdown file. This should probably be moved to the article struct
+    /// moving it there would make it easier to use when just adding a new article
     pub(crate) fn write_initial_markdown_file(&mut self, path: &Path) -> Result<()> {
         let article = self.articles[0].meta.finalize();
         let mut md_file = std::fs::OpenOptions::new()

@@ -40,7 +40,7 @@ pub struct MetaArticle {
 }
 
 impl MetaArticle {
-    /// Create a new MetaAtricle using Defaults::defaults()
+    /// Create a new MetaAtricle using defaults()
     #[allow(dead_code)]
     fn new() -> Self {
         Self {
@@ -66,6 +66,8 @@ impl MetaArticle {
     fn fix_file_name(&self) -> String {
         std::format!("{}.md", self.title.clone().to_lowercase().replace(' ', "-"))
     }
+    /// This Return a validated fully formed MetaArticle Struct setting any needed fields
+    /// The name might want to be changed to build even though its not really a build strategy
     pub(crate) fn finalize(&mut self) -> Self {
         self.path = Some(std::format!("/{}", self.fix_file_name()));
         self.to_owned()
@@ -156,13 +158,14 @@ pub struct Article {
     #[serde(default)]
     pub publish: bool,
     /// The canonical link of this article.
-    /// See issue: https://github.com/zineland/zine/issues/141
+    /// See issue: <https://github.com/zineland/zine/issues/141>
     pub canonical: Option<String>,
     #[serde(default, skip_serializing)]
     pub i18n: HashMap<String, Article>,
 }
 
 impl Article {
+    /// Creates a new Article struct with default values.
     #[allow(dead_code)]
     fn new() -> Self {
         Self {
@@ -176,29 +179,35 @@ impl Article {
         self.meta = article_meta;
         self
     }
+    /// Set the title of the article.
     #[allow(dead_code)]
     pub(crate) fn set_title(&mut self, title: &str) -> &mut Self {
         self.meta.set_title(title);
         self
     }
+    /// Set the Article as featured to `true`
     #[allow(dead_code)]
     pub(crate) fn set_featured_to_true(&mut self) -> &mut Self {
         self.featured = true;
         self
     }
+    /// Set the Article as published to `true`
     #[allow(dead_code)]
     pub(crate) fn set_published_to_true(&mut self) -> &mut Self {
         self.publish = true;
         self
     }
+    /// Set the Canonocal URL for the article
     #[allow(dead_code)]
     pub(crate) fn set_canonical(&mut self, canonical: &str) -> &mut Self {
         self.canonical = Some(canonical.into());
         self
     }
+    /// Return a validated Article Struct. Note: Tests still needed
     pub(crate) fn finalize(&self) -> Self {
         self.to_owned()
     }
+    /// Write the TOML data for the article to the end of the `issue` TOML file
     pub(crate) fn append_article_to_toml(&self, path: &Path) -> Result<()> {
         // Article zine.toml file must exist
         if !path.exists() {
