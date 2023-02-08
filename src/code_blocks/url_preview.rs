@@ -39,7 +39,7 @@ impl<'a> CodeBlock for UrlPreviewBlock<'a> {
         writeln!(&mut html, r#" <a href="{url}">{url}</a>"#, url = self.url)?;
         if self.show_image {
             if let Some(image) = self.info.image.as_ref().filter(|i| !i.is_empty()) {
-                writeln!(&mut html, r#" <img src="{}" />"#, image)?;
+                writeln!(&mut html, r#" <img src="{image}" />"#)?;
             }
         }
         writeln!(&mut html, r#"</div>"#)?;

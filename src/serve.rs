@@ -37,8 +37,8 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
             .unwrap();
     });
 
-    println!("{}", ZINE_BANNER);
-    println!("listening on http://{}", addr);
+    println!("{ZINE_BANNER}");
+    println!("listening on http://{addr}");
     hyper::Server::bind(&addr)
         .serve(tower::make::Shared::new(serve_dir))
         .await

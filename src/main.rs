@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
             zine::set_current_mode(Mode::Build);
             let dest = dest.unwrap_or_else(|| "build".into());
             watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch, None).await?;
-            println!("Build success! The build directory is `{}`.", dest);
+            println!("Build success! The build directory is `{dest}`.");
         }
         Commands::Serve { source, port } => {
             zine::set_current_mode(Mode::Serve);
@@ -89,8 +89,8 @@ async fn main() -> Result<()> {
             let date = option_env!("LAST_COMMIT_DATE").unwrap_or("");
             let build_info = env!("BUILD_INFO");
             println!("{}", zine::ZINE_BANNER);
-            println!("Zine version {} {}", version, date);
-            println!("({})", build_info);
+            println!("Zine version {version} {date}");
+            println!("({build_info})");
         }
     }
     Ok(())

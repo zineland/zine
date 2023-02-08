@@ -199,7 +199,7 @@ impl ZineEngine {
 
         // Copy builtin static files into dest static dir.
         let dest_static_dir = self.dest.join("static");
-        fs::create_dir_all(&dest_static_dir)?;
+        fs::create_dir_all(dest_static_dir)?;
 
         #[cfg(not(debug_assertions))]
         include_dir::include_dir!("static").extract(dest_static_dir)?;

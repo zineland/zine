@@ -258,7 +258,7 @@ impl<'a> MarkdownRender<'a> {
                 let html = self.highlight_syntax(fenced.name, text);
                 return Visiting::Event(Event::Html(html.into()));
             } else {
-                return Visiting::Event(Event::Html(format!("<pre>{}</pre>", text).into()));
+                return Visiting::Event(Event::Html(format!("<pre>{text}</pre>").into()));
             }
         }
 

@@ -114,7 +114,7 @@ impl<'a> Fenced<'a> {
                                 Some((key.trim().replace('-', "_"), value.trim()))
                             }
                             _ => {
-                                println!("Warning: invalid fenced options: {}", pair);
+                                println!("Warning: invalid fenced options: {pair}");
                                 None
                             }
                         }

@@ -24,7 +24,7 @@ pub mod serve;
 
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
-pub use self::entity::{ Site, Issue, MetaArticle, Article, AuthorId, Author};
+pub use self::entity::{Article, Author, AuthorId, Issue, MetaArticle, Site};
 /// The convention name of zine config file.
 pub static ZINE_FILE: &str = "zine.toml";
 /// The convention name of zine markdown directory.

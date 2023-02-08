@@ -30,7 +30,7 @@ impl ZineScaffold {
         // Appending Author to site zine.toml
         let mut file = std::fs::OpenOptions::new()
             .append(true)
-            .open(&self.source.join(crate::ZINE_FILE))?;
+            .open(self.source.join(crate::ZINE_FILE))?;
         file.write_all("\n[authors]\n".as_bytes())?;
         file.write_all(author.to_string().as_bytes())?;
 
@@ -47,8 +47,7 @@ impl ZineScaffold {
             .set_title(self.issue_title.clone())
             .set_issue_number(self.issue_number)
             .finalize();
-        println!("{:?}", issue);
-        fs::create_dir_all(&contents_dir.join(&issue.dir))?;
+        fs::create_dir_all(contents_dir.join(&issue.dir))?;
         let mut article = Article::default();
         article.meta.set_authors(&self.author)?.finalize();
         article.finalize();
@@ -101,7 +100,7 @@ pub fn new_zine_issue() -> Result<()> {
     let next_issue_number = zine.issues.len() + 1;
 
     let issue_number = prompt_default("What is your issue number?", next_issue_number)?;
-    let issue_title = prompt_default("What is your issue title?", format!("Issue"))?;
+    let issue_title = prompt_default("What is your issue title?", "Issue".to_string())?;
 
     let scaffold = ZineScaffold {
         source,

@@ -2,7 +2,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
 use std::path::Path;
-use toml;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Site {
