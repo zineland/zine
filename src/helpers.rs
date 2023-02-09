@@ -142,17 +142,15 @@ pub mod serde_date {
         type Value = Date;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a date value like YYYY-MM-dd")
+            formatter.write_str("The date format is YYYY-MM-DD")
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
         where
             E: de::Error,
         {
-            let format =
-                format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
-            Ok(Date::parse(v, &format)
-                .unwrap_or_else(|_| panic!("The date value {} is invalid", &v)))
+            let format = format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
+            Date::parse(v, &format).map_err(|e| E::custom(format!("The date value {} is invalid: {}", v, e)))
         }
     }
 }
