@@ -32,9 +32,13 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
     let serve_dir = ServeDir::new(&tmp_dir).fallback(FallbackService { tx: tx.clone() });
 
     tokio::spawn(async move {
-        watch_build(Path::new(&source), tmp_dir.as_path(), true, Some(tx))
-            .await
-            .unwrap();
+        match watch_build(Path::new(&source), tmp_dir.as_path(), true, Some(tx)).await {
+            Ok(result) => result,
+            Err(e) => {
+                // handle the error here, for example by logging it or returning it to the caller
+                println!("Error: {:?}", e);
+            }
+        };
     });
 
     println!("{}", ZINE_BANNER);
