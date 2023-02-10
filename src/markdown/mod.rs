@@ -21,7 +21,7 @@ pub fn extract_description(markdown: &str) -> String {
             if line.is_empty() || line.starts_with(['#', '!']) {
                 None
             } else {
-                let raw = strip_markdown(line).trim().to_string();
+                let raw = strip_markdown(line);
                 // If the stripped raw text is empty, we step to next one.
                 if raw == "\n" || raw.is_empty() {
                     None
@@ -39,11 +39,13 @@ pub fn extract_description(markdown: &str) -> String {
             chars_count += line.chars().count();
             true
         })
-        .collect::<Vec<_>>()
-        .join(" ")
-        .chars()
-        .take(max_length)
-        .collect::<String>()
+        .reduce(|mut dest, line| {
+            dest.push('\n');
+            dest.push_str(&line);
+            dest
+        })
+        .map(|lines| lines.chars().take(max_length).collect::<_>())
+        .unwrap_or_default()
 }
 
 /// Convert markdown into plain text.
@@ -133,9 +135,10 @@ mod tests {
         assert_eq!("a 'aa' a", extract_description(markdown));
     }
 
-    #[test_case("a\naa\na"; "multiple paragraphs")]
-    fn test_extract_decription4(markdown: &str) {
-        assert_eq!("a aa a", extract_description(markdown));
+    #[test]
+    fn test_extract_decription4() {
+        assert_eq!("", extract_description(""));
+        assert_eq!("a\naa\na", extract_description("a\naa\na"));
     }
 
     #[test]
@@ -145,6 +148,11 @@ mod tests {
         let p2 = p1.clone();
         // Never extract more than 200 chars.
         assert_eq!(p1[..200], extract_description(&p2));
+
+        assert_eq!(
+            format!("a\naa\n{}", "a".repeat(200 - 5)),
+            extract_description(&format!("a\naa\n{}", "a".repeat(400)))
+        );
     }
 
     #[test]
