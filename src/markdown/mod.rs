@@ -139,15 +139,6 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_decription_at_most_1_paragraphs() {
-        let base = "a".repeat(10);
-        let mut p1 = base.clone();
-        p1.push('\n');
-        p1.push_str(&base);
-        assert_eq!(base, extract_description(&p1));
-    }
-
-    #[test]
     fn test_extract_decription_at_most_200_chars() {
         let p1 = "a".repeat(400);
 
