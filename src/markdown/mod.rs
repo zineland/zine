@@ -6,29 +6,44 @@ pub use render::MarkdownRender;
 
 /// Extract the description from markdown content.
 ///
-/// The strategy is extract the first meaningful line,
-/// and only take at most 200 plain chars from this line.
+/// The strategy is extract at most 200 plain chars from the
+/// provided markdown content.
 pub fn extract_description(markdown: &str) -> String {
+    // The max length of the resulting description.
+    let max_length = 200;
+    let mut chars_count = 0;
+
     markdown
         .lines()
-        .find_map(|line| {
+        .filter_map(|line| {
             // Ignore heading, image line.
             let line = line.trim();
             if line.is_empty() || line.starts_with(['#', '!']) {
                 None
             } else {
-                let raw = strip_markdown(line);
+                let raw = strip_markdown(line).trim().to_string();
                 // If the stripped raw text is empty, we step to next one.
                 if raw == "\n" || raw.is_empty() {
                     None
                 } else {
-                    // No more than 200 chars.
-                    // Also, replace double quote to single quote.
-                    Some(raw.chars().take(200).collect::<String>().replace('"', "'"))
+                    Some(raw.replace('"', "'"))
                 }
             }
         })
-        .unwrap_or_default()
+        // Take lines untill the chars count is greater than 200. Including
+        // the line that makes the count exceed 200.
+        .take_while(|line| {
+            if chars_count >= max_length {
+                return false;
+            }
+            chars_count += line.chars().count();
+            true
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+        .take(max_length)
+        .collect::<String>()
 }
 
 /// Convert markdown into plain text.
@@ -116,6 +131,11 @@ mod tests {
     #[test_case("a \"aa\" a"; "quote replace")]
     fn test_extract_decription3(markdown: &str) {
         assert_eq!("a 'aa' a", extract_description(markdown));
+    }
+
+    #[test_case("a\naa\na"; "multiple paragraphs")]
+    fn test_extract_decription4(markdown: &str) {
+        assert_eq!("a aa a", extract_description(markdown));
     }
 
     #[test]
