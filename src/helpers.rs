@@ -149,8 +149,10 @@ pub mod serde_date {
         where
             E: de::Error,
         {
-            let format = format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
-            Date::parse(v, &format).map_err(|e| E::custom(format!("The date value {} is invalid: {}", v, e)))
+            let format =
+                format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
+            Date::parse(v, &format)
+                .map_err(|e| E::custom(format!("The date value {} is invalid: {}", v, e)))
         }
     }
 }
