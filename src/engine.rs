@@ -65,6 +65,7 @@ fn init_tera(source: &Path, zine: &Zine) {
         .unwrap();
         tera.register_function("markdown_to_html", markdown_to_html_fn);
         tera.register_function("get_author", get_author_fn);
+        tera.register_function("get_entity", get_entity_fn);
 
         parking_lot::RwLock::new(tera)
     });
@@ -256,6 +257,26 @@ fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
         let data = data::read();
         let author = data.get_author_by_id(author_id);
         Ok(serde_json::to_value(author)?)
+    } else {
+        Ok(Value::Null)
+    }
+}
+
+// A tera functio to get entity by name.
+fn get_entity_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
+    if let Some(Value::String(name)) = map.get("name") {
+        match name.as_ref() {
+            "author" => {
+                let data = data::read();
+                Ok(serde_json::to_value(data.get_authors())?)
+            }
+            // "page" => {
+            //     todo!()
+            // }
+            _ => Err(tera::Error::msg(
+                "invalid entity name for `get_entity` function.",
+            )),
+        }
     } else {
         Ok(Value::Null)
     }
