@@ -16,7 +16,7 @@
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
     <div class="max-w-prose mx-auto">
         <div class="flex flex-col sm:flex-row py-6">
-            <div class="m-4 sm:m-8 text-center">
+            <div class="flex-none m-4 sm:m-8 text-center">
                 <img class="zine-avatar mx-auto w-44 h-44 object-cover rounded-full border" src="{{ author.avatar }}"
                     alt="Avatar" loading="lazy">
                 {% if author.is_editor -%}
@@ -38,7 +38,7 @@
                 </div>
                 {% endif -%}
             </div>
-            <div class="prose my-2 sm:m-8 grow">
+            <div class="flex-1 prose my-2 sm:m-8">
                 <div class="zine-author-name text-center text-4xl font-bold py-2 text-center">{{ author_name }}</div>
                 {% if author.bio -%}
                 <div class="zine-author-bio">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
