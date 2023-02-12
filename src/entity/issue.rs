@@ -97,9 +97,10 @@ impl Issue {
     ///
     /// See [`Article::need_publish()`](super::Article::need_publish)
     pub fn articles(&self) -> Vec<&Article> {
+        let issue_need_publish = self.need_publish();
         self.articles
             .iter()
-            .filter(|article| article.need_publish())
+            .filter(|article| issue_need_publish && article.need_publish())
             .collect()
     }
 }
