@@ -5,7 +5,7 @@ use crate::helpers::get_date_of_today;
 use anyhow::{ensure, Context as _, Result};
 use serde::{Deserialize, Serialize};
 use tera::Context;
-use time::Date;
+use time::{Date, OffsetDateTime};
 
 use crate::{
     current_mode, data, engine,
@@ -50,12 +50,11 @@ impl MetaArticle {
     /// Set the Title for the article and also set the file based on the Title.
     pub(crate) fn set_title(&mut self, title: &str) -> &mut Self {
         self.title = title.into();
-        self.file = self.title.clone().to_lowercase().replace(' ', "-");
         self
     }
     /// Set the Author Ids by parsing a provided string. Names should be simply listed with spaces
     pub(crate) fn set_authors(&mut self, authors: &str) -> Result<&mut Self> {
-        if let Ok(authors) = authors.to_string().parse::<AuthorId>() {
+        if let Ok(authors) = authors.to_lowercase().parse::<AuthorId>() {
             self.author = Some(authors);
             return Ok(self);
         };
@@ -66,14 +65,18 @@ impl MetaArticle {
     fn fix_file_name(&self) -> String {
         std::format!("{}.md", self.title.clone().to_lowercase().replace(' ', "-"))
     }
+    fn fix_path(&self) -> String {
+        std::format!("/{}", self.title.clone().to_lowercase().replace(' ', "-"))
+    }
     /// This Return a validated fully formed MetaArticle Struct setting any needed fields
     /// The name might want to be changed to build even though its not really a build strategy
     pub(crate) fn finalize(&mut self) -> Self {
-        self.path = Some(std::format!("/{}", self.fix_file_name()));
+        self.file = self.fix_file_name();
+        self.path = Some(self.fix_path());
         self.to_owned()
     }
     fn default_pub_date() -> Date {
-        Date::MIN
+        OffsetDateTime::now_utc().date()
     }
 
     // This should be removable as default date will always be the current date.
@@ -98,7 +101,7 @@ impl Default for MetaArticle {
             file: "give-this-file-a-name.md".into(),
             // Need more information on what this should be
             slug: "1".into(),
-            title: "Give me a Title.".into(),
+            title: "Give me a Title".into(),
             path: None,
             author: None,
             cover: None,
@@ -120,7 +123,7 @@ mod meta_article_tests {
         assert_eq!(meta_defaults.file, "give-this-file-a-name.md");
         assert_eq!(meta_defaults.slug, "1");
         assert_eq!(meta_defaults.path, None);
-        assert_eq!(meta_defaults.title, "Give me a Title.");
+        assert_eq!(meta_defaults.title, "Give me a Title");
         assert_eq!(meta_defaults.cover, None);
         assert_eq!(meta_defaults.pub_date, get_date_of_today());
     }
@@ -130,10 +133,10 @@ mod meta_article_tests {
         assert_eq!(m_a.file, "give-this-file-a-name.md");
         m_a.set_title("This is a test");
         assert_eq!(m_a.title, "This is a test");
-        assert_eq!(m_a.file, "this-is-a-test");
+        assert_eq!(m_a.file, "give-this-file-a-name.md");
         m_a.set_authors("Bob Bas-Man").unwrap();
         assert!(matches!(m_a.author.unwrap(),
-                AuthorId::List(names) if names == vec![String::from("Bob"), String::from("Bas-Man")],));
+                AuthorId::List(names) if names == vec![String::from("bob"), String::from("bas-man")],));
     }
 }
 
@@ -204,7 +207,8 @@ impl Article {
         self
     }
     /// Return a validated Article Struct. Note: Tests still needed
-    pub(crate) fn finalize(&self) -> Self {
+    pub(crate) fn finalize(&mut self) -> Self {
+        self.meta = self.meta.finalize();
         self.to_owned()
     }
     /// Write the TOML data for the article to the end of the `issue` TOML file
@@ -360,7 +364,7 @@ mod tests_article_impl {
 
         assert_eq!(article.featured, false);
         assert_eq!(article.publish, false);
-        assert_eq!(article.meta.title, "Give me a Title.");
+        assert_eq!(article.meta.title, "Give me a Title");
     }
 
     #[test]
@@ -414,6 +418,7 @@ mod tests_article_impl {
         let mut issue = Issue::default();
         let article = Article::new();
         let article2 = Article::new().set_title("my second article").finalize();
+
         issue.articles.push(article);
         issue.articles.push(article2);
 
@@ -431,7 +436,7 @@ mod tests_article_impl {
             issue_from_toml.articles[0].meta.file
         );
 
-        assert_eq!(issue.articles[1].meta.file, "my-second-article");
+        assert_eq!(issue.articles[1].meta.file, "my-second-article.md");
         assert_eq!(
             issue.articles[1].meta.file,
             issue_from_toml.articles[1].meta.file

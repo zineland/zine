@@ -24,7 +24,7 @@ pub struct Issue {
     #[serde(skip)]
     pub intro: Option<String>,
     pub cover: Option<String>,
-    /// The path of issue diretory.
+    /// The path of issue directory.
     #[serde(skip_deserializing)]
     pub dir: String,
     /// Skip serialize `articles` since a single article page would
@@ -68,12 +68,6 @@ impl Issue {
         self.dir = self.title.clone().to_lowercase().replace(' ', "-");
         self
     }
-    #[allow(dead_code)]
-    /// Set the text to be used for the issue's introduction
-    fn set_intro(&mut self, intro: impl Into<String>) -> &mut Self {
-        self.intro = Some(intro.into());
-        self
-    }
     /// Add an article to the issue struct
     pub(crate) fn add_article(&mut self, article: Article) -> &mut Self {
         self.articles.push(article);
@@ -81,10 +75,8 @@ impl Issue {
     }
     /// Finalize and return a complete Issue struct
     pub(crate) fn finalize(&mut self) -> Self {
+        // I think this matches the current behavour.
         self.dir = std::format!("{}-{}", &self.dir, &self.number);
-        if self.slug.is_empty() {
-            self.slug = self.dir.clone()
-        };
         self.to_owned()
     }
     /// Create a new directory for the issue
@@ -237,11 +229,7 @@ mod tests {
     #[test]
     fn defaults() {
         let mut issue = Issue::new();
-        issue
-            .set_issue_number(1)
-            .set_title("Some Magical Title")
-            .set_intro("Some magical introduction to some amazing Issue");
-
+        issue.set_issue_number(1).set_title("Some Magical Title");
         let temp_dir = tempdir().unwrap();
         let temp_path = temp_dir.path();
         assert!(std::fs::create_dir_all(&temp_path.join(&issue.dir)).is_ok());

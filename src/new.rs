@@ -21,7 +21,7 @@ impl ZineScaffold {
             ..Default::default()
         };
         let author = Author {
-            name: Some(self.author.clone().to_lowercase()),
+            name: Some(self.author.clone()),
             id: self.author.to_lowercase(),
             ..Default::default()
         };
@@ -81,7 +81,7 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
         source,
         author,
         issue_number: 1,
-        issue_title: "Issue 1".into(),
+        issue_title: "Issue".into(),
     };
 
     scaffold.create_project(&name.unwrap_or_default())?;
