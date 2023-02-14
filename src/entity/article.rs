@@ -100,6 +100,7 @@ impl Default for MetaArticle {
         Self {
             file: "give-this-file-a-name.md".into(),
             // Need more information on what this should be
+            // # todo: remove string leave slug as empty
             slug: "1".into(),
             title: "Give me a Title".into(),
             path: None,
@@ -183,10 +184,13 @@ impl Article {
         self
     }
     /// Set the title of the article.
-    #[allow(dead_code)]
     pub(crate) fn set_title(&mut self, title: &str) -> &mut Self {
         self.meta.set_title(title);
         self
+    }
+    pub(crate) fn set_authors(&mut self, authors: &str) -> Result<&mut Self> {
+        self.meta.set_authors(authors)?;
+        Ok(self)
     }
     /// Set the Article as featured to `true`
     #[allow(dead_code)]
@@ -223,7 +227,7 @@ impl Article {
         let toml_str = toml::to_string(&self)?;
 
         // Code fix as the section does not appear to be added by default.
-        file.write_all("[[article]]\n".as_bytes())?;
+        file.write_all("\n[[article]]\n".as_bytes())?;
         file.write_all(toml_str.as_bytes())?;
 
         Ok(())

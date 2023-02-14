@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use zine::build::watch_build;
-use zine::new::{new_zine_issue, new_zine_project};
+use zine::new::{new_zine_article, new_zine_issue, new_zine_project};
 use zine::serve::run_serve;
 use zine::{lint, Mode};
 
@@ -86,7 +86,7 @@ async fn main() -> Result<()> {
                     _ => {}
                 }
             } else if article {
-                println!("Calling Article\n");
+                new_zine_article()?;
             } else {
                 new_zine_project(name)?
             }
