@@ -37,9 +37,12 @@ enum Commands {
     New {
         /// The project name.
         name: Option<String>,
-        /// New issue.
+        /// Create a new issue.
         #[arg(short, long)]
         issue: bool,
+        /// Create a new article
+        #[arg(short, long)]
+        article: bool,
     },
     /// Lint Zine project.
     Lint {
@@ -70,7 +73,11 @@ async fn main() -> Result<()> {
             zine::set_current_mode(Mode::Serve);
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
-        Commands::New { name, issue } => {
+        Commands::New {
+            name,
+            issue,
+            article,
+        } => {
             if issue {
                 match new_zine_issue() {
                     Err(_) => eprintln!(
@@ -78,6 +85,8 @@ async fn main() -> Result<()> {
                     ),
                     _ => {}
                 }
+            } else if article {
+                println!("Calling Article\n");
             } else {
                 new_zine_project(name)?
             }
