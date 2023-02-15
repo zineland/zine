@@ -7,8 +7,8 @@
             {% for topic in topics -%}
             <a href="/topic/{{ topic.id | lower }}">
                 <div class="flex p-6 hover:bg-gray-100">
-                    <div class="bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl">#</div>
-                    <div class="pl-4 sm:pl-8">
+                    <div class="flex-none bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl">#</div>
+                    <div class="flex-1 pl-4 sm:pl-8">
                         <div class="flex flex-col sm:flex-row sm:items-center">
                             <div class="zine-topic-name relative font-bold text-xl text-black">
                                 {% if topic.name -%}
