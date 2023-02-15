@@ -155,4 +155,50 @@ pub mod serde_date {
                 .map_err(|e| E::custom(format!("The date value {} is invalid: {}", v, e)))
         }
     }
+
+    pub mod options {
+        use super::*;
+
+        struct OptionDateVisitor;
+
+        pub fn serialize<S: Serializer>(
+            date: &Option<Date>,
+            serializer: S,
+        ) -> Result<S::Ok, S::Error> {
+            if let Some(date) = date {
+                super::serialize(date, serializer)
+            } else {
+                None::<Date>.serialize(serializer)
+            }
+        }
+
+        pub fn deserialize<'de, D>(d: D) -> Result<Option<Date>, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            d.deserialize_option(OptionDateVisitor)
+        }
+
+        impl<'de> de::Visitor<'de> for OptionDateVisitor {
+            type Value = Option<Date>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a YYYY-MM-DD date or none")
+            }
+
+            fn visit_some<D>(self, d: D) -> Result<Self::Value, D::Error>
+            where
+                D: de::Deserializer<'de>,
+            {
+                d.deserialize_str(DateVisitor).map(Some)
+            }
+
+            fn visit_none<E>(self) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(None)
+            }
+        }
+    }
 }

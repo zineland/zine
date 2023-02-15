@@ -32,9 +32,11 @@
         class="zine-diamond text-2xl before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative block">
         <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-14">{{ title }}</div>
     </span>
+    {% if date -%}
     <span
         class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-main relative block mt-2">
         <div class="relative text-xs text-white">{{ date }}</div>
     </span>
+    {% endif -%}
 </div>
 {% endmacro -%}

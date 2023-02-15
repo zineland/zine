@@ -5,6 +5,7 @@ use rayon::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     collections::{BTreeMap, HashMap},
     fs,
     path::{Component, Path},
@@ -219,7 +220,7 @@ impl Zine {
                         },
                         content: &article.markdown,
                         author: &article.meta.author,
-                        date: &article.meta.pub_date,
+                        date: Some(article.meta.pub_date),
                     })
                     .collect::<Vec<_>>();
 
@@ -231,7 +232,7 @@ impl Zine {
                             url: format!("{}/{}", self.site.url, issue.slug),
                             content,
                             author: &None,
-                            date: &issue.pub_date,
+                            date: issue.pub_date,
                         })
                     }
                 }
@@ -240,7 +241,10 @@ impl Zine {
             .collect::<Vec<_>>();
 
         // Sort by date in descending order.
-        entries.par_sort_unstable_by(|a, b| b.date.cmp(a.date));
+        entries.par_sort_unstable_by(|a, b| match (a.date, b.date) {
+            (Some(a_date), Some(b_date)) => b_date.cmp(&a_date),
+            _ => Ordering::Equal,
+        });
         entries.into_iter().take(limit).collect()
     }
 
