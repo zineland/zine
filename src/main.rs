@@ -32,6 +32,9 @@ enum Commands {
         /// The listen port.
         #[arg(short, default_value_t = 3000)]
         port: u16,
+        /// Auto open magazine in browser.
+        #[arg(short, long)]
+        open: bool,
     },
     /// New a Zine project.
     New {
@@ -66,9 +69,9 @@ async fn main() -> Result<()> {
             watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch, None).await?;
             println!("Build success! The build directory is `{}`.", dest);
         }
-        Commands::Serve { source, port } => {
+        Commands::Serve { source, port, open } => {
             zine::set_current_mode(Mode::Serve);
-            run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
+            run_serve(source.unwrap_or_else(|| ".".into()), port, open).await?;
         }
         Commands::New { name, issue } => {
             if issue {

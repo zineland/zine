@@ -33,6 +33,11 @@ pub async fn watch_build<P: AsRef<Path>>(
     let build_result = tokio::task::spawn_blocking(move || {
         build(&mut engine, false)?;
 
+        if let Some(sender) = sender.as_ref() {
+            // Notify the first building finished.
+            sender.send(())?;
+        }
+
         if watch {
             println!("Watching...");
             let (tx, rx) = mpsc::channel();
