@@ -232,6 +232,16 @@ impl Article {
 
         Ok(())
     }
+    pub(crate) fn write_markdown_template(&self, path: &Path) -> Result<()> {
+        let mut md_file = std::fs::OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(path.join(&self.meta.file))?;
+
+        md_file.write_all("Hello. Write your article here\n".as_bytes())?;
+
+        Ok(())
+    }
     /// Check whether `author` name is the author of this article.
     pub fn is_author(&self, author: &str) -> bool {
         self.meta
