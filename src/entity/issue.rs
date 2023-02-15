@@ -4,8 +4,9 @@ use anyhow::{Context as _, Result};
 use rayon::slice::ParallelSliceMut;
 use serde::{Deserialize, Serialize};
 use tera::Context;
+use time::Date;
 
-use crate::{engine, html::Meta, markdown};
+use crate::{current_mode, engine, html::Meta, markdown, Mode};
 
 use super::{article::Article, Entity};
 
@@ -22,7 +23,13 @@ pub struct Issue {
     /// The optional introduction for this issue (parsed from convention intro.md file).
     #[serde(skip)]
     pub intro: Option<String>,
-    pub cover: Option<String>,
+    cover: Option<String>,
+    /// The publish date. Format like YYYY-MM-DD.
+    #[serde(with = "crate::helpers::serde_date")]
+    pub pub_date: Date,
+    /// Whether to publish the whole issue.
+    #[serde(default)]
+    publish: bool,
     /// The path of issue diretory.
     #[serde(skip_deserializing)]
     pub dir: String,
@@ -49,6 +56,15 @@ impl std::fmt::Debug for Issue {
 }
 
 impl Issue {
+    /// Check whether the issue need publish.
+    ///
+    /// The issue need publish in any of two conditions:
+    /// - the publish property is true
+    /// - in `zine serve` mode
+    pub fn need_publish(&self) -> bool {
+        self.publish || matches!(current_mode(), Mode::Serve)
+    }
+
     // Get the description of this issue.
     // Mainly for html meta description tag.
     fn description(&self) -> String {
@@ -73,7 +89,7 @@ impl Issue {
     pub fn featured_articles(&self) -> Vec<&Article> {
         self.articles
             .iter()
-            .filter(|article| article.featured && article.publish)
+            .filter(|article| article.featured && article.need_publish())
             .collect()
     }
 
@@ -81,9 +97,10 @@ impl Issue {
     ///
     /// See [`Article::need_publish()`](super::Article::need_publish)
     pub fn articles(&self) -> Vec<&Article> {
+        let issue_need_publish = self.need_publish();
         self.articles
             .iter()
-            .filter(|article| article.need_publish())
+            .filter(|article| issue_need_publish && article.need_publish())
             .collect()
     }
 }
@@ -114,6 +131,10 @@ impl Entity for Issue {
     }
 
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+        if !self.need_publish() {
+            return Ok(());
+        }
+
         let issue_dir = dest.join(&self.slug);
         context.insert("issue", &self);
 
