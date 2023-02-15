@@ -412,7 +412,7 @@ mod tests_article_impl {
         // Strip off [[article]] for testing
         let massaged_contents = contents
             .lines()
-            .skip(1)
+            .skip(2)
             .map(|x| x.to_owned())
             .collect::<Vec<String>>()
             .join("\n");

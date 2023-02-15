@@ -26,6 +26,12 @@ pub fn run_command(program: &str, args: &[&str]) -> Result<String, io::Error> {
     }
 }
 
+pub fn get_author_from_git() -> String {
+    run_command("git", &["config", "user.name"])
+        .ok()
+        .unwrap_or_default()
+}
+
 pub fn get_date_of_today() -> time::Date {
     OffsetDateTime::now_utc().date()
 }

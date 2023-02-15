@@ -4,7 +4,10 @@ use std::{borrow::Cow, env, fs, path::PathBuf};
 use anyhow::{Context as _, Result};
 use promptly::prompt_default;
 
-use crate::{helpers::run_command, ZINE_FILE};
+use crate::{
+    helpers::{get_author_from_git, run_command},
+    ZINE_CONTENT_DIR, ZINE_FILE,
+};
 use crate::{Article, Author, Issue, Site};
 
 struct ZineScaffold {
@@ -74,9 +77,7 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
         fs::create_dir_all(&source)?;
     }
 
-    let author = run_command("git", &["config", "user.name"])
-        .ok()
-        .unwrap_or_default();
+    let author = get_author_from_git();
     let scaffold = ZineScaffold {
         source,
         author,
@@ -94,9 +95,7 @@ pub fn new_zine_issue() -> Result<()> {
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
     zine.parse_issue_from_dir(&source)?;
 
-    let author = run_command("git", &["config", "user.name"])
-        .ok()
-        .unwrap_or_default();
+    let author = get_author_from_git();
     let next_issue_number = zine.issues.len() + 1;
 
     let issue_number = prompt_default("What is your issue number?", next_issue_number)?;
@@ -109,5 +108,45 @@ pub fn new_zine_issue() -> Result<()> {
         issue_title: issue_title.into(),
     };
     scaffold.create_issue()?;
+    Ok(())
+}
+
+pub fn new_zine_article() -> Result<()> {
+    // Use zine.toml to find root path
+    let (source, mut zine) = crate::locate_root_zine_folder(env::current_dir()?)?
+        .with_context(|| "Failed to find the root zine.toml file".to_string())?;
+    zine.parse_issue_from_dir(&source)?;
+
+    let author = run_command("git", &["config", "user.name"])
+        .ok()
+        .unwrap_or_default()
+        .to_lowercase();
+
+    let current_issue_number = zine.issues.len() - 1;
+
+    let article_title = prompt_default(
+        "What is your article's title?",
+        "My New Article".to_string(),
+    )?;
+    let author = prompt_default("Author or list of author names (lowercase):", author)?;
+
+    let article = Article::default()
+        .set_title(article_title.as_ref())
+        .set_authors(author.as_ref())?
+        .finalize();
+
+    let issue_path = &source
+        .join(ZINE_CONTENT_DIR)
+        .join(&zine.issues[current_issue_number].dir);
+
+    // Append the new article to the zine.toml for the current Issue.
+    article.append_article_to_toml(&issue_path.join(ZINE_FILE))?;
+    // Vec[0] = Issue 1, Vec[1] = Issue 2 and so on.
+    zine.issues[current_issue_number].add_article(article);
+    zine.issues[current_issue_number]
+        .articles
+        .last()
+        .expect("No Articles for this Issue")
+        .write_markdown_template(&issue_path)?;
     Ok(())
 }
