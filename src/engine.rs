@@ -199,6 +199,7 @@ impl ZineEngine {
 
         // Copy builtin static files into dest static dir.
         let dest_static_dir = self.dest.join("static");
+        #[allow(clippy::needless_borrow)]
         fs::create_dir_all(&dest_static_dir)?;
 
         #[cfg(not(debug_assertions))]
