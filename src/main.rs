@@ -74,23 +74,25 @@ async fn main() -> Result<()> {
             run_serve(source.unwrap_or_else(|| ".".into()), port).await?;
         }
         Commands::New {
+            name: _,
+            issue: false,
+            article: true,
+        } => new_zine_article()?,
+        Commands::New {
+            name: _,
+            issue: true,
+            article: _,
+        } => match new_zine_issue() {
+            Err(_) => eprintln!(
+                "You have tried to create an issue that already exists.\nNothing created."
+            ),
+            _ => {}
+        },
+        Commands::New {
             name,
-            issue,
-            article,
-        } => {
-            if issue {
-                match new_zine_issue() {
-                    Err(_) => eprintln!(
-                        "You have tried to create an issue that already exists.\nNothing created."
-                    ),
-                    _ => {}
-                }
-            } else if article {
-                new_zine_article()?;
-            } else {
-                new_zine_project(name)?
-            }
-        }
+            issue: false,
+            article: false,
+        } => new_zine_project(name)?,
         Commands::Lint { source, ci } => {
             let success = lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?;
             if ci && !success {
