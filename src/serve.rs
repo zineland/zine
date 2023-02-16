@@ -20,7 +20,7 @@ use tower_http::services::ServeDir;
 // The temporal build dir, mainly for `zine serve` command.
 static TEMP_ZINE_BUILD_DIR: &str = "__zine_build";
 
-pub async fn run_serve(source: String, port: u16) -> Result<()> {
+pub async fn run_serve(source: String, port: u16, open_browser: bool) -> Result<()> {
     let tmp_dir = env::temp_dir().join(TEMP_ZINE_BUILD_DIR);
     if tmp_dir.exists() {
         // Remove cached build directory to invalidate the old cache.
@@ -28,17 +28,31 @@ pub async fn run_serve(source: String, port: u16) -> Result<()> {
     }
 
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
-    let (tx, _rx) = broadcast::channel(64);
+    let serving_url = format!("http://{addr}");
+    println!("{}", ZINE_BANNER);
+    println!("listening on {}", serving_url);
+
+    let (tx, mut rx) = broadcast::channel(64);
     let serve_dir = ServeDir::new(&tmp_dir).fallback(FallbackService { tx: tx.clone() });
 
+    if open_browser {
+        tokio::spawn(async move {
+            if rx.recv().await.is_ok() {
+                opener::open(serving_url).unwrap();
+            }
+        });
+    }
+
     tokio::spawn(async move {
-        watch_build(Path::new(&source), tmp_dir.as_path(), true, Some(tx))
-            .await
-            .unwrap();
+        match watch_build(Path::new(&source), tmp_dir.as_path(), true, Some(tx)).await {
+            Ok(result) => result,
+            Err(e) => {
+                // handle the error here, for example by logging it or returning it to the caller
+                println!("Error: {:?}", e);
+            }
+        };
     });
 
-    println!("{ZINE_BANNER}");
-    println!("listening on http://{addr}");
     hyper::Server::bind(&addr)
         .serve(tower::make::Shared::new(serve_dir))
         .await

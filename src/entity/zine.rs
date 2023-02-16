@@ -207,7 +207,7 @@ impl Zine {
             .issues
             .par_iter()
             .flat_map(|issue| {
-                issue
+                let mut entries = issue
                     .articles()
                     .iter()
                     .map(|article| FeedEntry {
@@ -221,7 +221,21 @@ impl Zine {
                         author: &article.meta.author,
                         date: &article.meta.pub_date,
                     })
-                    .collect::<Vec<_>>()
+                    .collect::<Vec<_>>();
+
+                // Add issue intro article into feed
+                if issue.need_publish() {
+                    if let Some(content) = issue.intro.as_ref() {
+                        entries.push(FeedEntry {
+                            title: &issue.title,
+                            url: format!("{}/{}", self.site.url, issue.slug),
+                            content,
+                            author: &None,
+                            date: &issue.pub_date,
+                        })
+                    }
+                }
+                entries
             })
             .collect::<Vec<_>>();
 
@@ -401,10 +415,14 @@ impl Entity for Zine {
         self.pages.render(context.clone(), dest)?;
 
         // Render home page.
-        context.insert("issues", &self.issues);
-        // `article_map` is the issue number and issue's featured articles map.
-        let article_map = self
+        let issues = self
             .issues
+            .iter()
+            .filter(|issue| issue.need_publish())
+            .collect::<Vec<_>>();
+        context.insert("issues", &issues);
+        // `article_map` is the issue number and issue's featured articles map.
+        let article_map = issues
             .iter()
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();

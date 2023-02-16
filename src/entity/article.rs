@@ -160,7 +160,7 @@ pub struct Article {
     /// This field would be ignored if in `zine serve` mode, that's mean we alwasy
     /// generate HTML file in this mode.
     #[serde(default)]
-    pub publish: bool,
+    publish: bool,
     /// The canonical link of this article.
     /// See issue: <https://github.com/zineland/zine/issues/141>
     pub canonical: Option<String>,

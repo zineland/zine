@@ -149,6 +149,7 @@ pub fn parse_html_meta<'a, R: Read>(mut html: R) -> Meta<'a> {
 }
 
 // Walk html tree to parse [`Meta`].
+#[allow(unused_assignments)]
 fn walk(handle: &Handle, meta: &mut Meta) {
     fn get_attribute<'a>(attrs: &'a [Attribute], name: &'a str) -> Option<&'a str> {
         attrs.iter().find_map(|attr| {
@@ -167,6 +168,9 @@ fn walk(handle: &Handle, meta: &mut Meta) {
         })
     }
 
+    // Current super node we traversing in.
+    let mut super_node = "";
+
     if let NodeData::Element {
         ref name,
         ref attrs,
@@ -174,7 +178,10 @@ fn walk(handle: &Handle, meta: &mut Meta) {
     } = handle.data
     {
         match name.local.as_ref() {
-            "meta" => {
+            node_name @ ("head" | "body" | "footer") => {
+                super_node = node_name;
+            }
+            "meta" if super_node == "head" => {
                 // <meta name="description" content="xxx"/>
                 // get description value from attribute.
                 let attrs = &*attrs.borrow();
@@ -199,10 +206,10 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                     _ => {}
                 }
             }
-            "link" => {
+            "link" if super_node == "head" => {
                 // TODO: Extract favicon from <link> tag
             }
-            "title" => {
+            "title" if super_node == "head" => {
                 // Extract <title> tag.
                 // Some title tag may have multiple empty text child nodes,
                 // we need handle this case:

@@ -2,11 +2,8 @@
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-    <div class="text-2xl text-center m-6">
-        <span
-            class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-primary relative inline-block">
-            <div class="first-letter:text-4xl first-letter:font-bold relative text-main px-10">{{ issue.title }}</div>
-        </span>
+    <div class="text-center my-16">
+    {{ macros::issue_diamond(title=issue.title, date=issue.pub_date) }}
     </div>
     <div class="max-w-prose mx-auto">
         {% if intro -%}
@@ -19,7 +16,7 @@
         <div class="prose my-8 md:mx-8">{{ markdown_to_html(markdown = intro) | safe }}</div>
         {% endif -%}
         {% for article in articles -%}
-        <div class="relative py-6 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
+        <div class="relative pt-6 pb-4 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
             {% if article.path -%}
             <a class="group" href="{{ article.path }}">
             {% else -%}
@@ -33,14 +30,14 @@
                     <img class="z-0 w-full max-h-52 md:max-h-72 object-cover" loading="lazy" src="{{ article.cover }}"
                         alt="{{ article.title }}" />
                 </div>
-                <div class="my-4 text-2xl text-black">
+                <div class="mt-4 text-2xl text-black">
                     <div
-                        class="zine-card-title pb-4 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
+                        class="zine-card-title mb-2 font-bold line-clamp-2 group-hover:underline decoration-8 underline-offset-1 decoration-primary">
                         {{ article.title }}
                     </div>
                 </div>
             </a>
-            <div class="flex sm:px-8 items-center justify-between text-base text-gray-500 absolute bottom-4 left-0 right-0">
+            <div class="flex items-center justify-between text-base text-gray-500">
                 <span class="zine-card-date">{{ article.pub_date }}</span>
                 {{ macros::author_link(author = article.author) }}
             </div>

@@ -6,12 +6,16 @@ pub use render::MarkdownRender;
 
 /// Extract the description from markdown content.
 ///
-/// The strategy is extract the first meaningful line,
-/// and only take at most 200 plain chars from this line.
+/// The strategy is extract at most 200 plain chars from the
+/// provided markdown content.
 pub fn extract_description(markdown: &str) -> String {
+    // The max length of the resulting description.
+    let max_length = 200;
+    let mut chars_count = 0;
+
     markdown
         .lines()
-        .find_map(|line| {
+        .filter_map(|line| {
             // Ignore heading, image line.
             let line = line.trim();
             if line.is_empty() || line.starts_with(['#', '!']) {
@@ -22,12 +26,25 @@ pub fn extract_description(markdown: &str) -> String {
                 if raw == "\n" || raw.is_empty() {
                     None
                 } else {
-                    // No more than 200 chars.
-                    // Also, replace double quote to single quote.
-                    Some(raw.chars().take(200).collect::<String>().replace('"', "'"))
+                    Some(raw.replace('"', "'"))
                 }
             }
         })
+        // Take lines untill the chars count is greater than 200. Including
+        // the line that makes the count exceed 200.
+        .take_while(|line| {
+            if chars_count >= max_length {
+                return false;
+            }
+            chars_count += line.chars().count();
+            true
+        })
+        .reduce(|mut dest, line| {
+            dest.push('\n');
+            dest.push_str(&line);
+            dest
+        })
+        .map(|lines| lines.chars().take(max_length).collect::<_>())
         .unwrap_or_default()
 }
 
@@ -119,12 +136,9 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_decription_at_most_1_paragraphs() {
-        let base = "a".repeat(10);
-        let mut p1 = base.clone();
-        p1.push('\n');
-        p1.push_str(&base);
-        assert_eq!(base, extract_description(&p1));
+    fn test_extract_decription4() {
+        assert_eq!("", extract_description(""));
+        assert_eq!("a\naa\na", extract_description("a\naa\na"));
     }
 
     #[test]
@@ -134,6 +148,11 @@ mod tests {
         let p2 = p1.clone();
         // Never extract more than 200 chars.
         assert_eq!(p1[..200], extract_description(&p2));
+
+        assert_eq!(
+            format!("a\naa\n{}", "a".repeat(200 - 5)),
+            extract_description(&format!("a\naa\n{}", "a".repeat(400)))
+        );
     }
 
     #[test]
