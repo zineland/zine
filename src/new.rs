@@ -49,13 +49,16 @@ impl ZineScaffold {
             .finalize();
         fs::create_dir_all(contents_dir.join(&issue.dir))?;
         let mut article = Article::default();
-        article.meta.set_authors(&self.author)?.finalize();
-        article.finalize();
+        article.set_authors(&self.author)?.finalize();
         issue.add_article(article);
         issue.write_new_issue(&contents_dir)?;
 
         if !issue.articles.is_empty() {
-            issue.write_initial_markdown_file(&contents_dir)?;
+            issue
+                .articles
+                .first()
+                .expect("No Articles in issue")
+                .write_markdown_template(&contents_dir.join(&issue.dir))?;
             issue.articles[0]
                 .append_article_to_toml(&contents_dir.join(issue.dir).join(ZINE_FILE))?;
         }

@@ -126,18 +126,6 @@ impl Issue {
 
         Ok(())
     }
-    /// Create an emtpy markdown file. This should probably be moved to the article struct
-    /// moving it there would make it easier to use when just adding a new article
-    pub(crate) fn write_initial_markdown_file(&mut self, path: &Path) -> Result<()> {
-        let article = self.articles[0].meta.finalize();
-        let mut md_file = std::fs::OpenOptions::new()
-            .create_new(true)
-            .write(true)
-            .open(path.join(&self.dir).join(article.file))?;
-
-        md_file.write_all("Hello. Write your article here\n".as_bytes())?;
-        Ok(())
-    }
     /// Check whether the issue need publish.
     ///
     /// The issue need publish in any of two conditions:
