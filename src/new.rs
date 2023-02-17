@@ -4,10 +4,7 @@ use std::{borrow::Cow, env, fs, path::PathBuf};
 use anyhow::{Context as _, Result};
 use promptly::prompt_default;
 
-use crate::{
-    helpers::{get_author_from_git, run_command},
-    ZINE_CONTENT_DIR, ZINE_FILE,
-};
+use crate::{helpers::get_author_from_git, ZINE_CONTENT_DIR, ZINE_FILE};
 use crate::{Article, Author, Issue, Site};
 
 struct ZineScaffold {
@@ -117,10 +114,7 @@ pub fn new_zine_article() -> Result<()> {
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
     zine.parse_issue_from_dir(&source)?;
 
-    let author = run_command("git", &["config", "user.name"])
-        .ok()
-        .unwrap_or_default()
-        .to_lowercase();
+    let author = get_author_from_git().to_lowercase();
 
     let article_title = prompt_default(
         "What is your article's title?",
@@ -139,12 +133,12 @@ pub fn new_zine_article() -> Result<()> {
 
     // Append the new article to the zine.toml for the current Issue.
     article.append_article_to_toml(&issue_path.join(ZINE_FILE))?;
-    // Vec[0] = Issue 1, Vec[1] = Issue 2 and so on.
+    // vec.push() places the new article at the start of the vec. So it is at index:0
     zine.issues[0].add_article(article);
     zine.issues[0]
         .articles
         .last()
         .expect("No Articles for this Issue")
-        .write_markdown_template(&issue_path)?;
+        .write_markdown_template(issue_path)?;
     Ok(())
 }

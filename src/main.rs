@@ -85,12 +85,13 @@ async fn main() -> Result<()> {
             name: _,
             issue: true,
             article: _,
-        } => match new_zine_issue() {
-            Err(_) => eprintln!(
-                "You have tried to create an issue that already exists.\nNothing created."
-            ),
-            _ => {}
-        },
+        } => {
+            if new_zine_issue().is_err() {
+                eprintln!(
+                    "You have tried to create an issue that already exists.\nNothing created."
+                );
+            }
+        }
         Commands::New {
             name,
             issue: false,
