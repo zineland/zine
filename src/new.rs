@@ -122,8 +122,6 @@ pub fn new_zine_article() -> Result<()> {
         .unwrap_or_default()
         .to_lowercase();
 
-    let current_issue_number = zine.issues.len() - 1;
-
     let article_title = prompt_default(
         "What is your article's title?",
         "My New Article".to_string(),
@@ -137,13 +135,13 @@ pub fn new_zine_article() -> Result<()> {
 
     let issue_path = &source
         .join(ZINE_CONTENT_DIR)
-        .join(&zine.issues[current_issue_number].dir);
+        .join(&zine.issues.first().expect("No Issues found.").dir);
 
     // Append the new article to the zine.toml for the current Issue.
     article.append_article_to_toml(&issue_path.join(ZINE_FILE))?;
     // Vec[0] = Issue 1, Vec[1] = Issue 2 and so on.
-    zine.issues[current_issue_number].add_article(article);
-    zine.issues[current_issue_number]
+    zine.issues[0].add_article(article);
+    zine.issues[0]
         .articles
         .last()
         .expect("No Articles for this Issue")
