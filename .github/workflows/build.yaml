@@ -24,7 +24,7 @@ jobs:
     - name: Run clippy
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
-        cargo clippy --release
+        cargo clippy --release --no-deps 
     - name: Run test
       run: |
         export PATH="$HOME/.cargo/bin:$PATH"
