@@ -9,6 +9,6 @@ pub struct FeedEntry<'a> {
     pub url: String,
     pub content: &'a String,
     pub author: &'a Option<AuthorId>,
-    #[serde(with = "crate::helpers::serde_date")]
-    pub date: &'a Date,
+    #[serde(with = "crate::helpers::serde_date::options")]
+    pub date: Option<Date>,
 }

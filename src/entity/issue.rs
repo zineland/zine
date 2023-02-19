@@ -25,8 +25,9 @@ pub struct Issue {
     pub intro: Option<String>,
     cover: Option<String>,
     /// The publish date. Format like YYYY-MM-DD.
-    #[serde(with = "crate::helpers::serde_date")]
-    pub pub_date: Date,
+    #[serde(default)]
+    #[serde(with = "crate::helpers::serde_date::options")]
+    pub pub_date: Option<Date>,
     /// Whether to publish the whole issue.
     #[serde(default)]
     publish: bool,
