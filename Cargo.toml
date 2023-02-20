@@ -53,4 +53,5 @@ walkdir = "2"
 
 [dev-dependencies]
 anyhow = { version = "1.0", features = ["backtrace"] }
+tempfile = "3"
 test-case = "2"
