@@ -1,3 +1,4 @@
+use std::io::prelude::*;
 use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::{Context as _, Result};
@@ -9,9 +10,8 @@ use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
 
-use crate::{current_mode, engine, html::Meta, markdown, Mode};
-
 use super::{article::Article, Entity};
+use crate::{current_mode, engine, html::Meta, markdown, Mode};
 
 /// The issue entity config.
 /// It parsed from issue directory's `zine.toml`.
@@ -44,9 +44,10 @@ pub struct Issue {
     /// Skip serialize `articles` since a single article page would
     /// contain a issue context, the `articles` is useless for the
     /// single article page.
+    // Disable skip so that we can use the default toml::to_string() to write toml as needed.
     #[serde(skip_serializing, default)]
-    #[serde(rename(deserialize = "article"))]
-    articles: Vec<Article>,
+    #[serde(rename(deserialize = "article", serialize = "article"))]
+    pub articles: Vec<Article>,
 }
 
 impl std::fmt::Debug for Issue {
@@ -63,7 +64,74 @@ impl std::fmt::Debug for Issue {
     }
 }
 
+impl Default for Issue {
+    fn default() -> Self {
+        Self {
+            slug: "".into(),
+            number: 0,
+            title: "Issue".into(),
+            intro: None,
+            cover: None,
+            dir: "".into(),
+            publish: true,
+            pub_date: None,
+            articles: vec![],
+        }
+    }
+}
 impl Issue {
+    /// Creates a default Issue struct
+    pub(crate) fn new() -> Self {
+        Self {
+            ..Default::default()
+        }
+    }
+    /// Set the issue number
+    pub(crate) fn set_issue_number(&mut self, number: u32) -> &mut Self {
+        self.number = number;
+        self
+    }
+    /// Set the title of the Issue
+    pub(crate) fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
+        self.title = title.into();
+        self.dir = self.title.clone().to_lowercase().replace(' ', "-");
+        self
+    }
+    /// Add an article to the issue struct
+    pub(crate) fn add_article(&mut self, article: Article) -> &mut Self {
+        self.articles.push(article);
+        self
+    }
+    /// Finalize and return a complete Issue struct
+    pub(crate) fn finalize(&mut self) -> Self {
+        // I think this matches the current behavour.
+        self.dir = std::format!("{}-{}", &self.dir, &self.number);
+        self.to_owned()
+    }
+    /// Create a new directory for the issue
+    /// Should be passed the path to the [ZINE_CONTENT_DIR]
+    #[allow(dead_code)]
+    pub(crate) fn create_issue_dir(&self, path: &Path) -> Result<()> {
+        if path.join(&self.dir).exists() {
+            Err(anyhow::anyhow!(
+                "Issue alredy Exists! Not creating a new issue."
+            ))?
+        }
+        std::fs::create_dir_all(path.join(&self.dir))?;
+        Ok(())
+    }
+    // Appends the issue to the top level zine.toml file
+    pub(crate) fn write_new_issue(&self, path: &Path) -> Result<()> {
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .create_new(true)
+            .open(path.join(&self.dir).join(crate::ZINE_FILE))?;
+
+        let toml_str = toml::to_string(&self)?;
+        file.write_all(toml_str.as_bytes())?;
+
+        Ok(())
+    }
     /// Check whether the issue need publish.
     ///
     /// The issue need publish in any of two conditions:
@@ -189,5 +257,34 @@ impl Entity for Issue {
         context.insert("intro", &self.intro);
         engine::render("issue.jinja", &context, issue_dir)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::entity::issue::Issue;
+    use tempfile::tempdir;
+
+    #[test]
+    fn defaults() {
+        let mut issue = Issue::new();
+        issue.set_issue_number(1).set_title("Some Magical Title");
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path();
+        assert!(std::fs::create_dir_all(&temp_path.join(&issue.dir)).is_ok());
+
+        assert!(issue.write_new_issue(&temp_path).is_ok());
+        assert!(issue.write_new_issue(&temp_path).is_err());
+
+        let contents =
+            std::fs::read_to_string(&temp_path.join(&issue.dir).join(crate::ZINE_FILE)).unwrap();
+        let data: Issue = toml::from_str(&contents).unwrap();
+
+        assert_eq!(data.title, "Some Magical Title");
+        assert_eq!(data.number, 1);
+
+        drop(temp_path);
+        assert!(temp_dir.close().is_ok());
     }
 }
