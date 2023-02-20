@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use zine::build::watch_build;
-use zine::new::{new_zine_issue, new_zine_project};
+use zine::new::{new_zine_article, new_zine_issue, new_zine_project};
 use zine::serve::run_serve;
 use zine::{lint, Mode};
 
@@ -40,9 +40,12 @@ enum Commands {
     New {
         /// The project name.
         name: Option<String>,
-        /// New issue.
+        /// Create a new issue.
         #[arg(short, long)]
         issue: bool,
+        /// Create a new article
+        #[arg(short, long)]
+        article: bool,
     },
     /// Lint Zine project.
     Lint {
@@ -67,19 +70,33 @@ async fn main() -> Result<()> {
             zine::set_current_mode(Mode::Build);
             let dest = dest.unwrap_or_else(|| "build".into());
             watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch, None).await?;
-            println!("Build success! The build directory is `{}`.", dest);
+            println!("Build success! The build directory is `{dest}`.");
         }
         Commands::Serve { source, port, open } => {
             zine::set_current_mode(Mode::Serve);
             run_serve(source.unwrap_or_else(|| ".".into()), port, open).await?;
         }
-        Commands::New { name, issue } => {
-            if issue {
-                new_zine_issue()?;
-            } else {
-                new_zine_project(name)?
+        Commands::New {
+            name: _,
+            issue: false,
+            article: true,
+        } => new_zine_article()?,
+        Commands::New {
+            name: _,
+            issue: true,
+            article: _,
+        } => {
+            if new_zine_issue().is_err() {
+                eprintln!(
+                    "You have tried to create an issue that already exists.\nNothing created."
+                );
             }
         }
+        Commands::New {
+            name,
+            issue: false,
+            article: false,
+        } => new_zine_project(name)?,
         Commands::Lint { source, ci } => {
             let success = lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?;
             if ci && !success {
@@ -92,8 +109,8 @@ async fn main() -> Result<()> {
             let date = option_env!("LAST_COMMIT_DATE").unwrap_or("");
             let build_info = env!("BUILD_INFO");
             println!("{}", zine::ZINE_BANNER);
-            println!("Zine version {} {}", version, date);
-            println!("({})", build_info);
+            println!("Zine version {version} {date}");
+            println!("({build_info})");
         }
     }
     Ok(())
