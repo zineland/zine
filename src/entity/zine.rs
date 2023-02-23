@@ -259,13 +259,24 @@ impl Zine {
         // Issues and articles
         for issue in &self.issues {
             entries.push(format!("{}/{}/", base_url, issue.slug));
-            entries.par_extend(issue.articles().par_iter().map(|article| {
-                if let Some(path) = article.meta.path.as_ref() {
-                    format!("{}{}", base_url, path)
-                } else {
-                    format!("{}/{}/{}", base_url, issue.slug, article.meta.slug)
-                }
-            }));
+            let articles = issue
+                .articles()
+                .into_iter()
+                .par_bridge()
+                .flat_map(|article| {
+                    let mut articles = vec![article];
+                    // including translation articles
+                    articles.extend(article.i18n.values());
+                    articles
+                })
+                .map(|article| {
+                    if let Some(path) = article.meta.path.as_ref() {
+                        format!("{}{}", base_url, path)
+                    } else {
+                        format!("{}/{}/{}", base_url, issue.slug, article.meta.slug)
+                    }
+                });
+            entries.par_extend(articles);
         }
 
         // Authors
