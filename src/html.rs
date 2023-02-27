@@ -21,13 +21,6 @@ pub struct Meta<'a> {
 }
 
 impl<'a> Meta<'a> {
-    pub fn is_filled(&self) -> bool {
-        !self.title.is_empty()
-            && !self.description.is_empty()
-            && matches!(&self.image, Some(image) if !image.is_empty())
-            && matches!(&self.url, Some(url) if !url.is_empty())
-    }
-
     pub fn truncate(&mut self) {
         self.title.to_mut().truncate(200);
         self.description.to_mut().truncate(200);
@@ -150,7 +143,10 @@ pub fn parse_html_meta<'a, R: Read>(mut html: R) -> Meta<'a> {
 }
 
 // Walk html tree to parse [`Meta`].
-fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) {
+// `super_node` is the current node we traversing in.
+//
+// Return true if we should stop traversing.
+fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) -> bool {
     fn get_attribute<'a>(attrs: &'a [Attribute], name: &'a str) -> Option<&'a str> {
         attrs.iter().find_map(|attr| {
             if attr.name.local.as_ref() == name {
@@ -179,6 +175,11 @@ fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) {
     {
         match name.local.as_ref() {
             node_name @ ("head" | "body" | "footer") => {
+                if current_super_node == "head" && node_name != "head" {
+                    // We have parsed all tags in head, so we can return.
+                    return true;
+                }
+
                 current_super_node = node_name;
             }
             "meta" if current_super_node == "head" => {
@@ -243,13 +244,13 @@ fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) {
     }
     let children = handle.children.borrow();
     for child in children.iter() {
-        walk(child, meta, current_super_node);
-
-        // If meta is filled, no need to walk.
-        if meta.is_filled() {
-            break;
+        if walk(child, meta, current_super_node) {
+            // Stop traverse.
+            return true;
         }
     }
+
+    false
 }
 
 #[cfg(test)]
