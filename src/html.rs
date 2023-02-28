@@ -137,7 +137,17 @@ pub fn parse_html_meta<'a, R: Read>(mut html: R) -> Meta<'a> {
         .unwrap();
 
     let mut meta = Meta::default();
-    walk(&rc_dom.document, &mut meta, "html");
+    if let NodeData::Document = rc_dom.document.data {
+        let children = rc_dom.document.children.borrow();
+        for child in children.iter() {
+            if walk(child, &mut meta, "html") {
+                // Stop traverse.
+                break;
+            }
+        }
+    } else {
+        walk(&rc_dom.document, &mut meta, "html");
+    }
     meta.truncate();
     meta
 }
@@ -164,25 +174,23 @@ fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) -> bool {
         })
     }
 
-    // Current super node we traversing in.
-    let mut current_super_node = super_node;
-
     if let NodeData::Element {
         ref name,
         ref attrs,
         ..
-    } = handle.data
+    } = &handle.data
     {
         match name.local.as_ref() {
-            node_name @ ("head" | "body" | "footer") => {
-                if current_super_node == "head" && node_name != "head" {
-                    // We have parsed all tags in head, so we can return.
-                    return true;
+            node_name @ ("html" | "head") => {
+                let children = handle.children.borrow();
+                for child in children.iter() {
+                    if walk(child, meta, node_name) {
+                        // Stop traverse.
+                        return true;
+                    }
                 }
-
-                current_super_node = node_name;
             }
-            "meta" if current_super_node == "head" => {
+            "meta" if super_node == "head" => {
                 // <meta name="description" content="xxx"/>
                 // get description value from attribute.
                 let attrs = &*attrs.borrow();
@@ -213,10 +221,10 @@ fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) -> bool {
                     _ => {}
                 }
             }
-            "link" if current_super_node == "head" => {
+            "link" if super_node == "head" => {
                 // TODO: Extract favicon from <link> tag
             }
-            "title" if current_super_node == "head" => {
+            "title" if super_node == "head" => {
                 // Extract <title> tag.
                 // Some title tag may have multiple empty text child nodes,
                 // we need handle this case:
@@ -240,13 +248,6 @@ fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) -> bool {
                 meta.title = Cow::Owned(title.trim().to_owned());
             }
             _ => {}
-        }
-    }
-    let children = handle.children.borrow();
-    for child in children.iter() {
-        if walk(child, meta, current_super_node) {
-            // Stop traverse.
-            return true;
         }
     }
 
@@ -437,31 +438,27 @@ mod tests {
 
     #[test]
     fn test_parse_html_meta2() {
-        let html = r#"<!DOCTYPE html><html lang="en" class="notranslate" translate="no">
-<head>
+        let html = r#"
+        
+<!DOCTYPE html><html lang="en" class="notranslate" translate="no"><head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>crates.io: Rust Package Registry</title>
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/assets/cargo.png" type="image/png">
+<link rel="search" href="/opensearch.xml" type="application/opensearchdescription+xml" title="Cargo">
+
 <meta property="og:image" content="/assets/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="description" content="crates.io is a Rust community effort to create a shared registry of crates.">
-<meta property="og:description" content="crates.io is a Rust community effort to create a shared registry of crates.">
-<meta name="twitter:description" content="crates.io is a Rust community effort to create a shared registry of crates.">
-<meta property="og:url" content="https://crates.io/">
-<meta name="twitter:url" content="https://crates.io/">
-</head>
-<body></body></html>
+
+<body>
+</body></html>
         "#;
         let meta = parse_html_meta(html.as_bytes());
         assert_eq!(meta.title, "crates.io: Rust Package Registry");
-        assert_eq!(
-            meta.description,
-            "crates.io is a Rust community effort to create a shared registry of crates."
-        );
-        assert_eq!(meta.url, Some("https://crates.io/".into()));
+        assert_eq!(meta.description, "",);
+        assert_eq!(meta.url, None);
         assert_eq!(meta.image, Some("/assets/og-image.png".into()));
     }
 
@@ -490,6 +487,33 @@ mod tests {
 </footer>
 </html>
         "#;
+        let meta = parse_html_meta(html.as_bytes());
+        assert_eq!(meta.title, "crates.io: Rust Package Registry");
+        assert_eq!(
+            meta.description,
+            "crates.io is a Rust community effort to create a shared registry of crates."
+        );
+        assert_eq!(meta.url, Some("https://crates.io/".into()));
+        assert_eq!(meta.image, Some("/assets/og-image.png".into()));
+    }
+
+    #[test]
+    fn test_parse_html_meta4() {
+        let html = r#"<head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/assets/cargo.png" type="image/png">
+        <meta property="og:image" content="/assets/og-image.png">
+        <meta name="twitter:card" content="summary_large_image">
+        <title>crates.io: Rust Package Registry</title>
+        <meta name="description" content="crates.io is a Rust community effort to create a shared registry of crates.">
+        
+        <meta property="og:url" content="https://crates.io/">
+        <meta name="twitter:url" content="https://crates.io/">
+        
+        </head>"#;
         let meta = parse_html_meta(html.as_bytes());
         assert_eq!(meta.title, "crates.io: Rust Package Registry");
         assert_eq!(
