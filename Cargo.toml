@@ -45,7 +45,7 @@ syntect = { version = "5", default-features = false, features = [
 tera = "1"
 thiserror = "1"
 time = { version = "0.3", features = ["serde", "serde-well-known"] }
-tokio = { version = "1.23", features = ["rt-multi-thread", "signal", "macros"] }
+tokio = { version = "1.26", features = ["rt-multi-thread", "signal", "macros"] }
 toml = "0.5"
 tower = { version = "0.4", features = ["make", "util"] }
 tower-http = { version = "0.3", features = ["fs"] }
@@ -53,4 +53,5 @@ walkdir = "2"
 
 [dev-dependencies]
 anyhow = { version = "1.0", features = ["backtrace"] }
+parking_lot = { version = "0.12", features = ["deadlock_detection"] }
 test-case = "2"

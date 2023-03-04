@@ -310,12 +310,6 @@ impl Zine {
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         self.theme.parse(source)?;
-        {
-            let mut zine_data = data::write();
-            zine_data
-                .set_theme(self.theme.clone())
-                .set_markdown_config(self.markdown_config.clone());
-        }
 
         if self.authors.is_empty() {
             println!("Warning: no author specified in [authors] of root `zine.toml`.");
@@ -334,6 +328,8 @@ impl Entity for Zine {
         {
             let mut zine_data = data::write();
             zine_data
+                .set_theme(self.theme.clone())
+                .set_markdown_config(self.markdown_config.clone())
                 .set_site(self.site.clone())
                 .set_topics(self.topics.keys().cloned().collect());
         }
