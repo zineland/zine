@@ -2,7 +2,7 @@ use std::{path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, ZineEngine};
 use anyhow::{Context, Result};
-use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode, DebouncedEventKind};
 use tokio::sync::broadcast::Sender;
 
 pub async fn watch_build<P: AsRef<Path>>(
@@ -54,14 +54,27 @@ pub async fn watch_build<P: AsRef<Path>>(
 
             loop {
                 match rx.recv() {
-                    Ok(_) => match build(&mut engine, true) {
-                        Ok(_) => {
-                            if let Some(sender) = sender.as_ref() {
-                                sender.send(())?;
+                    Ok(result) => match result {
+                        Ok(events) => {
+                            // Prevent build too frequently, otherwise it will cause program stuck.
+                            if events
+                                .iter()
+                                .any(|event| event.kind == DebouncedEventKind::Any)
+                            {
+                                match build(&mut engine, true) {
+                                    Ok(_) => {
+                                        if let Some(sender) = sender.as_ref() {
+                                            sender.send(())?;
+                                        }
+                                    }
+                                    Err(err) => {
+                                        println!("build error: {:?}", &err);
+                                    }
+                                }
                             }
                         }
                         Err(err) => {
-                            println!("build error: {:?}", &err);
+                            println!("watch error: {:?}", &err);
                         }
                     },
                     Err(err) => println!("watch error: {:?}", &err),
