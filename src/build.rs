@@ -31,7 +31,7 @@ pub async fn watch_build<P: AsRef<Path>>(
     let mut engine = ZineEngine::new(source, dest, zine)?;
     // Spawn the build process as a blocking task, avoid starving other tasks.
     let build_result = tokio::task::spawn_blocking(move || {
-        build(&mut engine, false)?;
+        engine.build(false)?;
 
         if let Some(sender) = sender.as_ref() {
             // Notify the first building finished.
@@ -61,7 +61,7 @@ pub async fn watch_build<P: AsRef<Path>>(
                                 .iter()
                                 .any(|event| event.kind == DebouncedEventKind::Any)
                             {
-                                match build(&mut engine, true) {
+                                match engine.build(true) {
                                     Ok(_) => {
                                         if let Some(sender) = sender.as_ref() {
                                             sender.send(())?;
@@ -92,12 +92,5 @@ pub async fn watch_build<P: AsRef<Path>>(
         println!("Error: {}", &err);
         std::process::exit(1);
     }
-    Ok(())
-}
-
-fn build(engine: &mut ZineEngine, reload: bool) -> Result<()> {
-    let instant = std::time::Instant::now();
-    engine.build(reload)?;
-    println!("Build cost: {}ms", instant.elapsed().as_millis());
     Ok(())
 }

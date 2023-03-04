@@ -213,6 +213,8 @@ impl ZineEngine {
     }
 
     pub fn build(&mut self, reload: bool) -> Result<()> {
+        let instant = std::time::Instant::now();
+
         if reload {
             self.zine = Zine::parse_from_toml(&self.source)?;
         }
@@ -236,7 +238,9 @@ impl ZineEngine {
         sitemap_context.insert("entries", &self.zine.sitemap_entries());
         render_sitemap(sitemap_context, &self.dest)?;
 
-        self.copy_static_assets()
+        self.copy_static_assets()?;
+        println!("Build cost: {}ms", instant.elapsed().as_millis());
+        Ok(())
     }
 }
 
