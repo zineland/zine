@@ -58,8 +58,7 @@ pub async fn watch_build<P: AsRef<Path>>(
                         Ok(events) => {
                             if events
                                 .iter()
-                                .find(|event| event.kind == DebouncedEventKind::Any)
-                                .is_some()
+                                .any(|event| event.kind == DebouncedEventKind::Any)
                             {
                                 match build(&mut engine, true) {
                                     Ok(_) => {
