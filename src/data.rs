@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::Result;
-use dashmap::DashMap;
+use dashmap::{try_result::TryResult, DashMap};
 use once_cell::sync::OnceCell;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{
@@ -179,7 +179,13 @@ impl ZineData {
     }
 
     pub fn get_preview(&self, url: &str) -> Option<UrlPreviewInfo> {
-        self.url_previews.get(url).map(|u| u.to_owned())
+        match self.url_previews.try_get(url) {
+            TryResult::Present(info) => Some(info.to_owned()),
+            TryResult::Absent => None,
+            TryResult::Locked => {
+                panic!("The url preview data is locked, please try again later.")
+            }
+        }
     }
 
     /// Preview url asynchronously, return a tuple.
