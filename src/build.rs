@@ -56,6 +56,7 @@ pub async fn watch_build<P: AsRef<Path>>(
                 match rx.recv() {
                     Ok(result) => match result {
                         Ok(events) => {
+                            // Prevent build too frequently, otherwise it will cause program stuck.
                             if events
                                 .iter()
                                 .any(|event| event.kind == DebouncedEventKind::Any)
