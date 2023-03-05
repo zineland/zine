@@ -59,7 +59,7 @@ struct ArticleRef<'a> {
 }
 
 impl Zine {
-    /// Parse Zine instance from the root zine.toml file.li
+    /// Parse Zine instance from the root zine.toml file.
     pub fn parse_from_toml<P: AsRef<Path>>(source: P) -> Result<Zine> {
         let source = source.as_ref().join(crate::ZINE_FILE);
         let content = fs::read_to_string(&source)
