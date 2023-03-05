@@ -24,6 +24,10 @@ pub struct Issue {
     #[serde(skip)]
     pub intro: Option<String>,
     cover: Option<String>,
+    /// Default cover for each article in this issue.
+    /// The global `default_cover` in [theme] section will be overrided.
+    #[serde(skip_serializing)]
+    default_cover: Option<String>,
     /// The publish date. Format like YYYY-MM-DD.
     #[serde(default)]
     #[serde(with = "crate::helpers::serde_date::options")]
@@ -126,6 +130,14 @@ impl Entity for Issue {
         // Sort all articles by pub_date.
         self.articles
             .par_sort_unstable_by_key(|article| article.meta.pub_date);
+
+        if let Some(default_cover) = self.default_cover.as_deref() {
+            // Set default cover for articles in this issue if article has no `cover`.
+            self.articles
+                .iter_mut()
+                .filter(|article| article.meta.cover.is_none())
+                .for_each(|article| article.meta.cover = Some(default_cover.to_owned()))
+        }
 
         self.articles.parse(&dir)?;
         Ok(())
