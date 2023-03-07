@@ -1,8 +1,13 @@
 <div class="relative my-6 p-8 bg-[#f8fafc]">
-    <div class="mb-4">
-        {% if quote.author -%}
-        <div class="text-lg font-bold">{{ quote.author }}</div>
-        {% endif -%}
+    <div class="not-prose my-6">
+        <div class="flex items-center">
+            {% if quote.avatar -%}
+            <img class="not-prose w-8 h-8 rounded-full !m-0 !mr-2" src="{{ quote.avatar }}"/>
+            {% endif -%}
+            {% if quote.author -%}
+            <div class="text-lg font-bold">{{ quote.author }}</div>
+            {% endif -%}
+        </div>
         {% if quote.bio -%}
         <div class="text-sm text-slate-400">{{ markdown_to_html(markdown = quote.bio) | safe }}</div>
         {% endif -%}
