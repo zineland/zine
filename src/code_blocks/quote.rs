@@ -11,6 +11,8 @@ pub struct QuoteBlock {
     // The author name.
     // Plain text format.
     pub author: Option<String>,
+    /// The avatar url.
+    pub avatar: Option<String>,
     // The profile of the author.
     // Markdown format.
     pub bio: Option<String>,
