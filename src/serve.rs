@@ -89,9 +89,16 @@ impl Service<Request<Body>> for FallbackService {
                         // Spawn a task to handle the websocket connection.
                         tokio::spawn(async move {
                             let mut websocket = websocket.await.unwrap();
-                            while reload_rx.recv().await.is_ok() {
-                                // Ignore the send failure, the reason could be: Broken pipe
-                                let _ = websocket.send(Message::text("reload")).await;
+                            loop {
+                                match reload_rx.recv().await {
+                                    Ok(_) => {
+                                        // Ignore the send failure, the reason could be: Broken pipe
+                                        let _ = websocket.send(Message::text("reload")).await;
+                                    }
+                                    Err(e) => {
+                                        panic!("Failed to receive reload signal: {:?}", e);
+                                    }
+                                }
                             }
                         });
 

@@ -91,6 +91,14 @@ pub async fn fetch_url(url: &str) -> Result<impl Read> {
         } else {
             println!("Warning: url `{url}` has been redirected");
         }
+    } else if !resp.status().is_success() {
+        let warning = format!(
+            "Warning: failed to fetch url `{url}`, status code: {status}",
+            url = url,
+            status = resp.status()
+        );
+        println!("{warning}");
+        anyhow::bail!(warning);
     }
     let bytes = body::to_bytes(resp.into_body()).await?;
     Ok(bytes.reader())

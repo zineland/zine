@@ -107,6 +107,17 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
     };
 
     scaffold.create_project(&name.unwrap_or_default())?;
+    println!(
+        r#"
+    Created sucessfully!
+    
+    To start your magazine, run:    
+    $ zine serve --open
+
+    Or to build your magazine, run:
+    $ zine build
+    "#
+    );
     Ok(())
 }
 

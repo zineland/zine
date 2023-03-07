@@ -21,12 +21,6 @@ pub struct Meta<'a> {
 }
 
 impl<'a> Meta<'a> {
-    pub fn is_filled(&self) -> bool {
-        !self.title.is_empty()
-            && !self.description.is_empty()
-            && matches!(&self.image, Some(image) if !image.is_empty())
-    }
-
     pub fn truncate(&mut self) {
         self.title.to_mut().truncate(200);
         self.description.to_mut().truncate(200);
@@ -143,14 +137,26 @@ pub fn parse_html_meta<'a, R: Read>(mut html: R) -> Meta<'a> {
         .unwrap();
 
     let mut meta = Meta::default();
-    walk(&rc_dom.document, &mut meta);
+    if let NodeData::Document = rc_dom.document.data {
+        let children = rc_dom.document.children.borrow();
+        for child in children.iter() {
+            if walk(child, &mut meta, "html") {
+                // Stop traverse.
+                break;
+            }
+        }
+    } else {
+        walk(&rc_dom.document, &mut meta, "html");
+    }
     meta.truncate();
     meta
 }
 
 // Walk html tree to parse [`Meta`].
-#[allow(unused_assignments)]
-fn walk(handle: &Handle, meta: &mut Meta) {
+// `super_node` is the current node we traversing in.
+//
+// Return true if we should stop traversing.
+fn walk(handle: &Handle, meta: &mut Meta, super_node: &str) -> bool {
     fn get_attribute<'a>(attrs: &'a [Attribute], name: &'a str) -> Option<&'a str> {
         attrs.iter().find_map(|attr| {
             if attr.name.local.as_ref() == name {
@@ -168,18 +174,21 @@ fn walk(handle: &Handle, meta: &mut Meta) {
         })
     }
 
-    // Current super node we traversing in.
-    let mut super_node = "";
-
     if let NodeData::Element {
         ref name,
         ref attrs,
         ..
-    } = handle.data
+    } = &handle.data
     {
         match name.local.as_ref() {
-            node_name @ ("head" | "body" | "footer") => {
-                super_node = node_name;
+            node_name @ ("html" | "head") => {
+                let children = handle.children.borrow();
+                for child in children.iter() {
+                    if walk(child, meta, node_name) {
+                        // Stop traverse.
+                        return true;
+                    }
+                }
             }
             "meta" if super_node == "head" => {
                 // <meta name="description" content="xxx"/>
@@ -201,6 +210,12 @@ fn walk(handle: &Handle, meta: &mut Meta) {
                     Some("og:image" | "twitter:image") if meta.image.is_none() => {
                         if let Some(image) = get_attribute(attrs, "content") {
                             meta.image = Some(Cow::Owned(image.to_owned()));
+                        }
+                    }
+                    // url
+                    Some("og:url" | "twitter:url") if meta.url.is_none() => {
+                        if let Some(url) = get_attribute(attrs, "content") {
+                            meta.url = Some(Cow::Owned(url.to_owned()));
                         }
                     }
                     _ => {}
@@ -235,20 +250,13 @@ fn walk(handle: &Handle, meta: &mut Meta) {
             _ => {}
         }
     }
-    let children = handle.children.borrow();
-    for child in children.iter() {
-        walk(child, meta);
 
-        // If meta is filled, no need to walk.
-        if meta.is_filled() {
-            break;
-        }
-    }
+    false
 }
 
 #[cfg(test)]
 mod tests {
-    use super::rewrite_html_base_url;
+    use super::{parse_html_meta, rewrite_html_base_url};
     use test_case::test_case;
 
     const SITE_URL: &str = "https://github.com";
@@ -402,5 +410,117 @@ mod tests {
             ),
             html.replace("{}", path)
         );
+    }
+
+    #[test]
+    fn test_parse_html_meta1() {
+        let html = r#"
+<!DOCTYPE html><html lang="en" class="notranslate" translate="no">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>crates.io: Rust Package Registry</title>
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/assets/cargo.png" type="image/png">
+<meta name="google" content="notranslate">
+<meta property="og:image" content="/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body></body></html>
+        "#;
+        let meta = parse_html_meta(html.as_bytes());
+        assert_eq!(meta.title, "crates.io: Rust Package Registry");
+        assert_eq!(meta.description, "");
+        assert_eq!(meta.url, None);
+        assert_eq!(meta.image, Some("/assets/og-image.png".into()));
+    }
+
+    #[test]
+    fn test_parse_html_meta2() {
+        let html = r#"
+        
+<!DOCTYPE html><html lang="en" class="notranslate" translate="no"><head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>crates.io: Rust Package Registry</title>
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/assets/cargo.png" type="image/png">
+<link rel="search" href="/opensearch.xml" type="application/opensearchdescription+xml" title="Cargo">
+
+<meta property="og:image" content="/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<body>
+</body></html>
+        "#;
+        let meta = parse_html_meta(html.as_bytes());
+        assert_eq!(meta.title, "crates.io: Rust Package Registry");
+        assert_eq!(meta.description, "",);
+        assert_eq!(meta.url, None);
+        assert_eq!(meta.image, Some("/assets/og-image.png".into()));
+    }
+
+    #[test]
+    fn test_parse_html_meta3() {
+        let html = r#"<!DOCTYPE html><html lang="en" class="notranslate" translate="no">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/assets/cargo.png" type="image/png">
+<meta property="og:image" content="/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<title>crates.io: Rust Package Registry</title>
+<meta name="description" content="crates.io is a Rust community effort to create a shared registry of crates.">
+
+<meta property="og:url" content="https://crates.io/">
+<meta name="twitter:url" content="https://crates.io/">
+
+</head>
+
+<body></body>
+<footer>
+<title>fake title</title>
+</footer>
+</html>
+        "#;
+        let meta = parse_html_meta(html.as_bytes());
+        assert_eq!(meta.title, "crates.io: Rust Package Registry");
+        assert_eq!(
+            meta.description,
+            "crates.io is a Rust community effort to create a shared registry of crates."
+        );
+        assert_eq!(meta.url, Some("https://crates.io/".into()));
+        assert_eq!(meta.image, Some("/assets/og-image.png".into()));
+    }
+
+    #[test]
+    fn test_parse_html_meta4() {
+        let html = r#"<head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/assets/cargo.png" type="image/png">
+        <meta property="og:image" content="/assets/og-image.png">
+        <meta name="twitter:card" content="summary_large_image">
+        <title>crates.io: Rust Package Registry</title>
+        <meta name="description" content="crates.io is a Rust community effort to create a shared registry of crates.">
+        
+        <meta property="og:url" content="https://crates.io/">
+        <meta name="twitter:url" content="https://crates.io/">
+        
+        </head>"#;
+        let meta = parse_html_meta(html.as_bytes());
+        assert_eq!(meta.title, "crates.io: Rust Package Registry");
+        assert_eq!(
+            meta.description,
+            "crates.io is a Rust community effort to create a shared registry of crates."
+        );
+        assert_eq!(meta.url, Some("https://crates.io/".into()));
+        assert_eq!(meta.image, Some("/assets/og-image.png".into()));
     }
 }

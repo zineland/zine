@@ -2,7 +2,7 @@ use std::{path::Path, sync::mpsc, time::Duration};
 
 use crate::{data, ZineEngine};
 use anyhow::{Context, Result};
-use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode, DebouncedEventKind};
 use tokio::sync::broadcast::Sender;
 
 pub async fn watch_build<P: AsRef<Path>>(
@@ -31,7 +31,7 @@ pub async fn watch_build<P: AsRef<Path>>(
     let mut engine = ZineEngine::new(source, dest, zine)?;
     // Spawn the build process as a blocking task, avoid starving other tasks.
     let build_result = tokio::task::spawn_blocking(move || {
-        build(&mut engine, false)?;
+        engine.build(false)?;
 
         if let Some(sender) = sender.as_ref() {
             // Notify the first building finished.
@@ -54,14 +54,27 @@ pub async fn watch_build<P: AsRef<Path>>(
 
             loop {
                 match rx.recv() {
-                    Ok(_) => match build(&mut engine, true) {
-                        Ok(_) => {
-                            if let Some(sender) = sender.as_ref() {
-                                sender.send(())?;
+                    Ok(result) => match result {
+                        Ok(events) => {
+                            // Prevent build too frequently, otherwise it will cause program stuck.
+                            if events
+                                .iter()
+                                .any(|event| event.kind == DebouncedEventKind::Any)
+                            {
+                                match engine.build(true) {
+                                    Ok(_) => {
+                                        if let Some(sender) = sender.as_ref() {
+                                            sender.send(())?;
+                                        }
+                                    }
+                                    Err(err) => {
+                                        println!("build error: {:?}", &err);
+                                    }
+                                }
                             }
                         }
                         Err(err) => {
-                            println!("build error: {:?}", &err);
+                            println!("watch error: {:?}", &err);
                         }
                     },
                     Err(err) => println!("watch error: {:?}", &err),
@@ -79,12 +92,5 @@ pub async fn watch_build<P: AsRef<Path>>(
         println!("Error: {}", &err);
         std::process::exit(1);
     }
-    Ok(())
-}
-
-fn build(engine: &mut ZineEngine, reload: bool) -> Result<()> {
-    let instant = std::time::Instant::now();
-    engine.build(reload)?;
-    println!("Build cost: {}ms", instant.elapsed().as_millis());
     Ok(())
 }

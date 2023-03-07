@@ -1,7 +1,7 @@
 {% set htag = "h" ~ level -%}
-<{{ htag }} id="{{ id | lower }}" class="toc-item flex items-center group scroll-mt-20">
+<{{ htag }} id="{{ id | lower }}" class="toc-item group scroll-mt-20">
     {{ heading }}
-    <a href="#{{ id | lower }}" class="ml-2 inline-flex items-center opacity-0 border-0 group-hover:opacity-100"
+    <a href="#{{ id | lower }}" class="ml-2 inline-block opacity-0 border-0 group-hover:opacity-100"
         aria-label="Anchor">
         <div
             class="w-6 h-6 text-slate-400 ring-1 ring-slate-900/5 rounded-md shadow-sm flex items-center justify-center hover:ring-slate-900/10 hover:shadow hover:text-slate-700">

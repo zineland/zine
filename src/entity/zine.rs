@@ -59,7 +59,7 @@ struct ArticleRef<'a> {
 }
 
 impl Zine {
-    /// Parse Zine instance from the root zine.toml file.li
+    /// Parse Zine instance from the root zine.toml file.
     pub fn parse_from_toml<P: AsRef<Path>>(source: P) -> Result<Zine> {
         let source = source.as_ref().join(crate::ZINE_FILE);
         let content = fs::read_to_string(&source)
@@ -259,13 +259,24 @@ impl Zine {
         // Issues and articles
         for issue in &self.issues {
             entries.push(format!("{}/{}/", base_url, issue.slug));
-            entries.par_extend(issue.articles().par_iter().map(|article| {
-                if let Some(path) = article.meta.path.as_ref() {
-                    format!("{}{}", base_url, path)
-                } else {
-                    format!("{}/{}/{}", base_url, issue.slug, article.meta.slug)
-                }
-            }));
+            let articles = issue
+                .articles()
+                .into_iter()
+                .par_bridge()
+                .flat_map(|article| {
+                    let mut articles = vec![article];
+                    // including translation articles
+                    articles.extend(article.i18n.values());
+                    articles
+                })
+                .map(|article| {
+                    if let Some(path) = article.meta.path.as_ref() {
+                        format!("{}{}", base_url, path)
+                    } else {
+                        format!("{}/{}/{}", base_url, issue.slug, article.meta.slug)
+                    }
+                });
+            entries.par_extend(articles);
         }
 
         // Authors
@@ -299,12 +310,6 @@ impl Zine {
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         self.theme.parse(source)?;
-        {
-            let mut zine_data = data::write();
-            zine_data
-                .set_theme(self.theme.clone())
-                .set_markdown_config(self.markdown_config.clone());
-        }
 
         if self.authors.is_empty() {
             println!("Warning: no author specified in [authors] of root `zine.toml`.");
@@ -323,6 +328,8 @@ impl Entity for Zine {
         {
             let mut zine_data = data::write();
             zine_data
+                .set_theme(self.theme.clone())
+                .set_markdown_config(self.markdown_config.clone())
                 .set_site(self.site.clone())
                 .set_topics(self.topics.keys().cloned().collect());
         }
