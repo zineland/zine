@@ -92,8 +92,10 @@ impl Service<Request<Body>> for FallbackService {
                             loop {
                                 match reload_rx.recv().await {
                                     Ok(_) => {
-                                        // Ignore the send failure, the reason could be: Broken pipe
-                                        let _ = websocket.send(Message::text("reload")).await;
+                                        if websocket.send(Message::text("reload")).await.is_err() {
+                                            // Ignore the send failure, the reason could be: Broken pipe
+                                            break;
+                                        }
                                     }
                                     Err(e) => {
                                         panic!("Failed to receive reload signal: {:?}", e);
