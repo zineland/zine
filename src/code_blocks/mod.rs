@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Result};
+use tokio::{runtime::Handle, task};
 
 mod author;
 mod callout;
@@ -45,43 +46,48 @@ impl<'a> Fenced<'a> {
     /// otherwise return URL preview error HTML string to remind user we have error.
     ///
     /// If the fenced is unsupported, we simply return `None`.
-    pub async fn render_code_block(self, block: &'a str) -> Option<String> {
+    pub fn render_code_block(self, block: &'a str) -> Option<String> {
         match self.name {
             URL_PREVIEW => {
                 let url = block.trim();
 
-                let (first_preview, mut rx) = {
-                    // parking_lot RwLock guard isn't async-aware,
-                    // we should keep this guard drop in this scope.
-                    let data = data::read();
-                    if let Some(info) = data.get_preview(url) {
-                        let html = UrlPreviewBlock::new(self.options, url, info)
-                            .render()
-                            .unwrap();
-                        return Some(html);
-                    }
+                // Block in place to execute async task
+                task::block_in_place(|| {
+                    Handle::current().block_on(async {
+                        let (first_preview, mut rx) = {
+                            // parking_lot RwLock guard isn't async-aware,
+                            // we should keep this guard drop in this scope.
+                            let data = data::read();
+                            if let Some(info) = data.get_preview(url) {
+                                let html = UrlPreviewBlock::new(self.options, url, info)
+                                    .render()
+                                    .unwrap();
+                                return Some(html);
+                            }
 
-                    data.preview_url(url)
-                };
-                rx.changed()
-                    .await
-                    .expect("URL preview watch channel receive failed.");
-                let event = rx.borrow();
-                match event.to_owned().expect("Url preview didn't initialized.") {
-                    PreviewEvent::Finished(info) => {
-                        let html = UrlPreviewBlock::new(self.options, url, info)
-                            .render()
-                            .unwrap();
-                        if first_preview {
-                            println!("URL previewed: {url}");
+                            data.preview_url(url)
+                        };
+                        rx.changed()
+                            .await
+                            .expect("URL preview watch channel receive failed.");
+                        let event = rx.borrow();
+                        match event.to_owned().expect("Url preview didn't initialized.") {
+                            PreviewEvent::Finished(info) => {
+                                let html = UrlPreviewBlock::new(self.options, url, info)
+                                    .render()
+                                    .unwrap();
+                                if first_preview {
+                                    println!("URL previewed: {url}");
+                                }
+                                Some(html)
+                            }
+                            PreviewEvent::Failed(err) => {
+                                // Return a preview error block.
+                                Some(UrlPreviewError(url, &err).render().unwrap())
+                            }
                         }
-                        Some(html)
-                    }
-                    PreviewEvent::Failed(err) => {
-                        // Return a preview error block.
-                        Some(UrlPreviewError(url, &err).render().unwrap())
-                    }
-                }
+                    })
+                })
             }
             CALLOUT => {
                 let html = CalloutBlock::new(self.options, block).render().unwrap();
