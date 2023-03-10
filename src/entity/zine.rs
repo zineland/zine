@@ -13,7 +13,7 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
+use crate::{data, engine, error::ZineError, feed::FeedEntry, helpers::capitalize, Entity};
 
 use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
@@ -311,15 +311,6 @@ impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         self.theme.parse(source)?;
 
-        if self.authors.is_empty() {
-            println!("Warning: no author specified in [authors] of root `zine.toml`.");
-        } else {
-            self.authors.iter_mut().try_for_each(|(id, author)| {
-                author.id = id.clone();
-                author.parse(source)
-            })?;
-        }
-
         self.topics.iter_mut().try_for_each(|(id, topic)| {
             topic.id = id.clone();
             topic.parse(source)
@@ -339,6 +330,26 @@ impl Entity for Zine {
         self.issues.parse(source)?;
         // Sort all issues by number.
         self.issues.par_sort_unstable_by_key(|s| s.number);
+
+        if self.authors.is_empty() {
+            println!("Warning: no author specified in [authors] of root `zine.toml`.");
+        } else {
+            self.authors.iter_mut().try_for_each(|(id, author)| {
+                author.id = id.clone();
+                // Fallback to default zine avatar if neccessary.
+                if author.avatar.is_none()
+                    || matches!(&author.avatar, Some(avatar) if avatar.is_empty())
+                {
+                    author.avatar = self.theme.default_avatar.clone();
+                }
+
+                // Fallback to capitalized id if missing.
+                if author.name.is_none() {
+                    author.name = Some(capitalize(&author.id));
+                }
+                author.parse(source)
+            })?;
+        }
 
         // Parse pages
         let page_dir = source.join("pages");

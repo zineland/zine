@@ -19,7 +19,7 @@
             <div class="flex-none m-4 sm:m-8 text-center">
                 <img class="zine-avatar mx-auto w-44 h-44 object-cover rounded-full border" src="{{ author.avatar }}"
                     alt="Avatar" loading="lazy">
-                {% if author.is_editor -%}
+                {% if author.editor -%}
                 <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-4">
                     <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
                         fill="{{ theme.link_color }}" width="32" height="32" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -39,7 +39,7 @@
                 {% endif -%}
             </div>
             <div class="flex-1 prose my-2 sm:m-8">
-                <div class="zine-author-name text-center text-4xl font-bold py-2 text-center">{{ author_name }}</div>
+                <div class="zine-author-name text-center text-4xl font-bold py-2">{{ author_name }}</div>
                 {% if author.bio -%}
                 <div class="zine-author-bio">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
                 {% endif -%}
