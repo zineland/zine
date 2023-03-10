@@ -19,7 +19,7 @@
                     <div class="p-2 text-sm text-gray-500">
                         {{ fluent(key="article-count", number=author.article_count) }}
                     </div>
-                    {% if author.is_editor -%}
+                    {% if author.editor -%}
                     <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-2">
                         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
                             fill="{{ theme.link_color }}" width="32" height="32"
