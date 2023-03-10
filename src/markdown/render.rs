@@ -14,7 +14,6 @@ use syntect::{
     parsing::SyntaxSet,
 };
 use tera::Context;
-use tokio::{runtime::Handle, task};
 
 static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
     let syntax_set: SyntaxSet =
@@ -246,10 +245,7 @@ impl<'a> MarkdownRender<'a> {
         if let Some(input) = self.code_block_fenced.as_ref() {
             let fenced = Fenced::parse(input).unwrap();
             if fenced.is_custom_code_block() {
-                // Block in place to execute async task
-                let rendered_html = task::block_in_place(|| {
-                    Handle::current().block_on(async { fenced.render_code_block(text).await })
-                });
+                let rendered_html = fenced.render_code_block(text);
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));
                 }
