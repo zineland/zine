@@ -1,5 +1,8 @@
 use anyhow::Result;
-use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
+use rayon::{
+    iter::{IntoParallelRefMutIterator, ParallelIterator},
+    prelude::IntoParallelRefIterator,
+};
 use std::path::Path;
 use tera::Context;
 
@@ -66,14 +69,11 @@ impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
     }
 
     fn render(&self, context: Context, dest: &Path) -> Result<()> {
-        for entity in self {
+        self.par_iter().try_for_each(|entity| {
             let entity = entity.clone();
             let context = context.clone();
             let dest = dest.to_path_buf();
-            tokio::task::spawn_blocking(move || {
-                entity.render(context, &dest).expect("Render failed.")
-            });
-        }
-        Ok(())
+            entity.render(context, &dest)
+        })
     }
 }

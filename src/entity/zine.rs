@@ -1,6 +1,7 @@
 use anyhow::{Context as _, Result};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
+    prelude::IntoParallelRefMutIterator,
     slice::ParallelSliceMut,
 };
 use serde::{Deserialize, Serialize};
@@ -311,7 +312,7 @@ impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         self.theme.parse(source)?;
 
-        self.topics.iter_mut().try_for_each(|(id, topic)| {
+        self.topics.par_iter_mut().try_for_each(|(id, topic)| {
             topic.id = id.clone();
             topic.parse(source)
         })?;
@@ -334,7 +335,7 @@ impl Entity for Zine {
         if self.authors.is_empty() {
             println!("Warning: no author specified in [authors] of root `zine.toml`.");
         } else {
-            self.authors.iter_mut().try_for_each(|(id, author)| {
+            self.authors.par_iter_mut().try_for_each(|(id, author)| {
                 author.id = id.clone();
                 // Fallback to default zine avatar if neccessary.
                 if author.avatar.is_none()
@@ -439,13 +440,13 @@ impl Entity for Zine {
         // Render home page.
         let issues = self
             .issues
-            .iter()
+            .par_iter()
             .filter(|issue| issue.need_publish())
             .collect::<Vec<_>>();
         context.insert("issues", &issues);
         // `article_map` is the issue number and issue's featured articles map.
         let article_map = issues
-            .iter()
+            .par_iter()
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
