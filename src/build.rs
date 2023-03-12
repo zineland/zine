@@ -21,12 +21,6 @@ pub async fn watch_build<P: AsRef<Path>>(
     data::load(&source);
 
     let source_path = source.clone();
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c().await.unwrap();
-        // Save zine data only when the process gonna exist
-        data::export(source_path).unwrap();
-        std::process::exit(0);
-    });
 
     let mut engine = ZineEngine::new(source, dest, zine)?;
     // Spawn the build process as a blocking task, avoid starving other tasks.
@@ -39,6 +33,13 @@ pub async fn watch_build<P: AsRef<Path>>(
         }
 
         if watch {
+            tokio::spawn(async move {
+                tokio::signal::ctrl_c().await.unwrap();
+                // Save zine data only when the process gonna exist
+                data::export(source_path).unwrap();
+                std::process::exit(0);
+            });
+
             println!("Watching...");
             let (tx, rx) = mpsc::channel();
             let mut debouncer = new_debouncer(Duration::from_millis(500), None, tx)?;
@@ -80,6 +81,8 @@ pub async fn watch_build<P: AsRef<Path>>(
                     Err(err) => println!("watch error: {:?}", &err),
                 }
             }
+        } else {
+            data::export(source_path).unwrap();
         }
         anyhow::Ok(())
     })

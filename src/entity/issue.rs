@@ -1,7 +1,10 @@
 use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::{Context as _, Result};
-use rayon::slice::ParallelSliceMut;
+use rayon::{
+    prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
+    slice::ParallelSliceMut,
+};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
@@ -158,19 +161,20 @@ impl Entity for Issue {
             .filter(|article| article.need_publish())
             .collect::<Vec<_>>();
         // Render articles with number context.
-        for (index, article) in articles.iter().enumerate() {
-            let mut context = context.clone();
-            context.insert("siblings", &self.sibling_articles(index));
-            context.insert("number", &(index + 1));
+        articles
+            .par_iter()
+            .enumerate()
+            .for_each(|(index, article)| {
+                let mut context = context.clone();
+                context.insert("siblings", &self.sibling_articles(index));
+                context.insert("number", &(index + 1));
 
-            let dest = issue_dir.clone();
-            let article = (*article).clone();
-            tokio::task::spawn_blocking(move || {
+                let dest = issue_dir.clone();
+                let article = (*article).clone();
                 article
                     .render(context, &dest)
                     .expect("Render article failed.");
             });
-        }
 
         context.insert("articles", &articles);
         context.insert(
