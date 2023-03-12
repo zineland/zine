@@ -1,7 +1,7 @@
 use std::{collections::BTreeSet, mem};
 
 use crate::{
-    code_blocks::{AuthorCode, CodeBlock, Fenced, InlineLink},
+    code_blocks::{self, AuthorCode, CodeBlock, Fenced, InlineLink},
     data, engine,
     entity::MarkdownConfig,
 };
@@ -25,6 +25,16 @@ static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
     theme_set
 });
 
+// Render mode.
+enum RenderMode {
+    // RSS mode.
+    //
+    // In RSS mode, we will skip rendering some code blocks, such as `urlpreview`.
+    Rss,
+    // HTML mode.
+    Article,
+}
+
 /// Markdown html render.
 pub struct MarkdownRender<'a> {
     markdown_config: &'a MarkdownConfig,
@@ -35,6 +45,7 @@ pub struct MarkdownRender<'a> {
     image_alt: Option<CowStr<'a>>,
     heading: Option<Heading<'a>>,
     levels: BTreeSet<usize>,
+    render_mode: RenderMode,
     /// Table of content.
     pub toc: Vec<Heading<'a>>,
 }
@@ -113,8 +124,15 @@ impl<'a> MarkdownRender<'a> {
             image_alt: None,
             heading: None,
             levels: BTreeSet::new(),
+            render_mode: RenderMode::Article,
             toc: Vec::new(),
         }
+    }
+
+    /// Enable RSS mode.
+    pub fn enable_rss_mode(&mut self) -> &mut Self {
+        self.render_mode = RenderMode::Rss;
+        self
     }
 
     /// Rebuild the relative depth of toc items.
@@ -244,7 +262,12 @@ impl<'a> MarkdownRender<'a> {
 
         if let Some(input) = self.code_block_fenced.as_ref() {
             let fenced = Fenced::parse(input).unwrap();
-            if fenced.is_custom_code_block() {
+            if fenced.name == code_blocks::URL_PREVIEW
+                && matches!(self.render_mode, RenderMode::Rss)
+            {
+                // Ignore url preview in RSS mode.
+                return Visiting::Ignore;
+            } else if fenced.is_custom_code_block() {
                 let rendered_html = fenced.render_code_block(text);
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));

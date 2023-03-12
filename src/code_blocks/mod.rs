@@ -20,9 +20,9 @@ pub trait CodeBlock {
     fn render(&self) -> Result<String>;
 }
 
-const CALLOUT: &str = "callout";
-const QUOTE: &str = "quote";
-const URL_PREVIEW: &str = "urlpreview";
+pub const CALLOUT: &str = "callout";
+pub const QUOTE: &str = "quote";
+pub const URL_PREVIEW: &str = "urlpreview";
 
 const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, QUOTE, URL_PREVIEW];
 
