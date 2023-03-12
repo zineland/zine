@@ -32,7 +32,7 @@ pub async fn run_serve(source: String, port: u16, open_browser: bool) -> Result<
     println!("{}", ZINE_BANNER);
     println!("listening on {}", serving_url);
 
-    let (tx, mut rx) = broadcast::channel(64);
+    let (tx, mut rx) = broadcast::channel(16);
     let serve_dir = ServeDir::new(&tmp_dir).fallback(FallbackService { tx: tx.clone() });
 
     if open_browser {

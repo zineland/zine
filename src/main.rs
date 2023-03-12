@@ -1,6 +1,5 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use tokio::sync::broadcast;
 use zine::build::watch_build;
 use zine::new::{new_zine_issue, new_zine_project};
 use zine::serve::run_serve;
@@ -67,15 +66,7 @@ async fn main() -> Result<()> {
         } => {
             zine::set_current_mode(Mode::Build);
             let dest = dest.unwrap_or_else(|| "build".into());
-            let (tx, mut rx) = broadcast::channel(64);
-            watch_build(
-                &source.unwrap_or_else(|| ".".into()),
-                &dest,
-                watch,
-                Some(tx),
-            )
-            .await?;
-            rx.recv().await?;
+            watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch, None).await?;
             println!("Build success! The build directory is `{}`.", dest);
         }
         Commands::Serve { source, port, open } => {
