@@ -44,13 +44,10 @@ pub async fn run_serve(source: String, port: u16, open_browser: bool) -> Result<
     }
 
     tokio::spawn(async move {
-        match watch_build(Path::new(&source), tmp_dir.as_path(), true, Some(tx)).await {
-            Ok(result) => result,
-            Err(e) => {
-                // handle the error here, for example by logging it or returning it to the caller
-                println!("Error: {:?}", e);
-            }
-        };
+        if let Err(err) = watch_build(Path::new(&source), tmp_dir.as_path(), true, Some(tx)).await {
+            // handle the error here, for example by logging it or returning it to the caller
+            println!("Watch build error: {err}");
+        }
     });
 
     hyper::Server::bind(&addr)
