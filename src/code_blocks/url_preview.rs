@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Write};
 
 use anyhow::Result;
 
-use crate::data::UrlPreviewInfo;
+use crate::data::{self, PreviewEvent, UrlPreviewInfo};
 
 use super::CodeBlock;
 
@@ -58,5 +58,37 @@ impl<'a> CodeBlock for UrlPreviewError<'a> {
         writeln!(&mut html, r#" <a href="{url}">{url}</a>"#, url = self.0)?;
         writeln!(&mut html, r#"</div>"#)?;
         Ok(html)
+    }
+}
+
+#[tokio::main(flavor = "current_thread")]
+pub(super) async fn render(url: &str, options: HashMap<String, &str>) -> Option<String> {
+    let (first_preview, mut rx) = {
+        // parking_lot RwLock guard isn't async-aware,
+        // we should keep this guard drop in this scope.
+        let data = data::read();
+        if let Some(info) = data.get_preview(url) {
+            let html = UrlPreviewBlock::new(options, url, info).render().unwrap();
+            return Some(html);
+        }
+
+        data.preview_url(url)
+    };
+    rx.changed()
+        .await
+        .expect("URL preview watch channel receive failed.");
+    let event = rx.borrow();
+    match event.to_owned().expect("Url preview didn't initialized.") {
+        PreviewEvent::Finished(info) => {
+            let html = UrlPreviewBlock::new(options, url, info).render().unwrap();
+            if first_preview {
+                println!("URL previewed: {url}");
+            }
+            Some(html)
+        }
+        PreviewEvent::Failed(err) => {
+            // Return a preview error block.
+            Some(UrlPreviewError(url, &err).render().unwrap())
+        }
     }
 }
