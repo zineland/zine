@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         }
         Commands::Serve { source, port, open } => {
             zine::set_current_mode(Mode::Serve);
-            run_serve(source.unwrap_or_else(|| ".".into()), port, open).await?;
+            run_serve(source.as_deref().unwrap_or("."), port, open).await?;
         }
         Commands::New { name, issue } => {
             if issue {
