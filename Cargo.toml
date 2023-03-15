@@ -22,7 +22,6 @@ dashmap = { version = "5.4", features = ["serde"] }
 fluent = "0.16"
 futures = { version = "0.3", default-features = false }
 html5ever = "0.26"
-http-body = "0.4"
 hyper = { version = "0.14", features = ["client", "server", "tcp", "http1"] }
 hyper-tls = "0.5"
 hyper-tungstenite = "0.9"
