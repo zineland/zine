@@ -7,6 +7,7 @@
 [![Crates.io](https://img.shields.io/crates/v/zine.svg)](https://crates.io/crates/zine)
 ![Crates.io](https://img.shields.io/crates/d/zine)
 [![license-apache](https://img.shields.io/badge/license-Apache-yellow.svg)](./LICENSE)
+[![dependency status](https://deps.rs/crate/zine/latest/status.svg)](https://deps.rs/crate/zine)
 
 Zine - a simple and opinionated tool to build your own magazine.
 
