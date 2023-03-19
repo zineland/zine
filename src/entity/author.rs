@@ -30,8 +30,10 @@ pub struct Author {
     pub bio: Option<String>,
     /// Whether the author is an editor.
     #[serde(default)]
-    #[serde(rename = "editor")]
     pub editor: bool,
+    #[serde(default)]
+    /// Whether the author is a team account.
+    pub team: bool,
 }
 
 impl AuthorId {
