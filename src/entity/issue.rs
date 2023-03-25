@@ -72,6 +72,7 @@ impl Default for Issue {
             title: "Issue".into(),
             intro: None,
             cover: None,
+            default_cover: None,
             dir: "".into(),
             publish: true,
             pub_date: None,
