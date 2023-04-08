@@ -7,11 +7,11 @@ use super::CodeBlock;
 pub struct InlineLink<'a> {
     title: &'a str,
     url: &'a str,
-    image: &'a Option<String>,
+    image: Option<&'a String>,
 }
 
 impl<'a> InlineLink<'a> {
-    pub fn new(title: &'a str, url: &'a str, image: &'a Option<String>) -> Self {
+    pub fn new(title: &'a str, url: &'a str, image: Option<&'a String>) -> Self {
         Self { title, url, image }
     }
 }
@@ -30,7 +30,7 @@ impl<'a> CodeBlock for InlineLink<'a> {
             </a>"###,
             url = self.url,
             title = self.title,
-            image = self.image.as_deref().unwrap_or_default()
+            image = self.image.unwrap_or(&String::new())
         )?;
         Ok(html)
     }

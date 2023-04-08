@@ -71,7 +71,6 @@ impl<'a> Fenced<'a> {
         match raw.next() {
             Some(name) if !name.is_empty() => {
                 let options = raw
-                    .into_iter()
                     .filter_map(|pair| {
                         let mut v = pair.split(':').take(2);
                         match (v.next(), v.next()) {

@@ -304,9 +304,15 @@ impl<'a> MarkdownRender<'a> {
         } else if code.starts_with('/') {
             let data = data::read();
             if let Some(article) = data.get_article_by_path(code.as_ref()) {
-                let html = InlineLink::new(&article.title, code, &article.cover)
+                let html = InlineLink::new(&article.title, code, article.cover.as_ref())
                     .render()
                     .expect("Render inline linke failed.");
+                return Visiting::Event(Event::Html(html.into()));
+            }
+        } else if let Some(topic) = code.strip_prefix('#') {
+            let data = data::read();
+            if data.is_valid_topic(topic) {
+                let html = format!(r#"<a href="/topic/{topic}">#{topic}</a>"#);
                 return Visiting::Event(Event::Html(html.into()));
             }
         }
