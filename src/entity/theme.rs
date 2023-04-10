@@ -20,6 +20,9 @@ pub struct Theme {
     // The background color.
     #[serde(default = "Theme::default_secondary_color")]
     pub secondary_color: String,
+    // The page color.
+    #[serde(default = "Theme::default_page_color")]
+    pub page_color: String,
     // The background image url.
     #[serde(default)]
     pub background_image: Option<String>,
@@ -41,6 +44,7 @@ impl Default for Theme {
             main_color: Self::default_main_color(),
             link_color: Self::default_link_color(),
             secondary_color: Self::default_secondary_color(),
+            page_color: Self::default_page_color(),
             background_image: None,
             head_template: None,
             footer_template: None,
@@ -58,6 +62,7 @@ impl std::fmt::Debug for Theme {
             .field("main_color", &self.main_color)
             .field("link_color", &self.link_color)
             .field("secondary_color", &self.secondary_color)
+            .field("page_color", &self.page_color)
             .field("background_image", &self.background_image)
             .field("head_template", &self.head_template.is_some())
             .field("footer_template", &self.footer_template.is_some())
@@ -76,6 +81,7 @@ impl Theme {
     const DEFAULT_MAIN_COLOR: &'static str = "#ffffff";
     const DEFAULT_LINK_COLOR: &'static str = "#2563eb";
     const DEFAULT_SECONDARY_COLOR: &'static str = "#eff3f7";
+    const DEFAULT_PAGE_COLOR: &'static str = "#ffffff";
 
     fn default_primary_color() -> String {
         Self::DEFAULT_PRIMARY_COLOR.to_string()
@@ -91,6 +97,10 @@ impl Theme {
 
     fn default_secondary_color() -> String {
         Self::DEFAULT_SECONDARY_COLOR.to_string()
+    }
+
+    fn default_page_color() -> String {
+        Self::DEFAULT_PAGE_COLOR.to_string()
     }
 }
 
