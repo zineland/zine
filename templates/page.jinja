@@ -1,6 +1,6 @@
 {% extends "base.jinja" -%}
 {% block content -%}
-<div class="p-4 md:p-8 mx-4 my-6 bg-white min-h-[500px] shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="p-4 md:p-8 mx-4 my-6 bg-page min-h-[500px] shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     {% if site.edit_url -%}
     <a class="absolute top-5 right-10 p-2 rounded hover:bg-gray-200"
         href="{{ site.edit_url }}/pages/{{ page.file_path }}">

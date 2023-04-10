@@ -214,7 +214,7 @@ impl ZineEngine {
 
     pub fn build(&mut self, reload: bool) -> Result<()> {
         if reload {
-            self.zine = Zine::parse_from_toml(&self.source)?;
+            self.zine = Zine::parse_from_toml(&self.source)?; // Converting toml file into text
         }
 
         self.zine.parse(&self.source)?;
