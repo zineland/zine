@@ -8,10 +8,8 @@ mod inline_link;
 mod quote;
 mod url_preview;
 
-use crate::data::{self, PreviewEvent};
 pub use author::AuthorCode;
 pub use inline_link::InlineLink;
-use url_preview::{UrlPreviewBlock, UrlPreviewError};
 
 use self::{callout::CalloutBlock, quote::QuoteBlock};
 
@@ -19,9 +17,9 @@ pub trait CodeBlock {
     fn render(&self) -> Result<String>;
 }
 
-const CALLOUT: &str = "callout";
-const QUOTE: &str = "quote";
-const URL_PREVIEW: &str = "urlpreview";
+pub const CALLOUT: &str = "callout";
+pub const QUOTE: &str = "quote";
+pub const URL_PREVIEW: &str = "urlpreview";
 
 const ALL_CODE_BLOCKS: &[&str] = &[CALLOUT, QUOTE, URL_PREVIEW];
 
@@ -45,43 +43,11 @@ impl<'a> Fenced<'a> {
     /// otherwise return URL preview error HTML string to remind user we have error.
     ///
     /// If the fenced is unsupported, we simply return `None`.
-    pub async fn render_code_block(self, block: &'a str) -> Option<String> {
+    pub fn render_code_block(self, block: &'a str) -> Option<String> {
         match self.name {
             URL_PREVIEW => {
                 let url = block.trim();
-
-                let (first_preview, mut rx) = {
-                    // parking_lot RwLock guard isn't async-aware,
-                    // we should keep this guard drop in this scope.
-                    let data = data::read();
-                    if let Some(info) = data.get_preview(url) {
-                        let html = UrlPreviewBlock::new(self.options, url, info)
-                            .render()
-                            .unwrap();
-                        return Some(html);
-                    }
-
-                    data.preview_url(url)
-                };
-                rx.changed()
-                    .await
-                    .expect("URL preview watch channel receive failed.");
-                let event = rx.borrow();
-                match event.to_owned().expect("Url preview didn't initialized.") {
-                    PreviewEvent::Finished(info) => {
-                        let html = UrlPreviewBlock::new(self.options, url, info)
-                            .render()
-                            .unwrap();
-                        if first_preview {
-                            println!("URL previewed: {url}");
-                        }
-                        Some(html)
-                    }
-                    PreviewEvent::Failed(err) => {
-                        // Return a preview error block.
-                        Some(UrlPreviewError(url, &err).render().unwrap())
-                    }
-                }
+                url_preview::render(url, self.options)
             }
             CALLOUT => {
                 let html = CalloutBlock::new(self.options, block).render().unwrap();
@@ -105,7 +71,6 @@ impl<'a> Fenced<'a> {
         match raw.next() {
             Some(name) if !name.is_empty() => {
                 let options = raw
-                    .into_iter()
                     .filter_map(|pair| {
                         let mut v = pair.split(':').take(2);
                         match (v.next(), v.next()) {

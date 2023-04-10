@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     current_mode, data,
-    entity::{Entity, Zine},
+    entity::{Entity, MarkdownConfig, Zine},
     helpers::copy_dir,
     html::rewrite_html_base_url,
     locales::FluentLoader,
@@ -64,6 +64,7 @@ fn init_tera(source: &Path, zine: &Zine) {
         ])
         .unwrap();
         tera.register_function("markdown_to_html", markdown_to_html_fn);
+        tera.register_function("markdown_to_rss", markdown_to_rss_fn);
         tera.register_function("get_author", get_author_fn);
         tera.register_function("get_entity", get_entity_fn);
 
@@ -213,6 +214,8 @@ impl ZineEngine {
     }
 
     pub fn build(&mut self, reload: bool) -> Result<()> {
+        let instant = std::time::Instant::now();
+
         if reload {
             self.zine = Zine::parse_from_toml(&self.source)?; // Converting toml file into text
         }
@@ -236,7 +239,9 @@ impl ZineEngine {
         sitemap_context.insert("entries", &self.zine.sitemap_entries());
         render_sitemap(sitemap_context, &self.dest)?;
 
-        self.copy_static_assets()
+        self.copy_static_assets()?;
+        println!("Build cost: {}ms", instant.elapsed().as_millis());
+        Ok(())
     }
 }
 
@@ -246,6 +251,22 @@ fn markdown_to_html_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
         let zine_data = data::read();
         let markdown_config = zine_data.get_markdown_config();
         let html = MarkdownRender::new(markdown_config).render_html(markdown);
+        Ok(Value::String(html))
+    } else {
+        Ok(Value::Array(vec![]))
+    }
+}
+
+// A tera function to convert markdown into rss.
+fn markdown_to_rss_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
+    if let Some(Value::String(markdown)) = map.get("markdown") {
+        let markdown_config = MarkdownConfig {
+            highlight_code: false,
+            ..Default::default()
+        };
+        let html = MarkdownRender::new(&markdown_config)
+            .enable_rss_mode()
+            .render_html(markdown);
         Ok(Value::String(html))
     } else {
         Ok(Value::Array(vec![]))

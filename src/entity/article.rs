@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
 use anyhow::{ensure, Context as _, Result};
+use rayon::prelude::{ParallelBridge, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use tera::Context;
 use time::Date;
@@ -260,9 +261,10 @@ impl Entity for Article {
     fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("i18n", &self.get_translations());
         Article::render(self, context.clone(), dest)?;
-        for article in self.i18n.values() {
-            Article::render(article, context.clone(), dest)?;
-        }
+
+        self.i18n.values().par_bridge().for_each(|article| {
+            Article::render(article, context.clone(), dest).expect("Failed to render article");
+        });
 
         Ok(())
     }

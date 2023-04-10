@@ -1,6 +1,7 @@
 use anyhow::{Context as _, Result};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
+    prelude::IntoParallelRefMutIterator,
     slice::ParallelSliceMut,
 };
 use serde::{Deserialize, Serialize};
@@ -13,7 +14,7 @@ use std::{
 use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, error::ZineError, feed::FeedEntry, Entity};
+use crate::{data, engine, error::ZineError, feed::FeedEntry, helpers::capitalize, Entity};
 
 use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
@@ -59,7 +60,7 @@ struct ArticleRef<'a> {
 }
 
 impl Zine {
-    /// Parse Zine instance from the root zine.toml file.li
+    /// Parse Zine instance from the root zine.toml file.
     pub fn parse_from_toml<P: AsRef<Path>>(source: P) -> Result<Zine> {
         let source = source.as_ref().join(crate::ZINE_FILE);
         let content = fs::read_to_string(&source) // Content holds information of toml file
@@ -310,23 +311,8 @@ impl Zine {
 impl Entity for Zine {
     fn parse(&mut self, source: &Path) -> Result<()> {
         self.theme.parse(source)?;
-        {
-            let mut zine_data = data::write();
-            zine_data
-                .set_theme(self.theme.clone())
-                .set_markdown_config(self.markdown_config.clone());
-        }
 
-        if self.authors.is_empty() {
-            println!("Warning: no author specified in [authors] of root `zine.toml`.");
-        } else {
-            self.authors.iter_mut().try_for_each(|(id, author)| {
-                author.id = id.clone();
-                author.parse(source)
-            })?;
-        }
-
-        self.topics.iter_mut().try_for_each(|(id, topic)| {
+        self.topics.par_iter_mut().try_for_each(|(id, topic)| {
             topic.id = id.clone();
             topic.parse(source)
         })?;
@@ -334,6 +320,8 @@ impl Entity for Zine {
         {
             let mut zine_data = data::write();
             zine_data
+                .set_theme(self.theme.clone())
+                .set_markdown_config(self.markdown_config.clone())
                 .set_site(self.site.clone())
                 .set_topics(self.topics.keys().cloned().collect());
         }
@@ -343,6 +331,26 @@ impl Entity for Zine {
         self.issues.parse(source)?;
         // Sort all issues by number.
         self.issues.par_sort_unstable_by_key(|s| s.number);
+
+        if self.authors.is_empty() {
+            println!("Warning: no author specified in [authors] of root `zine.toml`.");
+        } else {
+            self.authors.par_iter_mut().try_for_each(|(id, author)| {
+                author.id = id.clone();
+                // Fallback to default zine avatar if neccessary.
+                if author.avatar.is_none()
+                    || matches!(&author.avatar, Some(avatar) if avatar.is_empty())
+                {
+                    author.avatar = self.theme.default_avatar.clone();
+                }
+
+                // Fallback to capitalized id if missing.
+                if author.name.is_none() {
+                    author.name = Some(capitalize(&author.id));
+                }
+                author.parse(source)
+            })?;
+        }
 
         // Parse pages
         let page_dir = source.join("pages");
@@ -432,13 +440,13 @@ impl Entity for Zine {
         // Render home page.
         let issues = self
             .issues
-            .iter()
+            .par_iter()
             .filter(|issue| issue.need_publish())
             .collect::<Vec<_>>();
         context.insert("issues", &issues);
         // `article_map` is the issue number and issue's featured articles map.
         let article_map = issues
-            .iter()
+            .par_iter()
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);

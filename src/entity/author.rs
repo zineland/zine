@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 use tera::Context;
 
-use crate::{data, engine, helpers::capitalize, html::Meta, markdown, Entity};
+use crate::{engine, html::Meta, markdown, Entity};
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.
@@ -30,8 +30,10 @@ pub struct Author {
     pub bio: Option<String>,
     /// Whether the author is an editor.
     #[serde(default)]
-    #[serde(rename(deserialize = "editor"))]
-    pub is_editor: bool,
+    pub editor: bool,
+    #[serde(default)]
+    /// Whether the author is a team account.
+    pub team: bool,
 }
 
 impl AuthorId {
@@ -46,20 +48,6 @@ impl AuthorId {
 }
 
 impl Entity for Author {
-    fn parse(&mut self, _source: &Path) -> anyhow::Result<()> {
-        // Fallback to default zine avatar if neccessary.
-        if self.avatar.is_none() || matches!(&self.avatar, Some(avatar) if avatar.is_empty()) {
-            let data = data::read();
-            self.avatar = data.get_theme().default_avatar.clone();
-        }
-
-        // Fallback to capitalized id if missing.
-        if self.name.is_none() {
-            self.name = Some(capitalize(&self.id));
-        }
-        Ok(())
-    }
-
     fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
         let slug = format!("@{}", self.id.to_lowercase());
         context.insert(

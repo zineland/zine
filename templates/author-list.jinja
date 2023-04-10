@@ -4,12 +4,12 @@
     <div class="max-w-prose mx-auto">
         <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="author-list") }}</div>
         <div class="flex flex-wrap flex-col sm:flex-row justify-center">
-            {% for author in authors | sort(attribute="article_count") | reverse -%}
+            {% for author in authors | filter(attribute="team", value=false) | sort(attribute="article_count") | reverse -%}
             <a href="/@{{ author.id | lower }}">
                 <div class="p-6 my-4 text-center hover:bg-gray-100">
-                    <img class="zine-avatar mx-auto w-40 h-40 object-cover rounded-full border" src="{{ author.avatar }}"
-                        alt="Avatar" loading="lazy">
-                    <div class="zine-author-name mx-auto w-40 relative m-3 font-bold text-2xl text-black">
+                    <img class="zine-avatar mx-auto w-28 h-28 object-cover rounded-full border"
+                        src="{{ author.avatar }}" alt="Avatar" loading="lazy">
+                    <div class="zine-author-name mx-auto w-28 relative m-3 font-bold text-2xl text-black">
                         {% if author.name -%}
                         {{ author.name }}
                         {% else -%}
@@ -19,7 +19,7 @@
                     <div class="p-2 text-sm text-gray-500">
                         {{ fluent(key="article-count", number=author.article_count) }}
                     </div>
-                    {% if author.is_editor -%}
+                    {% if author.editor -%}
                     <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-2">
                         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
                             fill="{{ theme.link_color }}" width="32" height="32"
@@ -42,6 +42,33 @@
             </a>
             {% endfor -%}
         </div>
+        {% set teams = authors | filter(attribute="team", value=true) | sort(attribute="article_count") | reverse -%}
+        {% if teams | length > 0 -%}
+        <div class="my-4 sm:my-6 text-2xl font-bold">
+            <span class="w-4 h-4 border-4 border-primary"></span>
+            <span class="px-2">{{ fluent(key = "author-team-list") }}</span>
+        </div>
+        <div class="flex flex-wrap flex-col sm:flex-row justify-center">
+            {% for team in teams -%}
+            <a href="/@{{ team.id | lower }}">
+                <div class="p-6 my-4 text-center hover:bg-gray-100">
+                    <img class="zine-avatar mx-auto w-28 h-28 object-cover rounded-full border" src="{{ team.avatar }}"
+                        alt="Avatar" loading="lazy">
+                    <div class="zine-author-name mx-auto w-28 relative m-3 font-bold text-2xl text-black">
+                        {% if team.name -%}
+                        {{ team.name }}
+                        {% else -%}
+                        {{ team.id | capitalize }}
+                        {% endif -%}
+                    </div>
+                    <div class="p-2 text-sm text-gray-500">
+                        {{ fluent(key="article-count", number=team.article_count) }}
+                    </div>
+                </div>
+            </a>
+            {% endfor -%}
+        </div>
+        {% endif -%}
     </div>
 </div>
 </div>

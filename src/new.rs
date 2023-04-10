@@ -112,7 +112,7 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
     Created sucessfully!
     
     To start your magazine, run:    
-    $ zine serve
+    $ zine serve --open
 
     Or to build your magazine, run:
     $ zine build
