@@ -1,0 +1,13 @@
+
+slug = "issue-1"
+number = 1
+title = "Issue 1"
+
+[[article]]
+file = "1-first.md"
+title = "First article"
+author = "josh_thompson"
+cover = ""
+pub_date = "2023-03-01"
+publish = true
+featured = true

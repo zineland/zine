@@ -1,0 +1,8 @@
+
+[site]
+url = "http://localhost"
+name = "your-zine-site"
+description = ""
+
+[authors]
+josh_thompson = { name = "Josh_Thompson" }

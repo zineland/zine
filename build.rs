@@ -1,5 +1,5 @@
 use std::io::{Error, ErrorKind};
-use std::process::Command;
+use std::process::Command; // A process builder, controlling how a new process should be spawned
 
 fn main() {
     // Obtain build infomation from Git.
@@ -10,8 +10,8 @@ fn main() {
 }
 
 fn run(args: &[&str]) -> Result<String, std::io::Error> {
-    let out = Command::new(args[0]).args(&args[1..]).output()?;
-    match out.status.success() {
+    let out = Command::new(args[0]).args(&args[1..]).output()?; // Output() executes command as child process
+    match out.status.success() { // Collecting status (child process) and checking for success
         true => Ok(String::from_utf8(out.stdout).unwrap().trim().to_string()),
         false => Err(Error::new(ErrorKind::Other, "Command not successful.")),
     }
