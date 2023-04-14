@@ -46,6 +46,22 @@ module.exports = {
                         'blockquote strong': {
                             color: '#6c6d6d',
                         },
+                        code: {
+                            color: 'var(--tw-prose-code)',
+                            fontWeight: '400',
+                            padding: '0.2em 0.4em',
+                            margin: 0,
+                            fontSize: '85%',
+                            whiteSpace: 'break-spaces',
+                            backgroundColor: '#eff1f3',
+                            borderRadius: '6px',
+                        },
+                        'code::before': {
+                            content: 'none',
+                        },
+                        'code::after': {
+                            content: 'none',
+                        },
                         ol: {
                             paddingLeft: '1rem',
                         },
