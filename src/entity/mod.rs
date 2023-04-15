@@ -5,7 +5,6 @@ use rayon::{
     prelude::IntoParallelRefIterator,
 };
 use std::path::Path;
-// use tera::Context;
 
 mod article;
 mod author;
@@ -46,43 +45,6 @@ pub trait Entity {
 
     fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         Ok(())
-    }
-}
-
-pub trait Entity2 {
-    fn parse2(&mut self, source: &Path) -> Result<()>;
-    fn render2(&self, env: &Environment, context: Context, dest: &Path) -> Result<()>;
-}
-
-// implement Entity2 for Option<T> and Vec<T>
-impl<T: Entity2> Entity2 for Option<T> {
-    fn parse2(&mut self, source: &Path) -> Result<()> {
-        if let Some(entity) = self {
-            entity.parse2(source)?;
-        }
-        Ok(())
-    }
-
-    fn render2(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
-        if let Some(entity) = self {
-            entity.render2(env, context, dest)?;
-        }
-        Ok(())
-    }
-}
-
-impl<T: Entity2 + Sync + Send + Clone + 'static> Entity2 for Vec<T> {
-    fn parse2(&mut self, source: &Path) -> Result<()> {
-        self.par_iter_mut()
-            .try_for_each(|entity| entity.parse2(source))
-    }
-
-    fn render2(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
-        self.par_iter().try_for_each(|entity| {
-            let context = context.clone();
-            // let dest = dest.to_path_buf();
-            entity.render2(env, context, &dest)
-        })
     }
 }
 
