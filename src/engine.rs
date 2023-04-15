@@ -16,7 +16,8 @@ use crate::{
 
 use anyhow::Result;
 use hyper::Uri;
-use minijinja::{value::Value as JinjaValue, Environment, Source, State};
+use minijinja::{context, value::Value as JinjaValue, Environment, Source, State};
+use serde::Serialize;
 use serde_json::Value;
 
 pub fn init_lite_jinja<'a>() -> Environment<'a> {
@@ -97,11 +98,11 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
         env.add_template("head_template.jinja", head_template)
             .expect("Cannot add head_template");
     }
-    if let Some(footer_template) = zine.theme.footer_template.as_ref() {
+    if let Some(footer_template) = &zine.theme.footer_template {
         env.add_template("footer_template.jinja", footer_template)
             .expect("Cannot add footer_template");
     }
-    if let Some(article_extend_template) = zine.theme.article_extend_template.as_ref() {
+    if let Some(article_extend_template) = &zine.theme.article_extend_template {
         env.add_template("article_extend_template.jinja", article_extend_template)
             .expect("Cannot add article_extend_template");
     }
@@ -168,7 +169,11 @@ pub fn render(
 }
 
 // Render Atom feed
-fn render_atom_feed(env: &Environment, context: Context, dest: impl AsRef<Path>) -> Result<()> {
+fn render_atom_feed(
+    env: &Environment,
+    context: impl Serialize,
+    dest: impl AsRef<Path>,
+) -> Result<()> {
     let dest = dest.as_ref().join("feed.xml");
     let template = env.get_template("feed.jinja")?;
 
@@ -176,19 +181,23 @@ fn render_atom_feed(env: &Environment, context: Context, dest: impl AsRef<Path>)
     let mut buf = vec![];
 
     template
-        .render_to_write(context.into_json(), &mut buf)
+        .render_to_write(context, &mut buf)
         .expect("Render feed.jinja failed.");
     fs::write(dest, buf).expect("Write feed.xml failed");
     Ok(())
 }
 
 // Render sitemap.xml
-fn render_sitemap(env: &Environment, context: Context, dest: impl AsRef<Path>) -> Result<()> {
+fn render_sitemap(
+    env: &Environment,
+    context: impl Serialize,
+    dest: impl AsRef<Path>,
+) -> Result<()> {
     let dest = dest.as_ref().join("sitemap.xml");
     let template = env.get_template("sitemap.jinja")?;
     let mut buf = vec![];
     template
-        .render_to_write(context.into_json(), &mut buf)
+        .render_to_write(context, &mut buf)
         .expect("Render sitemap.jinja failed.");
     fs::write(dest, buf).expect("Write sitemap.xml failed");
     Ok(())
@@ -242,16 +251,24 @@ impl ZineEngine {
         #[cfg(debug_assertions)]
         println!("Zine engine: {:?}", self.zine);
 
-        let mut feed_context = Context::new();
-        feed_context.insert("site", &self.zine.site);
-        feed_context.insert("entries", &self.zine.latest_feed_entries(20));
-        feed_context.insert("generator_version", env!("CARGO_PKG_VERSION"));
-        render_atom_feed(&env, feed_context, &self.dest)?;
+        render_atom_feed(
+            &env,
+            context! {
+                site => &self.zine.site,
+                entries => &self.zine.latest_feed_entries(20),
+                generator_version => env!("CARGO_PKG_VERSION"),
+            },
+            &self.dest,
+        )?;
 
-        let mut sitemap_context = Context::new();
-        sitemap_context.insert("site", &self.zine.site);
-        sitemap_context.insert("entries", &self.zine.sitemap_entries());
-        render_sitemap(&env, sitemap_context, &self.dest)?;
+        render_sitemap(
+            &env,
+            context! {
+                site => &self.zine.site,
+                entries => &self.zine.sitemap_entries(),
+            },
+            &self.dest,
+        )?;
 
         self.copy_static_assets()?;
         println!("Build cost: {}ms", instant.elapsed().as_millis());

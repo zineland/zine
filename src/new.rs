@@ -5,7 +5,7 @@ use minijinja::render;
 use promptly::prompt_default;
 use time::{format_description, OffsetDateTime};
 
-use crate::{context::Context, helpers::run_command, ZINE_FILE};
+use crate::{helpers::run_command, ZINE_FILE};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -64,13 +64,6 @@ impl ZineScaffold {
         fs::create_dir_all(&issue_dir)?;
         let format = format_description::parse("[year]-[month]-[day]")?;
         let today = OffsetDateTime::now_utc().format(&format)?;
-
-        let mut context = Context::new();
-        context.insert("slug", &self.issue_dir);
-        context.insert("number", &self.issue_number);
-        context.insert("title", &self.issue_title);
-        context.insert("pub_date", &today);
-        context.insert("author", &self.author);
 
         fs::write(
             issue_dir.join(ZINE_FILE),
