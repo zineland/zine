@@ -1,6 +1,7 @@
 use std::{borrow::Cow, path::Path};
 
 use anyhow::Result;
+use minijinja::Environment;
 use serde::{Deserialize, Serialize};
 
 use crate::{context::Context, engine, helpers::capitalize, html::Meta};
@@ -24,7 +25,7 @@ impl Entity for Topic {
         Ok(())
     }
 
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         context.insert(
             "meta",
             &Meta {
@@ -35,7 +36,12 @@ impl Entity for Topic {
             },
         );
         context.insert("topic", &self);
-        engine::render("topic.jinja", &context, dest.join(self.id.to_lowercase()))?;
+        engine::render(
+            env,
+            "topic.jinja",
+            &context,
+            dest.join(self.id.to_lowercase()),
+        )?;
         Ok(())
     }
 }

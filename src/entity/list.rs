@@ -1,6 +1,7 @@
 use std::{borrow::Cow, path::Path};
 
 use anyhow::Result;
+use minijinja::Environment;
 use serde::Serialize;
 
 use crate::{context::Context, engine, html::Meta, Entity};
@@ -70,7 +71,7 @@ impl<'a> List<'a, Topic> {
 }
 
 impl<'a, E: Serialize> Entity for List<'a, E> {
-    fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> anyhow::Result<()> {
         if self.entities.is_empty() {
             // Do nothing if the entities is empty.
             return Ok(());
@@ -86,7 +87,7 @@ impl<'a, E: Serialize> Entity for List<'a, E> {
             },
         );
         context.insert(self.name, &self.entities);
-        engine::render(self.template, &context, dest.join(self.name))?;
+        engine::render(env, self.template, &context, dest.join(self.name))?;
         Ok(())
     }
 }

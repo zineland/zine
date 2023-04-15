@@ -1,6 +1,7 @@
 use std::{borrow::Cow, path::Path};
 
 use anyhow::Result;
+use minijinja::Environment;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 
 use crate::{context::Context, engine, html::Meta, markdown, Entity};
@@ -47,7 +48,7 @@ impl AuthorId {
 }
 
 impl Entity for Author {
-    fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> anyhow::Result<()> {
         let slug = format!("@{}", self.id.to_lowercase());
         context.insert(
             "meta",
@@ -64,7 +65,7 @@ impl Entity for Author {
             },
         );
         context.insert("author", &self);
-        engine::render("author.jinja", &context, dest.join(slug))?;
+        engine::render(env, "author.jinja", &context, dest.join(slug))?;
         Ok(())
     }
 }

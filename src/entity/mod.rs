@@ -44,7 +44,7 @@ pub trait Entity {
         Ok(())
     }
 
-    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         Ok(())
     }
 }
@@ -94,9 +94,9 @@ impl<T: Entity> Entity for Option<T> {
         Ok(())
     }
 
-    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         if let Some(entity) = self {
-            entity.render(context, dest)?;
+            entity.render(env, context, dest)?;
         }
         Ok(())
     }
@@ -108,10 +108,10 @@ impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
             .try_for_each(|entity| entity.parse(source))
     }
 
-    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         self.par_iter().try_for_each(|entity| {
             let context = context.clone();
-            entity.render(context, dest)
+            entity.render(env, context, &dest)
         })
     }
 }

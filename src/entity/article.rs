@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
 use anyhow::{ensure, Context as _, Result};
+use minijinja::Environment;
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use time::Date;
@@ -166,7 +167,7 @@ impl Article {
         Ok(())
     }
 
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         context.insert(
             "meta",
             &Meta {
@@ -210,12 +211,13 @@ impl Article {
             let mut dest = dest.to_path_buf();
             dest.pop();
             engine::render(
+                env,
                 "article.jinja",
                 &context,
                 dest.join(path.trim_start_matches('/')),
             )
         } else {
-            engine::render("article.jinja", &context, dest.join(&self.meta.slug))
+            engine::render(env, "article.jinja", &context, dest.join(&self.meta.slug))
         }
     }
 }
@@ -258,12 +260,12 @@ impl Entity for Article {
         Ok(())
     }
 
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("i18n", &self.get_translations());
-        Article::render(self, context.clone(), dest)?;
+        Article::render(self, env, context.clone(), dest)?;
 
         self.i18n.values().par_bridge().for_each(|article| {
-            Article::render(article, context.clone(), dest).expect("Failed to render article");
+            Article::render(article, env, context.clone(), dest).expect("Failed to render article");
         });
 
         Ok(())

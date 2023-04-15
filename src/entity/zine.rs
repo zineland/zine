@@ -1,4 +1,5 @@
 use anyhow::{Context as _, Result};
+use minijinja::Environment;
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     prelude::IntoParallelRefMutIterator,
@@ -384,7 +385,7 @@ impl Entity for Zine {
         Ok(())
     }
 
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         context.insert(
             "live_reload",
             &matches!(crate::current_mode(), crate::Mode::Serve),
@@ -405,12 +406,12 @@ impl Entity for Zine {
 
             let mut context = context.clone();
             context.insert("articles", &articles);
-            author.render(context, dest)?;
+            author.render(env, context, dest)?;
 
             anyhow::Ok(())
         })?;
         // Render author list page.
-        author_list.render(context.clone(), dest)?;
+        author_list.render(env, context.clone(), dest)?;
 
         {
             let mut zine_data = data::write();
@@ -420,7 +421,7 @@ impl Entity for Zine {
         }
 
         // Render all issues pages.
-        self.issues.render(context.clone(), dest)?;
+        self.issues.render(env, context.clone(), dest)?;
 
         // Render all topic pages
         let topic_dest = dest.join("topic");
@@ -430,13 +431,13 @@ impl Entity for Zine {
             let articles = self.get_articles_by_topic(&topic.id);
             topic_list.push_topic(topic, articles.len());
             context.insert("articles", &articles);
-            topic.render(context, &topic_dest)
+            topic.render(env, context, &topic_dest)
         })?;
         // Render topic list page
-        topic_list.render(context.clone(), dest)?;
+        topic_list.render(env, context.clone(), dest)?;
 
         // Render other pages.
-        self.pages.render(context.clone(), dest)?;
+        self.pages.render(env, context.clone(), dest)?;
 
         // Render home page.
         let issues = self
@@ -451,7 +452,7 @@ impl Entity for Zine {
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
-        engine::render("index.jinja", &context, dest)?;
+        engine::render(env, "index.jinja", &context, dest)?;
         Ok(())
     }
 }

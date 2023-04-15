@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::{Context as _, Result};
+use minijinja::Environment;
 use rayon::{
     prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
     slice::ParallelSliceMut,
@@ -145,7 +146,7 @@ impl Entity for Issue {
         Ok(())
     }
 
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         if !self.need_publish() {
             return Ok(());
         }
@@ -171,7 +172,7 @@ impl Entity for Issue {
                 let dest = issue_dir.clone();
                 let article = (*article).clone();
                 article
-                    .render(context, &dest)
+                    .render(env, context, &dest)
                     .expect("Render article failed.");
             });
 
@@ -186,7 +187,7 @@ impl Entity for Issue {
             },
         );
         context.insert("intro", &self.intro);
-        engine::render("issue.jinja", &context, issue_dir)?;
+        engine::render(env, "issue.jinja", &context, issue_dir)?;
         Ok(())
     }
 }
