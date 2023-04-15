@@ -70,10 +70,8 @@ impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
 
     fn render(&self, context: Context, dest: &Path) -> Result<()> {
         self.par_iter().try_for_each(|entity| {
-            let entity = entity.clone();
             let context = context.clone();
-            let dest = dest.to_path_buf();
-            entity.render(context, &dest)
+            entity.render(context, dest)
         })
     }
 }
