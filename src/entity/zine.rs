@@ -386,15 +386,6 @@ impl Entity for Zine {
     }
 
     fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
-        context.insert(
-            "live_reload",
-            &matches!(crate::current_mode(), crate::Mode::Serve),
-        );
-        context.insert(
-            "zine_version",
-            option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
-        );
-        context.insert("theme", &self.theme);
         context.insert("site", &self.site);
 
         // Render all authors pages.
@@ -406,12 +397,16 @@ impl Entity for Zine {
 
             let mut context = context.clone();
             context.insert("articles", &articles);
-            author.render(env, context, dest)?;
+            author
+                .render(env, context, dest)
+                .expect("Failed to render author page");
 
             anyhow::Ok(())
         })?;
         // Render author list page.
-        author_list.render(env, context.clone(), dest)?;
+        author_list
+            .render(env, context.clone(), dest)
+            .expect("Failed to render author list page");
 
         {
             let mut zine_data = data::write();
@@ -421,23 +416,32 @@ impl Entity for Zine {
         }
 
         // Render all issues pages.
-        self.issues.render(env, context.clone(), dest)?;
+        self.issues
+            .render(env, context.clone(), dest)
+            .expect("Failed to render issues");
 
         // Render all topic pages
         let topic_dest = dest.join("topic");
         let mut topic_list = List::topic_list();
-        self.topics.values().try_for_each(|topic| {
-            let mut context = context.clone();
-            let articles = self.get_articles_by_topic(&topic.id);
-            topic_list.push_topic(topic, articles.len());
-            context.insert("articles", &articles);
-            topic.render(env, context, &topic_dest)
-        })?;
+        self.topics
+            .values()
+            .try_for_each(|topic| {
+                let mut context = context.clone();
+                let articles = self.get_articles_by_topic(&topic.id);
+                topic_list.push_topic(topic, articles.len());
+                context.insert("articles", &articles);
+                topic.render(env, context, &topic_dest)
+            })
+            .expect("Failed to render topic pages");
         // Render topic list page
-        topic_list.render(env, context.clone(), dest)?;
+        topic_list
+            .render(env, context.clone(), dest)
+            .expect("Failed to render topic list page");
 
         // Render other pages.
-        self.pages.render(env, context.clone(), dest)?;
+        self.pages
+            .render(env, context.clone(), dest)
+            .expect("Failed to render pages");
 
         // Render home page.
         let issues = self
@@ -452,7 +456,7 @@ impl Entity for Zine {
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
-        engine::render(env, "index.jinja", context, dest)?;
+        engine::render(env, "index.jinja", context, dest).expect("Failed to render home page");
         Ok(())
     }
 }

@@ -16,7 +16,11 @@ use crate::{
 
 use anyhow::Result;
 use hyper::Uri;
-use minijinja::{context, value::Value as JinjaValue, Environment, Source, State};
+use minijinja::{
+    context,
+    value::{Rest, Value as JinjaValue},
+    Environment, Source, State,
+};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -43,7 +47,7 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
     env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
     env.add_global(
         "markdown_config",
-        JinjaValue::from_serializable(&zine.markdown_config),
+        JinjaValue::from_object(zine.markdown_config.clone()),
     );
     env.add_global(
         "zine_version",
@@ -247,7 +251,9 @@ impl ZineEngine {
 
         let env = init_jinja(&self.source, &self.zine);
 
-        self.zine.render(&env, Context::new(), &self.dest)?;
+        self.zine
+            .render(&env, Context::new(), &self.dest)
+            .expect("Render zine failed.");
         #[cfg(debug_assertions)]
         println!("Zine engine: {:?}", self.zine);
 

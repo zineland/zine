@@ -68,7 +68,7 @@ impl<'a, E: Serialize> Entity for List<'a, E> {
         }
 
         let title = env.render_str(
-            &format!(r#"{{{{ fluent(key="{}") }}}}"#, self.fluent_key),
+            &format!(r#"{{{{ fluent("{}") }}}}"#, self.fluent_key),
             context! {},
         )?;
         context.insert(
