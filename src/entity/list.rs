@@ -2,9 +2,8 @@ use std::{borrow::Cow, path::Path};
 
 use anyhow::Result;
 use serde::Serialize;
-use tera::Context;
 
-use crate::{engine, html::Meta, Entity};
+use crate::{context::Context, engine, html::Meta, Entity};
 
 use super::{Author, Topic};
 

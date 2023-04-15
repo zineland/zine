@@ -3,10 +3,10 @@ use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 use anyhow::{ensure, Context as _, Result};
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 use serde::{Deserialize, Serialize};
-use tera::Context;
 use time::Date;
 
 use crate::{
+    context::Context,
     current_mode, data, engine,
     html::Meta,
     i18n,

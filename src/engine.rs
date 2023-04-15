@@ -5,6 +5,7 @@ use std::{
 };
 
 use crate::{
+    context::Context,
     current_mode, data,
     entity::{Entity, MarkdownConfig, Zine},
     helpers::copy_dir,
@@ -19,7 +20,7 @@ use hyper::Uri;
 use minijinja::{value::Value as JinjaValue, Environment, Source, State};
 use once_cell::sync::OnceCell;
 use serde_json::Value;
-use tera::{Context, Tera};
+use tera::Tera;
 
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
@@ -32,6 +33,14 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
     env.add_global(
         "markdown_config",
         JinjaValue::from_serializable(&zine.markdown_config),
+    );
+    env.add_global(
+        "zine_version",
+        &*option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
+    );
+    env.add_global(
+        "live_reload",
+        matches!(crate::current_mode(), crate::Mode::Serve),
     );
 
     // Dynamically add templates.
@@ -153,7 +162,7 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
         }
     }
 
-    get_tera().render_to(template, context, &mut buf)?;
+    get_tera().render_to(template, &context.to_tera_context(), &mut buf)?;
 
     // Rewrite some site url and cdn links if and only if:
     // 1. in build run mode
@@ -186,7 +195,7 @@ pub fn render(template: &str, context: &Context, dest: impl AsRef<Path>) -> Resu
 /// Render raw template.
 pub fn render_str(raw_template: &str, context: &Context) -> Result<String> {
     let mut tera = TERA.get().expect("Tera haven't initialized").write();
-    let r = tera.render_str(raw_template, context)?;
+    let r = tera.render_str(raw_template, &context.to_tera_context())?;
     Ok(r)
 }
 
@@ -196,7 +205,7 @@ fn render_atom_feed(context: Context, dest: impl AsRef<Path>) -> Result<()> {
     tokio::task::spawn_blocking(move || {
         let mut buf = vec![];
         get_tera()
-            .render_to("feed.jinja", &context, &mut buf)
+            .render_to("feed.jinja", &context.to_tera_context(), &mut buf)
             .expect("Render feed.jinja failed.");
         fs::write(dest, buf).expect("Write feed.xml failed");
     });
@@ -209,7 +218,7 @@ fn render_sitemap(context: Context, dest: impl AsRef<Path>) -> Result<()> {
     tokio::task::spawn_blocking(move || {
         let mut buf = vec![];
         get_tera()
-            .render_to("sitemap.jinja", &context, &mut buf)
+            .render_to("sitemap.jinja", &context.to_tera_context(), &mut buf)
             .expect("Render sitemap.jinja failed.");
         fs::write(dest, buf).expect("Write sitemap.xml failed");
     });
@@ -257,6 +266,8 @@ impl ZineEngine {
         }
 
         self.zine.parse(&self.source)?;
+
+        init_jinja(&self.source, &self.zine);
 
         init_tera(&self.source, &self.zine);
 

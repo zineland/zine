@@ -2,9 +2,8 @@ use std::{borrow::Cow, path::Path};
 
 use anyhow::Result;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
-use tera::Context;
 
-use crate::{engine, html::Meta, markdown, Entity};
+use crate::{context::Context, engine, html::Meta, markdown, Entity};
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.

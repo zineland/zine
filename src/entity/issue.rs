@@ -6,10 +6,9 @@ use rayon::{
     slice::ParallelSliceMut,
 };
 use serde::{Deserialize, Serialize};
-use tera::Context;
 use time::Date;
 
-use crate::{current_mode, engine, html::Meta, markdown, Mode};
+use crate::{context::Context, current_mode, engine, html::Meta, markdown, Mode};
 
 use super::{article::Article, Entity};
 

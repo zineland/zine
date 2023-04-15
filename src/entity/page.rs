@@ -5,9 +5,8 @@ use std::{
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use tera::Context;
 
-use crate::{engine, html::Meta, markdown};
+use crate::{context::Context, engine, html::Meta, markdown};
 
 use super::Entity;
 

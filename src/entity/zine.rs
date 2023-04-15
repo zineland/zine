@@ -11,10 +11,11 @@ use std::{
     fs,
     path::{Component, Path},
 };
-use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, error::ZineError, feed::FeedEntry, helpers::capitalize, Entity};
+use crate::{
+    context::Context, data, engine, error::ZineError, feed::FeedEntry, helpers::capitalize, Entity,
+};
 
 use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 

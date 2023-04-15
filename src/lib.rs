@@ -8,6 +8,7 @@ use walkdir::WalkDir;
 
 pub mod build;
 mod code_blocks;
+mod context;
 mod data;
 mod engine;
 mod entity;
