@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
@@ -18,14 +17,24 @@ use crate::{
 use anyhow::Result;
 use hyper::Uri;
 use minijinja::{value::Value as JinjaValue, Environment, Source, State};
-use once_cell::sync::OnceCell;
 use serde_json::Value;
-use tera::Tera;
 
-static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
+pub fn init_lite_jinja<'a>() -> Environment<'a> {
+    let mut env = Environment::new();
+    env.add_function("markdown_to_html", markdown_to_html_function);
+    env.add_function("get_author", get_author_function);
+    env.add_template("heading.jinja", include_str!("../templates/heading.jinja"))
+        .unwrap();
+    env.add_template(
+        "blocks/quote.jinja",
+        include_str!("../templates/blocks/quote.jinja"),
+    )
+    .unwrap();
+    env
+}
 
 fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
-    let mut env = Environment::new();
+    let mut env = init_lite_jinja();
     #[cfg(debug_assertions)]
     env.set_source(Source::from_path("templates"));
 
@@ -37,7 +46,7 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
     );
     env.add_global(
         "zine_version",
-        &*option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
+        option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
     );
     env.add_global(
         "live_reload",
@@ -54,8 +63,6 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
         env.add_template("_macros.jinja", include_str!("../templates/_macros.jinja"))
             .unwrap();
         env.add_template("_meta.jinja", include_str!("../templates/_meta.jinja"))
-            .unwrap();
-        env.add_template("heading.jinja", include_str!("../templates/heading.jinja"))
             .unwrap();
         env.add_template("base.jinja", include_str!("../templates/base.jinja"))
             .unwrap();
@@ -83,11 +90,6 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
             .unwrap();
         env.add_template("sitemap.jinja", include_str!("../templates/sitemap.jinja"))
             .unwrap();
-        env.add_template(
-            "blocks/quote.jinja",
-            include_str!("../templates/blocks/quote.jinja"),
-        )
-        .unwrap();
     }
 
     // Dynamically add templates.
@@ -103,20 +105,13 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
         env.add_template("article_extend_template.jinja", article_extend_template)
             .expect("Cannot add article_extend_template");
     }
-    env.add_function("markdown_to_html", markdown_to_html_function);
     env.add_function("markdown_to_rss", markdown_to_rss_function);
-    env.add_function("get_author", get_author_function);
 
     let fluent_loader = FluentLoader::new(source, &zine.site.locale);
     env.add_function("fluent", move |key: &str, number: Option<i64>| -> String {
         fluent_loader.format(key, number)
     });
     env
-}
-
-/// Get a Tera under read lock.
-pub fn get_tera() -> parking_lot::RwLockReadGuard<'static, Tera> {
-    TERA.get().expect("Tera haven't initialized").read()
 }
 
 #[derive(Debug)]
@@ -129,7 +124,7 @@ pub struct ZineEngine {
 pub fn render(
     env: &Environment,
     template: &str,
-    context: &Context,
+    context: Context,
     dest: impl AsRef<Path>,
 ) -> Result<()> {
     let mut buf = vec![];
@@ -140,6 +135,7 @@ pub fn render(
         }
     }
 
+    let site = context.get("site").cloned();
     env.get_template(template)?
         .render_to_write(context.into_json(), &mut buf)?;
 
@@ -150,11 +146,11 @@ pub fn render(
         let mut site_url: Option<&str> = None;
         let mut cdn_url: Option<&str> = None;
 
-        if let Some(Value::String(url)) = context.get("site").and_then(|site| site.get("cdn")) {
+        if let Some(Value::String(url)) = site.as_ref().and_then(|site| site.get("cdn")) {
             let _ = url.parse::<Uri>().expect("Invalid cdn url.");
             cdn_url = Some(url);
         }
-        if let Some(Value::String(url)) = context.get("site").and_then(|site| site.get("url")) {
+        if let Some(Value::String(url)) = site.as_ref().and_then(|site| site.get("url")) {
             let uri = url.parse::<Uri>().expect("Invalid site url.");
             // We don't need to rewrite links if the site url has a root path.
             if uri.path() != "/" {
@@ -171,17 +167,10 @@ pub fn render(
     Ok(())
 }
 
-/// Render raw template.
-pub fn render_str(raw_template: &str, context: &Context) -> Result<String> {
-    let mut tera = TERA.get().expect("Tera haven't initialized").write();
-    let r = tera.render_str(raw_template, &context.to_tera_context())?;
-    Ok(r)
-}
-
 // Render Atom feed
 fn render_atom_feed(env: &Environment, context: Context, dest: impl AsRef<Path>) -> Result<()> {
     let dest = dest.as_ref().join("feed.xml");
-    let template = env.get_template("feed.jinja")?.clone();
+    let template = env.get_template("feed.jinja")?;
 
     // tokio::task::spawn_blocking(move || {
     let mut buf = vec![];
@@ -274,7 +263,7 @@ impl ZineEngine {
 fn markdown_to_html_function(state: &State, markdown: &str) -> String {
     if let Some(value) = state.lookup("markdown_config") {
         let markdown_config = value.downcast_object_ref::<MarkdownConfig>().unwrap();
-        return MarkdownRender::new(&markdown_config).render_html(&markdown);
+        return MarkdownRender::new(markdown_config).render_html(markdown);
     }
     String::new()
 }
@@ -286,41 +275,11 @@ fn markdown_to_rss_function(markdown: &str) -> String {
     };
     MarkdownRender::new(&markdown_config)
         .enable_rss_mode()
-        .render_html(&markdown)
-}
-
-fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Some(Value::String(author_id)) = map.get("id") {
-        let data = data::read();
-        let author = data.get_author_by_id(author_id);
-        Ok(serde_json::to_value(author)?)
-    } else {
-        Ok(Value::Null)
-    }
+        .render_html(markdown)
 }
 
 fn get_author_function(id: &str) -> JinjaValue {
     let data = data::read();
     let author = data.get_author_by_id(id);
     JinjaValue::from_serializable(&author)
-}
-
-// A tera functio to get entity by name.
-fn get_entity_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
-    if let Some(Value::String(name)) = map.get("name") {
-        match name.as_ref() {
-            "author" => {
-                let data = data::read();
-                Ok(serde_json::to_value(data.get_authors())?)
-            }
-            // "page" => {
-            //     todo!()
-            // }
-            _ => Err(tera::Error::msg(
-                "invalid entity name for `get_entity` function.",
-            )),
-        }
-    } else {
-        Ok(Value::Null)
-    }
 }

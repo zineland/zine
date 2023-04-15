@@ -187,7 +187,7 @@ impl Entity for Issue {
             },
         );
         context.insert("intro", &self.intro);
-        engine::render(env, "issue.jinja", &context, issue_dir)?;
+        engine::render(env, "issue.jinja", context, issue_dir)?;
         Ok(())
     }
 }

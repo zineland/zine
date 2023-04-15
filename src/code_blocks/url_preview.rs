@@ -61,8 +61,10 @@ impl<'a> CodeBlock for UrlPreviewError<'a> {
     }
 }
 
+/// Render the preview url if success, otherwise return preview error
+/// to remind user we have error.
 #[tokio::main(flavor = "current_thread")]
-pub(super) async fn render(url: &str, options: HashMap<String, &str>) -> Option<String> {
+pub(crate) async fn render(url: &str, options: HashMap<String, &str>) -> Option<String> {
     let (first_preview, mut rx) = {
         // parking_lot RwLock guard isn't async-aware,
         // we should keep this guard drop in this scope.

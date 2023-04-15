@@ -1,11 +1,11 @@
 use std::{borrow::Cow, env, fs, path::PathBuf};
 
 use anyhow::{Context as _, Result};
+use minijinja::render;
 use promptly::prompt_default;
-use tera::{Context, Tera};
 use time::{format_description, OffsetDateTime};
 
-use crate::{helpers::run_command, ZINE_FILE};
+use crate::{context::Context, helpers::run_command, ZINE_FILE};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -44,14 +44,10 @@ struct ZineScaffold {
 
 impl ZineScaffold {
     fn create_project(&self, name: &str) -> Result<()> {
-        let mut context = Context::new();
-        context.insert("name", name);
-        context.insert("author", &self.author);
-
         // Generate project zine.toml
         fs::write(
             self.source.join(ZINE_FILE),
-            Tera::one_off(TEMPLATE_PROJECT_FILE, &context, true)?,
+            render!(TEMPLATE_PROJECT_FILE, name, author => self.author),
         )?;
 
         // Create issue dir and issue zine.toml
@@ -78,7 +74,14 @@ impl ZineScaffold {
 
         fs::write(
             issue_dir.join(ZINE_FILE),
-            Tera::one_off(TEMPLATE_ISSUE_FILE, &context, true)?,
+            render!(
+                TEMPLATE_ISSUE_FILE,
+                slug => self.issue_dir,
+                number => self.issue_number,
+                title => self.issue_title,
+                pub_date => today,
+                author => self.author
+            ),
         )?;
 
         // Create first article

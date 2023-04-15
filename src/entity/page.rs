@@ -51,7 +51,7 @@ impl Entity for Page {
             },
         );
         context.insert("page", &self);
-        engine::render(env, "page.jinja", &context, dest.join(self.slug()))?;
+        engine::render(env, "page.jinja", context, dest.join(self.slug()))?;
         Ok(())
     }
 }

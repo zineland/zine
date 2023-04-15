@@ -39,7 +39,7 @@ impl Entity for Topic {
         engine::render(
             env,
             "topic.jinja",
-            &context,
+            context,
             dest.join(self.id.to_lowercase()),
         )?;
         Ok(())

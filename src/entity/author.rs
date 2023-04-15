@@ -65,7 +65,7 @@ impl Entity for Author {
             },
         );
         context.insert("author", &self);
-        engine::render(env, "author.jinja", &context, dest.join(slug))?;
+        engine::render(env, "author.jinja", context, dest.join(slug))?;
         Ok(())
     }
 }

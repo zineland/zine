@@ -84,7 +84,7 @@ impl Context {
     }
 
     /// Converts the context to a `serde_json::Value` consuming the context.
-    pub fn into_json(&self) -> Value {
+    pub fn into_json(self) -> Value {
         let mut m = Map::new();
         for (key, value) in &self.data {
             m.insert(key.to_owned(), value.clone());
@@ -129,10 +129,6 @@ impl Context {
     /// Checks if a value exists at a specific index.
     pub fn contains_key(&self, index: &str) -> bool {
         self.data.contains_key(index)
-    }
-
-    pub fn to_tera_context(&self) -> tera::Context {
-        tera::Context::from_serialize(self.into_json()).unwrap()
     }
 }
 

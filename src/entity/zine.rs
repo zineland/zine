@@ -452,7 +452,7 @@ impl Entity for Zine {
             .map(|issue| (issue.number, issue.featured_articles()))
             .collect::<HashMap<u32, Vec<_>>>();
         context.insert("article_map", &article_map);
-        engine::render(env, "index.jinja", &context, dest)?;
+        engine::render(env, "index.jinja", context, dest)?;
         Ok(())
     }
 }

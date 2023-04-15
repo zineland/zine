@@ -213,11 +213,11 @@ impl Article {
             engine::render(
                 env,
                 "article.jinja",
-                &context,
+                context,
                 dest.join(path.trim_start_matches('/')),
             )
         } else {
-            engine::render(env, "article.jinja", &context, dest.join(&self.meta.slug))
+            engine::render(env, "article.jinja", context, dest.join(&self.meta.slug))
         }
     }
 }
