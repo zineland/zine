@@ -44,7 +44,40 @@ impl FluentLoader {
         bundle.add_resource(resource).unwrap();
         FluentLoader { bundle }
     }
+
+    pub(crate) fn format(&self, key: &str, number: Option<i64>) -> String {
+        let pattern = self
+            .bundle
+            .get_message(key)
+            .unwrap_or_else(|| panic!("Invalid fluent key: `{}`", key))
+            .value()
+            .expect("Missing Value.");
+
+        let mut fluent_args = FluentArgs::new();
+        if let Some(number) = number {
+            fluent_args.set("number", FluentValue::from(number));
+        }
+        // for (key, value) in args.iter() {
+        //     fluent_args.set(&**key, json_to_fluent(value));
+        // }
+
+        self.bundle
+            .format_pattern(pattern, Some(fluent_args).as_ref(), &mut vec![])
+            .into_owned()
+    }
 }
+
+// fn jinja_value_to_fluent(value: &JinjaValue) -> FluentValue {
+//     match value.kind() {
+//         ValueKind::Bool => todo!(),
+//         ValueKind::Number => FluentValue::Number(value),
+//         ValueKind::String => FluentValue::String(value.as_str().unwrap_or_default().into()),
+//         _ => {
+//             println!("Warning: invalid value to convert to fluent: {value}");
+//             FluentValue::None
+//         }
+//     }
+// }
 
 fn json_to_fluent(json: &Value) -> FluentValue {
     match json {

@@ -23,10 +23,9 @@ use tera::{Context, Tera};
 
 static TERA: OnceCell<parking_lot::RwLock<Tera>> = OnceCell::new();
 
-fn init_jinja<'a>(zine: &'a Zine) -> Environment<'a> {
+fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
     let mut env = Environment::new();
-    let source = Source::from_path("templates/**/*.jinja");
-    env.set_source(source);
+    env.set_source(Source::from_path("templates/**/*.jinja"));
 
     env.add_global("site", JinjaValue::from_serializable(&zine.site));
     env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
@@ -51,6 +50,11 @@ fn init_jinja<'a>(zine: &'a Zine) -> Environment<'a> {
     env.add_function("markdown_to_html", markdown_to_html_function);
     env.add_function("markdown_to_rss", markdown_to_rss_function);
     env.add_function("get_author", get_author_function);
+
+    let fluent_loader = FluentLoader::new(source, &zine.site.locale);
+    env.add_function("fluent", move |key: &str, number: Option<i64>| -> String {
+        fluent_loader.format(key, number)
+    });
     env
 }
 
@@ -289,13 +293,12 @@ fn markdown_to_html_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     }
 }
 
-fn markdown_to_html_function(state: &State, markdown: &str) -> Result<String, minijinja::Error> {
+fn markdown_to_html_function(state: &State, markdown: &str) -> String {
     if let Some(value) = state.lookup("markdown_config") {
         let markdown_config = value.downcast_object_ref::<MarkdownConfig>().unwrap();
-        let html = MarkdownRender::new(&markdown_config).render_html(&markdown);
-        return Ok(html);
+        return MarkdownRender::new(&markdown_config).render_html(&markdown);
     }
-    Ok(String::new())
+    String::new()
 }
 
 // A tera function to convert markdown into rss.
@@ -314,15 +317,14 @@ fn markdown_to_rss_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     }
 }
 
-fn markdown_to_rss_function(markdown: &str) -> Result<String, minijinja::Error> {
+fn markdown_to_rss_function(markdown: &str) -> String {
     let markdown_config = MarkdownConfig {
         highlight_code: false,
         ..Default::default()
     };
-    let html = MarkdownRender::new(&markdown_config)
+    MarkdownRender::new(&markdown_config)
         .enable_rss_mode()
-        .render_html(&markdown);
-    Ok(html)
+        .render_html(&markdown)
 }
 
 fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
@@ -335,10 +337,10 @@ fn get_author_fn(map: &HashMap<String, Value>) -> tera::Result<Value> {
     }
 }
 
-fn get_author_function(id: &str) -> Result<JinjaValue, minijinja::Error> {
+fn get_author_function(id: &str) -> JinjaValue {
     let data = data::read();
     let author = data.get_author_by_id(id);
-    Ok(JinjaValue::from_serializable(&author))
+    JinjaValue::from_serializable(&author)
 }
 
 // A tera functio to get entity by name.
