@@ -24,6 +24,7 @@ pub fn init_lite_jinja<'a>() -> Environment<'a> {
     let mut env = Environment::new();
     env.add_function("markdown_to_html", markdown_to_html_function);
     env.add_function("get_author", get_author_function);
+    env.add_function("now", now_function);
     env.add_template("heading.jinja", include_str!("../templates/heading.jinja"))
         .unwrap();
     env.add_template(
@@ -274,7 +275,13 @@ impl ZineEngine {
     }
 }
 
-// A tera function to convert markdown into html.
+fn now_function() -> String {
+    time::OffsetDateTime::now_utc()
+        .format(&time::format_description::well_known::Rfc3339)
+        .expect("Failed to format now time.")
+        .to_string()
+}
+
 fn markdown_to_html_function(markdown: &str) -> String {
     let zine_data = data::read();
     let markdown_config = zine_data.get_markdown_config();
