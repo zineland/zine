@@ -1,5 +1,5 @@
 use anyhow::{Context as _, Result};
-use minijinja::Environment;
+use minijinja::{context, Environment};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     prelude::IntoParallelRefMutIterator,
@@ -8,14 +8,19 @@ use rayon::{
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
-    collections::{BTreeMap, HashMap},
+    collections::BTreeMap,
     fs,
     path::{Component, Path},
 };
 use walkdir::WalkDir;
 
 use crate::{
-    context::Context, data, engine, error::ZineError, feed::FeedEntry, helpers::capitalize, Entity,
+    context::Context,
+    data, engine,
+    error::ZineError,
+    feed::FeedEntry,
+    helpers::{self, capitalize},
+    Entity,
 };
 
 use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
@@ -448,14 +453,17 @@ impl Entity for Zine {
             .issues
             .par_iter()
             .filter(|issue| issue.need_publish())
+            .map(|issue| {
+                context! {
+                    slug => issue.slug,
+                    title => issue.title,
+                    number => issue.number,
+                    pub_date => issue.pub_date.as_ref().map(helpers::format_date),
+                    articles => issue.featured_articles(),
+                }
+            })
             .collect::<Vec<_>>();
         context.insert("issues", &issues);
-        // `article_map` is the issue number and issue's featured articles map.
-        let article_map = issues
-            .par_iter()
-            .map(|issue| (issue.number, issue.featured_articles()))
-            .collect::<HashMap<u32, Vec<_>>>();
-        context.insert("article_map", &article_map);
         engine::render(env, "index.jinja", context, dest).expect("Failed to render home page");
         Ok(())
     }

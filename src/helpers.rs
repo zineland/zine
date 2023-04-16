@@ -13,6 +13,7 @@ use std::{
     path::Path,
     process::Command,
 };
+use time::{format_description, Date};
 
 pub fn run_command(program: &str, args: &[&str]) -> Result<String, io::Error> {
     let out = Command::new(program).args(args).output()?;
@@ -31,6 +32,11 @@ pub fn capitalize(text: &str) -> String {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase(),
     }
+}
+
+pub fn format_date(date: &Date) -> String {
+    let format = format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
+    date.format(&format).expect("Serialize date error")
 }
 
 /// Split styles into string pair.
@@ -127,14 +133,11 @@ pub fn copy_dir(source: &Path, dest: &Path) -> Result<()> {
 
 /// A serde module to serialize and deserialize [`time::Date`] type.
 pub mod serde_date {
+    use super::*;
     use serde::{de, Serialize, Serializer};
-    use time::{format_description, Date};
 
     pub fn serialize<S: Serializer>(date: &Date, serializer: S) -> Result<S::Ok, S::Error> {
-        let format = format_description::parse("[year]-[month]-[day]").expect("Shouldn't happen");
-        date.format(&format)
-            .expect("Serialize date error")
-            .serialize(serializer)
+        super::format_date(date).serialize(serializer)
     }
 
     pub fn deserialize<'de, D>(d: D) -> Result<Date, D::Error>
