@@ -25,6 +25,7 @@ pub fn init_lite_jinja<'a>() -> Environment<'a> {
     env.add_function("markdown_to_html", markdown_to_html_function);
     env.add_function("get_author", get_author_function);
     env.add_function("now", now_function);
+    env.add_filter("trim_start_matches", trim_start_matches_filter);
     env.add_template("heading.jinja", include_str!("../templates/heading.jinja"))
         .unwrap();
     env.add_template(
@@ -279,7 +280,10 @@ fn now_function() -> String {
     time::OffsetDateTime::now_utc()
         .format(&time::format_description::well_known::Rfc3339)
         .expect("Failed to format now time.")
-        .to_string()
+}
+
+fn trim_start_matches_filter(s: &str, prefix: &str) -> String {
+    s.trim_start_matches(prefix).to_string()
 }
 
 fn markdown_to_html_function(markdown: &str) -> String {
