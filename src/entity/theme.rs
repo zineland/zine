@@ -8,6 +8,8 @@ use super::Entity;
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct Theme {
+    //whether dark mode is enabled
+    pub dark_mode: Option<bool>,
     // The primary color.
     #[serde(default = "Theme::default_primary_color")]
     pub primary_color: String,
@@ -40,6 +42,7 @@ pub struct Theme {
 impl Default for Theme {
     fn default() -> Self {
         Self {
+            dark_mode: false,
             primary_color: Self::default_primary_color(),
             main_color: Self::default_main_color(),
             link_color: Self::default_link_color(),
@@ -58,6 +61,7 @@ impl Default for Theme {
 impl std::fmt::Debug for Theme {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Theme")
+            .field("dark_mode", &self.dark_mode)
             .field("primary_color", &self.primary_color)
             .field("main_color", &self.main_color)
             .field("link_color", &self.link_color)
@@ -77,30 +81,36 @@ impl std::fmt::Debug for Theme {
 }
 
 impl Theme {
-    const DEFAULT_PRIMARY_COLOR: &'static str = "#2563eb";
-    const DEFAULT_MAIN_COLOR: &'static str = "#ffffff";
-    const DEFAULT_LINK_COLOR: &'static str = "#2563eb";
-    const DEFAULT_SECONDARY_COLOR: &'static str = "#eff3f7";
-    const DEFAULT_PAGE_COLOR: &'static str = "#ffffff";
+    const DEFAULT_PRIMARY_COLOR_LIGHT: &'static str = "#2563eb";
+    const DEFAULT_MAIN_COLOR_LIGHT: &'static str = "#ffffff";
+    const DEFAULT_LINK_COLOR_LIGHT: &'static str = "#2563eb";
+    const DEFAULT_SECONDARY_COLOR_LIGHT: &'static str = "#eff3f7";
+    const DEFAULT_PAGE_COLOR_LIGHT: &'static str = "#ffffff";
+
+    const DEFAULT_PRIMARY_COLOR_DARK: &'static str = "#0d0d0d";
+    const DEFAULT_MAIN_COLOR_DARK: &'static str = "#ffffff";
+    const DEFAULT_LINK_COLOR_DARK: &'static str = "#2563eb";
+    const DEFAULT_SECONDARY_COLOR_DARK: &'static str = "#303030";
+    const DEFAULT_PAGE_COLOR_DARK: &'static str = "#505050";
 
     fn default_primary_color() -> String {
-        Self::DEFAULT_PRIMARY_COLOR.to_string()
+        Self::DEFAULT_PRIMARY_COLOR_LIGHT.to_string()
     }
 
     fn default_main_color() -> String {
-        Self::DEFAULT_MAIN_COLOR.to_string()
+        Self::DEFAULT_MAIN_COLOR_LIGHT.to_string()
     }
 
     fn default_link_color() -> String {
-        Self::DEFAULT_LINK_COLOR.to_string()
+        Self::DEFAULT_LINK_COLOR_LIGHT.to_string()
     }
 
     fn default_secondary_color() -> String {
-        Self::DEFAULT_SECONDARY_COLOR.to_string()
+        Self::DEFAULT_SECONDARY_COLOR_LIGHT.to_string()
     }
 
     fn default_page_color() -> String {
-        Self::DEFAULT_PAGE_COLOR.to_string()
+        Self::DEFAULT_PAGE_COLOR_LIGHT.to_string()
     }
 }
 
