@@ -1,9 +1,7 @@
-use std::collections::BTreeMap;
-use std::io::Write;
-
 use anyhow::anyhow;
 use serde::ser::Serialize;
 use serde_json::value::{to_value, Map, Value};
+use std::collections::BTreeMap;
 
 use crate::Result;
 
@@ -135,86 +133,5 @@ impl Context {
 impl Default for Context {
     fn default() -> Context {
         Context::new()
-    }
-}
-
-pub trait ValueRender {
-    fn render(&self, write: &mut impl Write) -> std::io::Result<()>;
-}
-
-// Convert serde Value to String.
-impl ValueRender for Value {
-    fn render(&self, write: &mut impl Write) -> std::io::Result<()> {
-        match *self {
-            Value::String(ref s) => write!(write, "{}", s),
-            Value::Number(ref i) => {
-                if let Some(v) = i.as_i64() {
-                    write!(write, "{}", v)
-                } else if let Some(v) = i.as_u64() {
-                    write!(write, "{}", v)
-                } else if let Some(v) = i.as_f64() {
-                    write!(write, "{}", v)
-                } else {
-                    unreachable!()
-                }
-            }
-            Value::Bool(i) => write!(write, "{}", i),
-            Value::Null => Ok(()),
-            Value::Array(ref a) => {
-                let mut first = true;
-                write!(write, "[")?;
-                for i in a.iter() {
-                    if !first {
-                        write!(write, ", ")?;
-                    }
-                    first = false;
-                    i.render(write)?;
-                }
-                write!(write, "]")?;
-                Ok(())
-            }
-            Value::Object(_) => write!(write, "[object]"),
-        }
-    }
-}
-
-pub trait ValueNumber {
-    fn to_number(&self) -> Result<f64, ()>;
-}
-// Needed for all the maths
-// Convert everything to f64, seems like a terrible idea
-impl ValueNumber for Value {
-    fn to_number(&self) -> Result<f64, ()> {
-        match *self {
-            Value::Number(ref i) => Ok(i.as_f64().unwrap()),
-            _ => Err(()),
-        }
-    }
-}
-
-// From handlebars-rust
-pub trait ValueTruthy {
-    fn is_truthy(&self) -> bool;
-}
-
-impl ValueTruthy for Value {
-    fn is_truthy(&self) -> bool {
-        match *self {
-            Value::Number(ref i) => {
-                if i.is_i64() {
-                    return i.as_i64().unwrap() != 0;
-                }
-                if i.is_u64() {
-                    return i.as_u64().unwrap() != 0;
-                }
-                let f = i.as_f64().unwrap();
-                f != 0.0 && !f.is_nan()
-            }
-            Value::Bool(ref i) => *i,
-            Value::Null => false,
-            Value::String(ref i) => !i.is_empty(),
-            Value::Array(ref i) => !i.is_empty(),
-            Value::Object(ref i) => !i.is_empty(),
-        }
     }
 }

@@ -56,64 +56,9 @@ impl FluentLoader {
         if let Some(number) = number {
             fluent_args.set("number", FluentValue::from(number));
         }
-        // for (key, value) in args.iter() {
-        //     fluent_args.set(&**key, json_to_fluent(value));
-        // }
 
         self.bundle
             .format_pattern(pattern, Some(fluent_args).as_ref(), &mut vec![])
             .into_owned()
     }
 }
-
-// fn jinja_value_to_fluent(value: &JinjaValue) -> FluentValue {
-//     match value.kind() {
-//         ValueKind::Bool => todo!(),
-//         ValueKind::Number => FluentValue::Number(value),
-//         ValueKind::String => FluentValue::String(value.as_str().unwrap_or_default().into()),
-//         _ => {
-//             println!("Warning: invalid value to convert to fluent: {value}");
-//             FluentValue::None
-//         }
-//     }
-// }
-
-// fn json_to_fluent(json: &Value) -> FluentValue {
-//     match json {
-//         Value::Number(n) if n.is_u64() => FluentValue::from(n.as_u64().unwrap()),
-//         Value::Number(n) if n.is_i64() => FluentValue::from(n.as_i64().unwrap()),
-//         Value::Number(n) if n.is_f64() => FluentValue::from(n.as_f64().unwrap()),
-//         Value::String(s) => FluentValue::String(s.into()),
-//         _ => {
-//             println!("Warning: invalid value to convert to fluent: {}", &json);
-//             FluentValue::None
-//         }
-//     }
-// }
-
-// impl tera::Function for FluentLoader {
-//     fn call(&self, args: &HashMap<String, Value>) -> tera::Result<Value> {
-//         let key = args
-//             .get("key")
-//             .and_then(Value::as_str)
-//             .expect("Missing `key` argument.");
-
-//         let pattern = self
-//             .bundle
-//             .get_message(key)
-//             .unwrap_or_else(|| panic!("Invalid fluent key: `{}`", key))
-//             .value()
-//             .expect("Missing Value.");
-
-//         let mut fluent_args = FluentArgs::new();
-//         for (key, value) in args.iter().filter(|(key, _)| &**key != "key") {
-//             fluent_args.set(&**key, json_to_fluent(value));
-//         }
-
-//         Ok(Value::String(
-//             self.bundle
-//                 .format_pattern(pattern, Some(fluent_args).as_ref(), &mut vec![])
-//                 .into_owned(),
-//         ))
-//     }
-// }
