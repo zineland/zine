@@ -16,11 +16,7 @@ use crate::{
 
 use anyhow::Result;
 use hyper::Uri;
-use minijinja::{
-    context,
-    value::{Rest, Value as JinjaValue},
-    Environment, Source, State,
-};
+use minijinja::{context, value::Value as JinjaValue, Environment, Source};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -45,10 +41,6 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
 
     env.add_global("site", JinjaValue::from_serializable(&zine.site));
     env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
-    env.add_global(
-        "markdown_config",
-        JinjaValue::from_object(zine.markdown_config.clone()),
-    );
     env.add_global(
         "zine_version",
         option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
@@ -283,12 +275,10 @@ impl ZineEngine {
 }
 
 // A tera function to convert markdown into html.
-fn markdown_to_html_function(state: &State, markdown: &str) -> String {
-    if let Some(value) = state.lookup("markdown_config") {
-        let markdown_config = value.downcast_object_ref::<MarkdownConfig>().unwrap();
-        return MarkdownRender::new(markdown_config).render_html(markdown);
-    }
-    String::new()
+fn markdown_to_html_function(markdown: &str) -> String {
+    let zine_data = data::read();
+    let markdown_config = zine_data.get_markdown_config();
+    MarkdownRender::new(markdown_config).render_html(markdown)
 }
 
 fn markdown_to_rss_function(markdown: &str) -> String {
