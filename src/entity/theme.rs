@@ -114,10 +114,20 @@ impl Theme {
     fn default_page_color() -> String {
         Self::DEFAULT_PAGE_COLOR_LIGHT.to_string()
     }
+
+    pub fn change_defaults(&mut self) {
+        if self.dark_mode.unwrap_or(false) {
+            if self.page_color == default_page_color() {
+                self.page_color = Self::DEFAULT_PAGE_COLOR_DARK.to_string();
+            }
+        }
+    }
 }
 
 impl Entity for Theme {
     fn parse(&mut self, source: &Path) -> Result<()> {
+        change_defaults(self);
+
         if self.default_cover.is_none() {
             self.default_cover = Some(String::from("/static/zine-placeholder.svg"));
         }
