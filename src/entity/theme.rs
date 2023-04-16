@@ -35,7 +35,9 @@ pub struct Theme {
     // The extend template path for article page, will be parsed to html.
     // Normally, this template can be a comment widget, such as https://giscus.app.
     pub article_extend_template: Option<String>,
+    #[serde(skip_serializing)]
     pub default_cover: Option<String>,
+    #[serde(skip_serializing)]
     pub default_avatar: Option<String>,
 }
 
