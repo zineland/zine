@@ -16,5 +16,5 @@ josh_thompson = { name = "Josh_Thompson" }
 [theme]
 dark_mode = true
 # the primary color
-primary_color = "#FFC0CB"
-secondary_color = "#FFC0CB"
+#primary_color = "#FFC0CB"
+#secondary_color = "#FFC0CB"

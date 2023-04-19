@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>My Zine Site</title>
     <subtitle></subtitle>
-    <updated>2023-04-19T23:05:29.982483200+01:00</updated>
+    <updated>2023-04-20T00:08:46.913582400+01:00</updated>
     <id>http://localhost</id>
     <link href="http://localhost/feed.xml" rel="self" type="application/atom+xml" />
     <link href="http://localhost" rel="alternate" type="text/html" />

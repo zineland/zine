@@ -89,10 +89,10 @@ impl Theme {
     const DEFAULT_SECONDARY_COLOR_LIGHT: &'static str = "#eff3f7";
     const DEFAULT_PAGE_COLOR_LIGHT: &'static str = "#ffffff";
 
-    // const DEFAULT_PRIMARY_COLOR_DARK: &'static str = "#0d0d0d";
+    const DEFAULT_PRIMARY_COLOR_DARK: &'static str = "#0d0d0d";
     // const DEFAULT_MAIN_COLOR_DARK: &'static str = "#ffffff";
     // const DEFAULT_LINK_COLOR_DARK: &'static str = "#2563eb";
-    // const DEFAULT_SECONDARY_COLOR_DARK: &'static str = "#303030";
+    const DEFAULT_SECONDARY_COLOR_DARK: &'static str = "#303030";
     const DEFAULT_PAGE_COLOR_DARK: &'static str = "#505050";
 
     fn default_primary_color() -> String {
@@ -119,11 +119,26 @@ impl Theme {
         Self::DEFAULT_PAGE_COLOR_DARK.to_string()
     }
 
-    pub fn change_defaults(&mut self) {
+    fn default_primary_color_dark() -> String {
+        Self::DEFAULT_PRIMARY_COLOR_DARK.to_string()
+    }
+
+    fn default_secondary_color_dark() -> String {
+        Self::DEFAULT_SECONDARY_COLOR_DARK.to_string()
+    }
+
+    fn change_defaults(&mut self) {
         println!("dark_mode: {:?}", self.dark_mode); // <-- Testing
+        println!("primary_color: {:?}", self.primary_color);
         if self.dark_mode.unwrap_or(false) {
             if self.page_color == Self::default_page_color() {
                 self.page_color = Self::default_page_color_dark(); // Changing page colour, if dark theme is enabled
+            }
+            if self.primary_color == Self::default_primary_color() {
+                self.primary_color = Self::default_primary_color_dark(); // Changing primary colour, if dark theme is enabled
+            }
+            if self.secondary_color == Self::default_secondary_color() {
+                self.secondary_color = Self::default_secondary_color_dark(); // Changing secondary colour, if dark theme is enabled
             }
         }
     }
