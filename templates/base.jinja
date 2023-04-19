@@ -20,7 +20,7 @@
         --link-color: {{ theme.link_color }};
         --secondary-color: {{ theme.secondary_color }};
         --page-color: {{ theme.page_color }}; 
-        {% Here we add page colour so that the white block (where articles are) becomes dark mode -%}
+        {# Here we add page colour so that the white block (where articles are) becomes dark mode #}
     }
     </style>
 </head>
@@ -57,6 +57,7 @@
         {% else -%}
         <div class="bg-black text-white text-center p-16">
             <div>
+                <a class="hover:underline" href="#"> Here {{ theme.page_color }}</a>
                 <a class="hover:underline" href="https://github.com/zineland/zine">Zine</a>
                 - a simple and opinionated tool to build your own magazine.
             </div>

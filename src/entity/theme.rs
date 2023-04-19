@@ -8,7 +8,7 @@ use super::Entity;
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct Theme {
-    //whether dark mode is enabled
+    //whether dark mode is enabled (boolean)
     pub dark_mode: Option<bool>,
     // The primary color.
     #[serde(default = "Theme::default_primary_color")]
@@ -44,7 +44,7 @@ pub struct Theme {
 impl Default for Theme {
     fn default() -> Self {
         Self {
-            dark_mode: false,
+            dark_mode: Some(false),
             primary_color: Self::default_primary_color(),
             main_color: Self::default_main_color(),
             link_color: Self::default_link_color(),
@@ -117,7 +117,7 @@ impl Theme {
 
     pub fn change_defaults(&mut self) {
         if self.dark_mode.unwrap_or(false) {
-            if self.page_color == default_page_color() {
+            if self.page_color == Self::default_page_color() {
                 self.page_color = Self::DEFAULT_PAGE_COLOR_DARK.to_string();
             }
         }
@@ -126,7 +126,7 @@ impl Theme {
 
 impl Entity for Theme {
     fn parse(&mut self, source: &Path) -> Result<()> {
-        change_defaults(self);
+        self.change_defaults(); // Change default colors if dark mode is enabled.
 
         if self.default_cover.is_none() {
             self.default_cover = Some(String::from("/static/zine-placeholder.svg"));

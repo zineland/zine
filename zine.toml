@@ -14,7 +14,7 @@ menu = [
 josh_thompson = { name = "Josh_Thompson" }
 
 [theme]
-dark_mode = false
+dark_mode = true
 # the primary color
 primary_color = "#87CEEB"
 secondary_color = "#FFC0CB"
