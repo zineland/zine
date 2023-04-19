@@ -2,9 +2,9 @@
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
 {% for issue in issues | reverse -%}
-<div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="text-center m-8">
-    {# Here I need to change the bg-white attribute to change depending on dark mode selection #}
+    {# Here I need to change the bg-white attribute to bg-page change depending on dark mode selection #}
         <a href="/{{ issue.slug }}">
             <div class="transition sm:hover:scale-110 duration-500">
             {{ macros::issue_diamond(title=issue.title, date=issue.pub_date) }}
