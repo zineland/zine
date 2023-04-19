@@ -2,11 +2,11 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title>My Zine Site</title>
     <subtitle></subtitle>
-    <updated>2023-03-10T13:36:13.800195300+00:00</updated>
+    <updated>2023-04-19T23:05:29.982483200+01:00</updated>
     <id>http://localhost</id>
     <link href="http://localhost/feed.xml" rel="self" type="application/atom+xml" />
     <link href="http://localhost" rel="alternate" type="text/html" />
-    <generator uri="https://github.com/JOSHMT0744/zine.git" version="0.11.0">zine</generator>
+    <generator uri="https://github.com/zineland/zine" version="0.13.0">zine</generator>
     <author>
         <name>My Zine Site</name>
         <uri>http://localhost</uri>

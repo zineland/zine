@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="theme-color" content="#87CEEB">
-    <meta name="zine-version" content="0.11.0"/>
+    <meta name="theme-color" content="#FFC0CB">
+    <meta name="zine-version" content="0.13.0"/>
     <title>Authors list</title>
 <meta name="description" content="">
 <meta property="og:type" content="website">
@@ -20,11 +20,12 @@
     <link rel="alternate" type="application/atom+xml" title="My Zine Site RSS" href="/feed.xml">
     <style>
     :root {
-        --primary-color: #87CEEB;
+        --primary-color: #FFC0CB;
         --main-color: #ffffff;
         --link-color: #2563eb;
         --secondary-color: #FFC0CB;
-        --page-color: #ffffff;
+        --page-color: #505050; 
+        
     }
     </style>
 </head>
@@ -48,15 +49,15 @@
     </div>
     <main
         class="pb-10 -translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56 mx-auto sm:max-w-scree-md md:max-w-screen-lg">
-        <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+        <div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="max-w-prose mx-auto">
         <div class="text-4xl text-center font-extrabold my-8">Authors list</div>
         <div class="flex flex-wrap flex-col sm:flex-row justify-center">
             <a href="/@josh_thompson">
                 <div class="p-6 my-4 text-center hover:bg-gray-100">
-                    <img class="zine-avatar mx-auto w-40 h-40 object-cover rounded-full border" src="/static/zine.png"
-                        alt="Avatar" loading="lazy">
-                    <div class="zine-author-name mx-auto w-40 relative m-3 font-bold text-2xl text-black">
+                    <img class="zine-avatar mx-auto w-28 h-28 object-cover rounded-full border"
+                        src="/static/zine.png" alt="Avatar" loading="lazy">
+                    <div class="zine-author-name mx-auto w-28 relative m-3 font-bold text-2xl text-black">
                         Josh_Thompson
                         </div>
                     <div class="p-2 text-sm text-gray-500">
@@ -65,13 +66,14 @@
                     </div>
             </a>
             </div>
-    </div>
+        </div>
 </div>
 </div>
 </main>
     <footer class="relative">
         <div class="bg-black text-white text-center p-16">
             <div>
+                <a class="hover:underline" href="#"> Here #505050</a>
                 <a class="hover:underline" href="https://github.com/zineland/zine">Zine</a>
                 - a simple and opinionated tool to build your own magazine.
             </div>
