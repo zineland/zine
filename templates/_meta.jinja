@@ -5,7 +5,7 @@
 {% set title = site.name -%}
 {% set description = site.description -%}
 {% endif -%}
-{% if meta.image -%}
+{% if meta and meta.image -%}
 {% set image = meta.image -%}
 {% elif site.social_image -%}
 {% set image = site.social_image -%}
@@ -22,9 +22,9 @@
 <meta property="twitter:url" content="{{ site.url ~ '/' ~ meta.url }}">
 {% endif -%}
 {% if image -%}
-{% if site.cdn and image is starting_with("/static") -%}
+{% if site.cdn and image is startingwith("/static") -%}
 {% set image_url = site.cdn -%}
-{% set image = image | trim_start_matches(pat="/static") -%}
+{% set image = image | trim_start_matches("/static") -%}
 {% else -%}
 {% set image_url = site.url -%}
 {% endif -%}

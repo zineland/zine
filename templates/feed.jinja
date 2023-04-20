@@ -20,12 +20,12 @@
         <updated>{{ entry.date }}T00:00:00+00:00</updated>
         <id>{{ entry.url }}</id>
         <content type="html" xml:base="{{ entry.url }}">
-            <![CDATA[{{ markdown_to_rss(markdown = entry.content) }}]]>
+            <![CDATA[{{ markdown_to_rss(entry.content) }}]]>
         </content>
 
         <author>
-            {% if entry.author is iterable -%}
-            <name>{{ entry.author | join(sep=", ")}}</name>
+            {% if entry.author is sequence -%}
+            <name>{{ entry.author | join(", ")}}</name>
             {% else -%}
             <name>{{ entry.author }}</name>
             {% endif -%}

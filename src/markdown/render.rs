@@ -123,7 +123,7 @@ impl<'a> Heading<'a> {
 impl<'a> MarkdownRender<'a> {
     pub fn new(markdown_config: &'a MarkdownConfig) -> Self {
         MarkdownRender {
-            markdown_env: engine::init_lite_jinja(),
+            markdown_env: engine::init_lite_jinja_environment(),
             markdown_config,
             code_block_fenced: None,
             processing_image: false,

@@ -10,7 +10,7 @@
                     href="/{{ issue.slug }}">
                     <div class="relative text-main px-4">{{ issue.title }}</div>
                 </a>
-                <span class="ml-2 text-gray-700">/ {{ fluent(key = "article-number", number = number) }}</span>
+                <span class="ml-2 text-gray-700">/ {{ fluent("article-number", number) }}</span>
             </div>
             <div>
                 {% set common_style = "py-1 my-1 rounded hover:bg-gray-100" -%}
@@ -82,7 +82,7 @@
             </div>
             <div class="flex items-center justify-between text-gray-500">
                 <span>{{ article.pub_date }}</span>
-                {{ macros::author_link(author = article.author) }}
+                {{ macros.author_link(article.author) }}
             </div>
             {% if article.topics -%}
             <div class="zine-topic bg-secondary my-2 py-2 px-2 text-center">
@@ -95,10 +95,10 @@
         <article class="prose mx-auto my-12">
             {{ html | safe }}
         </article>
-        {% if siblings.0 or siblings.1 -%}
+        {% if siblings[0] or siblings[1] -%}
         <div class="my-4 w-full border-dashed border-t border-slate-300"></div>
         <div class="zine-navigate flex flex-col md:flex-row md:justify-between">
-            {% for article in [siblings.0, siblings.1] -%}
+            {% for article in siblings -%}
             {% if article -%}
 
             {% if article.path -%}
@@ -108,9 +108,9 @@
             {% endif -%}
             <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline" href="{{ href }}">
                 {% if loop.index0 == 0 -%}
-                {{ fluent(key = "previous") }}
+                {{ fluent("previous") }}
                 {% else -%}
-                {{ fluent(key = "next") }}
+                {{ fluent("next") }}
                 {% endif -%}
                 {{ article.title }}
             </a>

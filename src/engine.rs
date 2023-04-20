@@ -20,12 +20,12 @@ use minijinja::{context, value::Value as JinjaValue, Environment, Source};
 use serde::Serialize;
 use serde_json::Value;
 
-pub fn init_lite_jinja<'a>() -> Environment<'a> {
+// The `Environment` only includes the fundamental functions and filters.
+// It is used for rendering html in some code blocks, such as `QuoteBlock`.
+pub fn init_lite_jinja_environment<'a>() -> Environment<'a> {
     let mut env = Environment::new();
     env.add_function("markdown_to_html", markdown_to_html_function);
     env.add_function("get_author", get_author_function);
-    env.add_function("now", now_function);
-    env.add_filter("trim_start_matches", trim_start_matches_filter);
     env.add_template("heading.jinja", include_str!("../templates/heading.jinja"))
         .unwrap();
     env.add_template(
@@ -36,8 +36,9 @@ pub fn init_lite_jinja<'a>() -> Environment<'a> {
     env
 }
 
-fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
-    let mut env = init_lite_jinja();
+// The `Environment` includes all the templates and functions.
+fn init_jinja_environment<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
+    let mut env = init_lite_jinja_environment();
     #[cfg(debug_assertions)]
     env.set_source(Source::from_path("templates"));
 
@@ -104,6 +105,8 @@ fn init_jinja<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
         env.add_template("article_extend_template.jinja", article_extend_template)
             .expect("Cannot add article_extend_template");
     }
+    env.add_function("now", now_function);
+    env.add_filter("trim_start_matches", trim_start_matches_filter);
     env.add_function("markdown_to_rss", markdown_to_rss_function);
 
     let fluent_loader = FluentLoader::new(source, &zine.site.locale);
@@ -243,7 +246,7 @@ impl ZineEngine {
 
         self.zine.parse(&self.source)?;
 
-        let env = init_jinja(&self.source, &self.zine);
+        let env = init_jinja_environment(&self.source, &self.zine);
 
         self.zine
             .render(&env, Context::new(), &self.dest)
