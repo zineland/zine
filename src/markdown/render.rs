@@ -1,11 +1,14 @@
 use std::{collections::BTreeSet, mem};
 
 use crate::{
-    code_blocks::{self, AuthorCode, CodeBlock, Fenced, InlineLink},
+    code_blocks::{
+        self, url_preview, AuthorCode, CalloutBlock, CodeBlock, Fenced, InlineLink, QuoteBlock,
+    },
     data, engine,
     entity::MarkdownConfig,
 };
 
+use minijinja::{context, Environment};
 use once_cell::sync::Lazy;
 use pulldown_cmark::*;
 use serde::Serialize;
@@ -13,7 +16,6 @@ use syntect::{
     dumps::from_binary, highlighting::ThemeSet, html::highlighted_html_for_string,
     parsing::SyntaxSet,
 };
-use tera::Context;
 
 static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
     let syntax_set: SyntaxSet =
@@ -37,6 +39,7 @@ enum RenderMode {
 
 /// Markdown html render.
 pub struct MarkdownRender<'a> {
+    markdown_env: Environment<'a>,
     markdown_config: &'a MarkdownConfig,
     code_block_fenced: Option<CowStr<'a>>,
     // Whether we are processing image parsing
@@ -90,7 +93,7 @@ impl<'a> Heading<'a> {
     }
 
     // Render heading to html.
-    fn render(&mut self) -> Event<'static> {
+    fn render(&mut self, env: &Environment<'a>) -> Event<'static> {
         if self.id.is_none() {
             // Fallback to raw text as the anchor id if the user didn't specify an id.
             self.id = Some(self.title.to_lowercase());
@@ -100,16 +103,18 @@ impl<'a> Heading<'a> {
             }
         }
 
-        let mut context = Context::new();
-        context.insert("level", &self.level);
-        context.insert("id", &self.id);
         let mut heading = String::new();
         let events = mem::take(&mut self.events);
         html::push_html(&mut heading, events.into_iter());
-        context.insert("heading", &heading);
 
-        let html = engine::get_tera()
-            .render("heading.jinja", &context)
+        let html = env
+            .get_template("heading.jinja")
+            .expect("Get heading template failed.")
+            .render(context! {
+                heading,
+                level => self.level,
+                id => self.id,
+            })
             .expect("Render heading failed.");
         Event::Html(html.into())
     }
@@ -118,6 +123,7 @@ impl<'a> Heading<'a> {
 impl<'a> MarkdownRender<'a> {
     pub fn new(markdown_config: &'a MarkdownConfig) -> Self {
         MarkdownRender {
+            markdown_env: engine::init_lite_jinja_environment(),
             markdown_config,
             code_block_fenced: None,
             processing_image: false,
@@ -184,6 +190,33 @@ impl<'a> MarkdownRender<'a> {
         html
     }
 
+    /// Render code block. Return rendered HTML string if success,
+    ///
+    /// If the fenced is unsupported, we simply return `None`.
+    pub fn render_code_block(&self, fenced: Fenced, block: &'a str) -> Option<String> {
+        match fenced.name {
+            code_blocks::URL_PREVIEW => {
+                let url = block.trim();
+                url_preview::render(url, fenced.options)
+            }
+            code_blocks::CALLOUT => {
+                let html = CalloutBlock::new(fenced.options, block).render().unwrap();
+                Some(html)
+            }
+            code_blocks::QUOTE => {
+                let quote_block = QuoteBlock::parse(block).unwrap();
+                let html = self
+                    .markdown_env
+                    .get_template("blocks/quote.jinja")
+                    .expect("Get quote template failed.")
+                    .render(context!(quote => quote_block))
+                    .expect("Render quote block failed.");
+                Some(html)
+            }
+            _ => None,
+        }
+    }
+
     fn visit_start_tag(&mut self, tag: &Tag<'a>) -> Visiting {
         match tag {
             Tag::CodeBlock(CodeBlockKind::Fenced(name)) => {
@@ -229,7 +262,7 @@ impl<'a> MarkdownRender<'a> {
                 if let Some(mut heading) = self.heading.take() {
                     self.levels.insert(heading.level);
                     // Render heading event.
-                    let event = heading.render();
+                    let event = heading.render(&self.markdown_env);
                     self.toc.push(heading);
                     Visiting::Event(event)
                 } else {
@@ -268,7 +301,7 @@ impl<'a> MarkdownRender<'a> {
                 // Ignore url preview in RSS mode.
                 return Visiting::Ignore;
             } else if fenced.is_custom_code_block() {
-                let rendered_html = fenced.render_code_block(text);
+                let rendered_html = self.render_code_block(fenced, text);
                 if let Some(html) = rendered_html {
                     return Visiting::Event(Event::Html(html.into()));
                 }

@@ -2,9 +2,9 @@
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="max-w-prose mx-auto">
-        <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="author-list") }}</div>
+        <div class="text-4xl text-center font-extrabold my-8">{{ fluent("author-list") }}</div>
         <div class="flex flex-wrap flex-col sm:flex-row justify-center">
-            {% for author in authors | filter(attribute="team", value=false) | sort(attribute="article_count") | reverse -%}
+            {% for author in authors | rejectattr("team") | sort(attribute="article_count", reverse=true) -%}
             <a href="/@{{ author.id | lower }}">
                 <div class="p-6 my-4 text-center hover:bg-gray-100">
                     <img class="zine-avatar mx-auto w-28 h-28 object-cover rounded-full border"
@@ -17,7 +17,7 @@
                         {% endif -%}
                     </div>
                     <div class="p-2 text-sm text-gray-500">
-                        {{ fluent(key="article-count", number=author.article_count) }}
+                        {{ fluent("article-count", author.article_count) }}
                     </div>
                     {% if author.editor -%}
                     <div class="flex justify-center items-center font-bold text-link py-2 px-4 mt-2">
@@ -35,18 +35,18 @@
                                 d="M822.012659 552.372499c22.598694-45.279253 35.636638-96.027054 35.636638-149.891845 0-188.077539-154.75255-340.543-345.648274-340.543-190.900841 0-345.653391 152.46546-345.653391 340.543 0 53.864792 13.037944 104.612593 35.639708 149.888775L61.684898 791.787264c0 0 88.978521 17.845437 179.252547 36.427654C301.111942 895.212822 361.02652 962.061322 361.02652 962.061322l129.000026-220.130559c7.302313 0.450255 14.554484 1.091868 21.974477 1.091868 7.417947 0 14.669094-0.641613 21.971407-1.091868L662.97348 962.061322c0 0 59.914578-66.848501 120.086006-133.846404 90.27505-18.582217 179.255617-36.427654 179.255617-36.427654L822.012659 552.372499zM354.340237 859.95583c0 0-43.212174-40.97011-83.815941-80.449263-57.608046-16.382109-115.743094-33.06814-115.743094-33.06814l81.541131-139.14099c47.035246 61.349253 114.502847 106.387006 192.589296 125.405151L354.340237 859.95583zM512.001023 680.989809c-155.204851 0-281.018302-126.066207-281.018302-281.589306 0-155.511843 125.81345-281.58112 281.018302-281.58112 155.199735 0 281.013185 126.069277 281.013185 281.58112C793.014208 554.923602 667.200758 680.989809 512.001023 680.989809zM753.475703 779.506567c-40.60479 39.479153-83.819011 80.449263-83.819011 80.449263l-74.570369-127.253242c78.086449-19.018146 145.55712-64.055898 192.591343-125.405151l81.541131 139.14099C869.218798 746.437403 811.081703 763.124458 753.475703 779.506567z">
                             </path>
                         </svg>
-                        <span class="pl-2">{{ fluent(key="editor") }}</span>
+                        <span class="pl-2">{{ fluent("editor") }}</span>
                     </div>
                     {% endif -%}
                 </div>
             </a>
             {% endfor -%}
         </div>
-        {% set teams = authors | filter(attribute="team", value=true) | sort(attribute="article_count") | reverse -%}
+        {% set teams = authors | selectattr("team") | sort(attribute="article_count", reverse=true) -%}
         {% if teams | length > 0 -%}
         <div class="my-4 sm:my-6 text-2xl font-bold">
             <span class="w-4 h-4 border-4 border-primary"></span>
-            <span class="px-2">{{ fluent(key = "author-team-list") }}</span>
+            <span class="px-2">{{ fluent("author-team-list") }}</span>
         </div>
         <div class="flex flex-wrap flex-col sm:flex-row justify-center">
             {% for team in teams -%}
@@ -62,7 +62,7 @@
                         {% endif -%}
                     </div>
                     <div class="p-2 text-sm text-gray-500">
-                        {{ fluent(key="article-count", number=team.article_count) }}
+                        {{ fluent("article-count", team.article_count) }}
                     </div>
                 </div>
             </a>

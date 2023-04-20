@@ -9,10 +9,10 @@
             {% endif -%}
         </div>
         {% if quote.bio -%}
-        <div class="text-sm text-slate-400">{{ markdown_to_html(markdown = quote.bio) | safe }}</div>
+        <div class="text-sm text-slate-400">{{ markdown_to_html(quote.bio) | safe }}</div>
         {% endif -%}
     </div>
-    <div class="prose prose-slate">{{ markdown_to_html(markdown = quote.content) | safe }}</div>
+    <div class="prose prose-slate">{{ markdown_to_html(quote.content) | safe }}</div>
     <svg class="absolute top-8 right-8 w-10 h-10" t="1647239309441" viewBox="0 0 1024 1024" version="1.1"
         xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <defs>

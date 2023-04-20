@@ -253,10 +253,6 @@ impl ZineData {
         self
     }
 
-    pub fn get_authors(&self) -> Vec<&Author> {
-        self.authors.iter().by_ref().collect()
-    }
-
     pub fn get_author_by_id(&self, author_id: &str) -> Option<&Author> {
         self.authors
             .iter()

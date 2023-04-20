@@ -2,7 +2,7 @@
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
     <div class="max-w-prose mx-auto">
-        <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="topic-list") }}</div>
+        <div class="text-4xl text-center font-extrabold my-8">{{ fluent("topic-list") }}</div>
         <div class="flex flex-col justify-center">
             {% for topic in topics -%}
             <a href="/topic/{{ topic.id | lower }}">
@@ -18,12 +18,12 @@
                                 {% endif -%}
                             </div>
                             <div class="sm:pl-4 text-sm text-gray-500">
-                                {{ fluent(key="article-count", number=topic.article_count) }}
+                                {{ fluent("article-count", topic.article_count) }}
                             </div>
                         </div>
                         <div class="py-3 text-sm text-gray-500">
                             {% if topic.description -%}
-                            {{ markdown_to_html(markdown = topic.description ) }}
+                            {{ markdown_to_html(topic.description ) }}
                             {% endif -%}
                         </div>
                     </div>

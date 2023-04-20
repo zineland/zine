@@ -1,8 +1,7 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{fs, path::Path};
 
 use fluent::{bundle::FluentBundle, FluentArgs, FluentResource, FluentValue};
 use intl_memoizer::concurrent::IntlLangMemoizer;
-use serde_json::Value;
 
 static FLUENT_EN: &str = include_str!("../locales/en.ftl");
 static FLUENT_ZH_CN: &str = include_str!("../locales/zh.ftl");
@@ -44,28 +43,8 @@ impl FluentLoader {
         bundle.add_resource(resource).unwrap();
         FluentLoader { bundle }
     }
-}
 
-fn json_to_fluent(json: &Value) -> FluentValue {
-    match json {
-        Value::Number(n) if n.is_u64() => FluentValue::from(n.as_u64().unwrap()),
-        Value::Number(n) if n.is_i64() => FluentValue::from(n.as_i64().unwrap()),
-        Value::Number(n) if n.is_f64() => FluentValue::from(n.as_f64().unwrap()),
-        Value::String(s) => FluentValue::String(s.into()),
-        _ => {
-            println!("Warning: invalid value to convert to fluent: {}", &json);
-            FluentValue::None
-        }
-    }
-}
-
-impl tera::Function for FluentLoader {
-    fn call(&self, args: &HashMap<String, Value>) -> tera::Result<Value> {
-        let key = args
-            .get("key")
-            .and_then(Value::as_str)
-            .expect("Missing `key` argument.");
-
+    pub(crate) fn format(&self, key: &str, number: Option<i64>) -> String {
         let pattern = self
             .bundle
             .get_message(key)
@@ -74,14 +53,12 @@ impl tera::Function for FluentLoader {
             .expect("Missing Value.");
 
         let mut fluent_args = FluentArgs::new();
-        for (key, value) in args.iter().filter(|(key, _)| &**key != "key") {
-            fluent_args.set(&**key, json_to_fluent(value));
+        if let Some(number) = number {
+            fluent_args.set("number", FluentValue::from(number));
         }
 
-        Ok(Value::String(
-            self.bundle
-                .format_pattern(pattern, Some(fluent_args).as_ref(), &mut vec![])
-                .into_owned(),
-        ))
+        self.bundle
+            .format_pattern(pattern, Some(fluent_args).as_ref(), &mut vec![])
+            .into_owned()
     }
 }

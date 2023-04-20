@@ -19,7 +19,7 @@
             </div>
             {% if topic.description -%}
             <div class="zine-topic-bio prose text-center my-2 sm:m-8 grow">
-                {{ markdown_to_html(markdown = topic.description) | safe }}
+                {{ markdown_to_html(topic.description) | safe }}
             </div>
             {% endif -%}
         </div>
@@ -27,7 +27,7 @@
         {% if article_count > 0 %}
         <div class="my-4 sm:my-6 text-2xl font-bold">
             <span class="w-4 h-4 border-4 border-primary"></span>
-            <span class="px-2">{{ fluent(key = "topic-article-title", number = article_count) }}</span>
+            <span class="px-2">{{ fluent("topic-article-title", article_count) }}</span>
         </div>
         {% include "_article_ref.jinja" -%}
         {% endif %}
