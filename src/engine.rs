@@ -16,7 +16,7 @@ use crate::{
 
 use anyhow::Result;
 use hyper::Uri;
-use minijinja::{context, value::Value as JinjaValue, Environment, Source};
+use minijinja::{context, value::Value as JinjaValue, Environment};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -26,13 +26,17 @@ pub fn init_lite_jinja_environment<'a>() -> Environment<'a> {
     let mut env = Environment::new();
     env.add_function("markdown_to_html", markdown_to_html_function);
     env.add_function("get_author", get_author_function);
-    env.add_template("heading.jinja", include_str!("../templates/heading.jinja"))
-        .unwrap();
-    env.add_template(
-        "blocks/quote.jinja",
-        include_str!("../templates/blocks/quote.jinja"),
-    )
-    .unwrap();
+
+    let templates = [
+        ("heading.jinja", include_str!("../templates/heading.jinja")),
+        (
+            "blocks/quote.jinja",
+            include_str!("../templates/blocks/quote.jinja"),
+        ),
+    ];
+    for (name, template) in templates {
+        env.add_template(name, template).unwrap();
+    }
     env
 }
 
@@ -40,7 +44,7 @@ pub fn init_lite_jinja_environment<'a>() -> Environment<'a> {
 fn init_jinja_environment<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
     let mut env = init_lite_jinja_environment();
     #[cfg(debug_assertions)]
-    env.set_source(Source::from_path("templates"));
+    env.set_source(minijinja::Source::from_path("templates"));
 
     env.add_global("site", JinjaValue::from_serializable(&zine.site));
     env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
@@ -55,41 +59,34 @@ fn init_jinja_environment<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> 
 
     #[cfg(not(debug_assertions))]
     {
-        env.add_template(
-            "_article_ref.jinja",
-            include_str!("../templates/_article_ref.jinja"),
-        )
-        .unwrap();
-        env.add_template("_macros.jinja", include_str!("../templates/_macros.jinja"))
-            .unwrap();
-        env.add_template("_meta.jinja", include_str!("../templates/_meta.jinja"))
-            .unwrap();
-        env.add_template("base.jinja", include_str!("../templates/base.jinja"))
-            .unwrap();
-        env.add_template("index.jinja", include_str!("../templates/index.jinja"))
-            .unwrap();
-        env.add_template("issue.jinja", include_str!("../templates/issue.jinja"))
-            .unwrap();
-        env.add_template("article.jinja", include_str!("../templates/article.jinja"))
-            .unwrap();
-        env.add_template(
-            "author-list.jinja",
-            include_str!("../templates/author-list.jinja"),
-        )
-        .unwrap();
-        env.add_template("topic.jinja", include_str!("../templates/topic.jinja"))
-            .unwrap();
-        env.add_template(
-            "topic-list.jinja",
-            include_str!("../templates/topic-list.jinja"),
-        )
-        .unwrap();
-        env.add_template("page.jinja", include_str!("../templates/page.jinja"))
-            .unwrap();
-        env.add_template("feed.jinja", include_str!("../templates/feed.jinja"))
-            .unwrap();
-        env.add_template("sitemap.jinja", include_str!("../templates/sitemap.jinja"))
-            .unwrap();
+        let templates = [
+            (
+                "_article_ref.jinja",
+                include_str!("../templates/_article_ref.jinja"),
+            ),
+            ("_macros.jinja", include_str!("../templates/_macros.jinja")),
+            ("_meta.jinja", include_str!("../templates/_meta.jinja")),
+            ("base.jinja", include_str!("../templates/base.jinja")),
+            ("index.jinja", include_str!("../templates/index.jinja")),
+            ("issue.jinja", include_str!("../templates/issue.jinja")),
+            ("article.jinja", include_str!("../templates/article.jinja")),
+            ("author.jinja", include_str!("../templates/author.jinja")),
+            (
+                "author-list.jinja",
+                include_str!("../templates/author-list.jinja"),
+            ),
+            ("topic.jinja", include_str!("../templates/topic.jinja")),
+            (
+                "topic-list.jinja",
+                include_str!("../templates/topic-list.jinja"),
+            ),
+            ("page.jinja", include_str!("../templates/page.jinja")),
+            ("feed.jinja", include_str!("../templates/feed.jinja")),
+            ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
+        ];
+        for (name, template) in templates {
+            env.add_template(name, template).unwrap();
+        }
     }
 
     // Dynamically add templates.
