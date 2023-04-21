@@ -27,8 +27,8 @@ impl Context {
     /// Panics if the serialization fails.
     ///
     /// ```rust
-    /// # use tera::Context;
-    /// let mut context = tera::Context::new();
+    /// # use zine::Context;
+    /// let mut context = Context::new();
     /// context.insert("number_users", &42);
     /// ```
     pub fn insert<T: Serialize + ?Sized, S: Into<String>>(&mut self, key: S, val: &T) {
@@ -40,7 +40,7 @@ impl Context {
     /// Returns an error if the serialization fails.
     ///
     /// ```rust
-    /// # use tera::Context;
+    /// # use zine::Context;
     /// # struct CannotBeSerialized;
     /// # impl serde::Serialize for CannotBeSerialized {
     /// #     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -68,7 +68,7 @@ impl Context {
     /// The source context will be dropped.
     ///
     /// ```rust
-    /// # use tera::Context;
+    /// # use zine::Context;
     /// let mut target = Context::new();
     /// target.insert("a", &1);
     /// target.insert("b", &2);

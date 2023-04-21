@@ -23,6 +23,7 @@ mod markdown;
 pub mod new;
 pub mod serve;
 
+pub use self::context::Context;
 pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
 
