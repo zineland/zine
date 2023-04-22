@@ -3,7 +3,10 @@ use std::{
     fs::{self, File},
     io::Write,
     path::Path,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use anyhow::Result;
@@ -23,6 +26,9 @@ use crate::{
 };
 
 static ZINE_DATA: OnceCell<RwLock<ZineData>> = OnceCell::new();
+// Atomic boolean to indicate if the data has been modified.
+// Currenly, mainly concerned with the `url_previews` field.
+static DIRTY: AtomicBool = AtomicBool::new(false);
 
 pub fn load<P: AsRef<Path>>(path: P) {
     ZINE_DATA.get_or_init(|| RwLock::new(ZineData::new(path.as_ref()).unwrap()));
@@ -39,10 +45,15 @@ pub fn write() -> RwLockWriteGuard<'static, ZineData> {
 /// Export all data into the `zine-data.json` file.
 /// If the data is empty, we never create the `zine-data.json` file.
 pub fn export<P: AsRef<Path>>(path: P) -> Result<()> {
-    let data = read();
-    if !data.url_previews.is_empty() {
-        let mut file = File::create(path.as_ref().join("zine-data.json"))?;
-        file.write_all(data.export_to_json()?.as_bytes())?;
+    // Prevent repeatedly exporting the same data.
+    // Otherwise will cause infinity auto reload.
+    if DIRTY.load(Ordering::Relaxed) {
+        let data = read();
+        if !data.url_previews.is_empty() {
+            let mut file = File::create(path.as_ref().join("zine-data.json"))?;
+            file.write_all(data.export_to_json()?.as_bytes())?;
+        }
+        DIRTY.store(false, Ordering::Relaxed);
     }
     Ok(())
 }
@@ -214,6 +225,7 @@ impl ZineData {
                         };
 
                         list.insert(url, info.clone());
+                        DIRTY.store(true, Ordering::Relaxed);
                         tx.send(Some(PreviewEvent::Finished(info)))
                     }
                     Err(err) => tx.send(Some(PreviewEvent::Failed(err.to_string()))),
