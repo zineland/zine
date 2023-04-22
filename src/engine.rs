@@ -115,8 +115,8 @@ fn init_jinja_environment<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> 
 
 #[derive(Debug)]
 pub struct ZineEngine {
-    pub source: PathBuf,
-    pub dest: PathBuf,
+    source: PathBuf,
+    dest: PathBuf,
     zine: Zine,
 }
 
@@ -175,7 +175,6 @@ fn render_atom_feed(
     let dest = dest.as_ref().join("feed.xml");
     let template = env.get_template("feed.jinja")?;
 
-    // tokio::task::spawn_blocking(move || {
     let mut buf = vec![];
 
     template
@@ -271,6 +270,7 @@ impl ZineEngine {
         )?;
 
         self.copy_static_assets()?;
+
         println!("Build cost: {}ms", instant.elapsed().as_millis());
         Ok(())
     }
