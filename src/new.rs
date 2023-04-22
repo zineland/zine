@@ -1,11 +1,15 @@
-use std::{borrow::Cow, env, fs, path::PathBuf};
+use std::{borrow::Cow, env, fs, io::Write, path::PathBuf};
 
-use anyhow::{Context as _, Result};
+use anyhow::{Context as _, Ok, Result};
 use minijinja::render;
 use promptly::prompt_default;
-use time::{format_description, OffsetDateTime};
+use time::OffsetDateTime;
 
-use crate::{helpers::run_command, ZINE_FILE};
+use crate::{
+    entity::Zine,
+    helpers::{self, run_command},
+    ZINE_FILE,
+};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -27,6 +31,18 @@ title = "{{ title }}"
 [[article]]
 file = "1-first.md"
 title = "First article"
+author = "{{ author | lower }}"
+cover = ""
+pub_date = "{{ pub_date }}"
+publish = true
+featured = true
+"#;
+
+static TEMPLATE_ARTICLE: &str = r#"
+
+[[article]]
+file = "{{ file }}"
+title = "{{ title }}"
 author = "{{ author | lower }}"
 cover = ""
 pub_date = "{{ pub_date }}"
@@ -62,8 +78,6 @@ impl ZineScaffold {
             .join(crate::ZINE_CONTENT_DIR)
             .join(self.issue_dir.as_ref());
         fs::create_dir_all(&issue_dir)?;
-        let format = format_description::parse("[year]-[month]-[day]")?;
-        let today = OffsetDateTime::now_utc().format(&format)?;
 
         fs::write(
             issue_dir.join(ZINE_FILE),
@@ -72,7 +86,7 @@ impl ZineScaffold {
                 slug => self.issue_dir,
                 number => self.issue_number,
                 title => self.issue_title,
-                pub_date => today,
+                pub_date => helpers::format_date(&OffsetDateTime::now_utc().date()),
                 author => self.author
             ),
         )?;
@@ -117,13 +131,16 @@ pub fn new_zine_project(name: Option<String>) -> Result<()> {
     Ok(())
 }
 
-pub fn new_zine_issue() -> Result<()> {
+fn load_zine_project() -> Result<(PathBuf, Zine)> {
     // Use zine.toml to find root path
     let (source, mut zine) = crate::locate_root_zine_folder(env::current_dir()?)?
         .with_context(|| "Failed to find the root zine.toml file".to_string())?;
     zine.parse_issue_from_dir(&source)?;
+    Ok((source, zine))
+}
 
-    let author = git_user_name();
+pub fn new_zine_issue() -> Result<()> {
+    let (source, zine) = load_zine_project()?;
     let next_issue_number = zine.issues.len() + 1;
     let issue_dir = prompt_default(
         "What is your issue directory name?",
@@ -135,6 +152,7 @@ pub fn new_zine_issue() -> Result<()> {
         format!("Issue {next_issue_number}"),
     )?;
 
+    let author = git_user_name();
     let scaffold = ZineScaffold {
         source,
         author,
@@ -143,6 +161,44 @@ pub fn new_zine_issue() -> Result<()> {
         issue_title: issue_title.into(),
     };
     scaffold.create_issue()?;
+    Ok(())
+}
+
+pub fn new_article() -> Result<()> {
+    let (source, zine) = load_zine_project()?;
+    let latest_issue_number = zine.issues.len();
+    let issue_number = prompt_default(
+        "Which Issue do you want create a new article?",
+        latest_issue_number,
+    )?;
+    if let Some(issue) = zine.get_issue_by_number(issue_number as u32) {
+        let article_file = prompt_default(
+            "What is your article file name?",
+            "new-article.md".to_owned(),
+        )?;
+        let title = prompt_default("What is your article title?", "New Article".to_owned())?;
+        let author = git_user_name();
+
+        let issue_dir = source.join(crate::ZINE_CONTENT_DIR).join(&issue.dir);
+        // Write article file
+        fs::write(issue_dir.join(&article_file), "Hello Zine")?;
+
+        // Append article to issue zine.toml
+        let article_content = render!(
+            TEMPLATE_ARTICLE,
+            title,
+            author,
+            file => article_file,
+            pub_date => helpers::format_date(&OffsetDateTime::now_utc().date()),
+        );
+        let mut issue_file = fs::OpenOptions::new()
+            .append(true)
+            .open(issue_dir.join(ZINE_FILE))?;
+        issue_file.write_all(article_content.as_bytes())?;
+    } else {
+        println!("Issue {} not found", issue_number);
+    }
+
     Ok(())
 }
 

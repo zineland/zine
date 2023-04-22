@@ -131,6 +131,10 @@ impl Zine {
         Ok(())
     }
 
+    pub fn get_issue_by_number(&self, number: u32) -> Option<&Issue> {
+        self.issues.iter().find(|issue| issue.number == number)
+    }
+
     // Get the article metadata list by author id, sorted by descending order of publishing date.
     fn get_articles_by_author(&self, author_id: &str) -> Vec<ArticleRef> {
         let mut items = self
