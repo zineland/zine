@@ -8,9 +8,9 @@
             <div class="zine-breadcrumb">
                 <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
                     href="/{{ issue.slug }}">
-                    <div class="relative text-main px-4">{{ issue.title }}</div>
+                    <div class="relative text-main px-4 dark_mode_text">{{ issue.title }}</div>
                 </a>
-                <span class="ml-2 text-gray-700">/ {{ fluent(key = "article-number", number = number) }}</span>
+                <span class="ml-2 text-gray-700 dark_mode_text">/ {{ fluent(key = "article-number", number = number) }}</span>
             </div>
             <div>
                 {% set common_style = "py-1 my-1 rounded hover:bg-gray-100" -%}

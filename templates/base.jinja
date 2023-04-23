@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -22,6 +22,11 @@
         --page-color: {{ theme.page_color }}; 
         {# Here we add page colour so that the white block (where articles are) becomes dark mode #}
     }
+    {% if theme.dark_mode -%}
+    .dark_mode_text {
+        color: white;
+    }
+    {% endif -%}
     </style>
 </head>
 
