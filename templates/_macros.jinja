@@ -8,7 +8,7 @@
     {% for author_id in author_ids -%}
     {% set author = get_author(id = author_id) -%}
     {% if author -%}
-    <a class="inline-flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline"
+    <a class="inline-flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline dark_mode_text"
         href="/@{{ author.id | lower }}">
         <img class="!m-0 !p-1 w-7 h-7 rounded-full object-cover" src="{{ author.avatar }}" alt="avatar" loading="lazy">
         <span>

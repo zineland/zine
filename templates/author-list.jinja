@@ -16,7 +16,7 @@
                         {{ author.id | capitalize }}
                         {% endif -%}
                     </div>
-                    <div class="p-2 text-sm text-gray-500">
+                    <div class="p-2 text-sm text-gray-500 dark_mode_text">
                         {{ fluent(key="article-count", number=author.article_count) }}
                     </div>
                     {% if author.editor -%}
@@ -61,7 +61,7 @@
                         {{ team.id | capitalize }}
                         {% endif -%}
                     </div>
-                    <div class="p-2 text-sm text-gray-500">
+                    <div class="p-2 text-sm text-gray-500 dark_mode_text">
                         {{ fluent(key="article-count", number=team.article_count) }}
                     </div>
                 </div>
