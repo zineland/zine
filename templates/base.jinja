@@ -30,7 +30,7 @@
     </style>
 </head>
 
-<body class="h-full bg-secondary">
+<body class="h-full bg-secondary dark_mode_text">
     {% if theme.background_image -%}
     <div class="zine-header bg-primary text-main font-bold text-center z-0"
         style="background-image: url('{{ theme.background_image }}')">
@@ -39,11 +39,11 @@
     {% endif -%}
         <header class="p-8 md:p-10">
             <div class="zine-brand text-4xl lg:text-5xl">
-                <a href="/">{{ site.name }}</a>
+                <a class="dark_mode_text" href="/">{{ site.name }}</a>
             </div>
-            <ul class="zine-menu">
+            <ul class="zine-menu dark_mode_text">
                 {% for menu in site.menus -%}
-                <li class="inline-block mt-6 mx-5 text-base hover:underline">
+                <li class="inline-block mt-6 mx-5 text-base hover:underline dark_mode_text">
                     <a href="{{ menu.url }}">{{ menu.name }}</a>
                 </li>
                 {% endfor -%}
@@ -52,23 +52,23 @@
         <div class="zine-space w-full h-32 md:h-36 lg:h-44 xl:h-48 2xl:h-56"></div>
     </div>
     <main
-        class="pb-10 -translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56 mx-auto sm:max-w-scree-md md:max-w-screen-lg">
+        class="pb-10 -translate-y-32 lg:-translate-y-36 xl:-translate-y-44 2xl:-translate-y-56 mx-auto sm:max-w-scree-md md:max-w-screen-lg dark_mode_text">
         {% block content -%}
         {% endblock content -%}
     </main>
-    <footer class="relative">
+    <footer class="relative dark_mode_text">
         {% if theme.footer_template -%}
         {% include "footer_template.jinja" -%}
         {% else -%}
-        <div class="bg-black text-white text-center p-16">
+        <div class="bg-black text-white text-center p-16 dark_mode_text">
             <div>
-                <a class="hover:underline" href="#"> Here {{ theme.page_color }}</a>
-                <a class="hover:underline" href="https://github.com/zineland/zine">Zine</a>
+                <a class="hover:underline dark_mode_text" href="#"> Here {{ theme.page_color }}</a>
+                <a class="hover:underline dark_mode_text" href="https://github.com/zineland/zine">Zine</a>
                 - a simple and opinionated tool to build your own magazine.
             </div>
         </div>
         {% endif -%}
-        <a href="https://github.com/zineland"
+        <a class="dark_mode_text" href="https://github.com/zineland"
             class="absolute z-20 bottom-0 w-full text-center font-bold md:text-slate-100 md:opacity-10 md:hover:opacity-50 md:bg-transparent bg-primary p-2 text-main">
             Proudly powered by Zine.
         </a>

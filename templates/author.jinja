@@ -5,9 +5,9 @@
 {% else -%}
 {% set author_name = author.id | capitalize -%}
 {% endif -%}
-<div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
     <div class="zine-breadcrumb relative mx-2">
-        <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
+        <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500 dark_mode_text"
             href="/authors">
             <div class="relative text-main px-4">{{ fluent(key="author-list") }}</div>
         </a>
@@ -38,14 +38,14 @@
                 </div>
                 {% endif -%}
             </div>
-            <div class="flex-1 prose my-2 sm:m-8">
+            <div class="flex-1 prose my-2 sm:m-8 dark_mode_text">
                 <div class="zine-author-name text-center text-4xl font-bold py-2">{{ author_name }}</div>
                 {% if author.bio -%}
                 <div class="zine-author-bio">{{ markdown_to_html(markdown = author.bio) | safe }}</div>
                 {% endif -%}
             </div>
         </div>
-        <div class="my-4 sm:my-6 text-2xl font-bold">
+        <div class="my-4 sm:my-6 text-2xl font-bold dark_mode_text">
             <span class="w-4 h-4 border-4 border-primary"></span>
             <span class="px-2">{{ fluent(key = "author-article-title", number = articles | length) }}</span>
         </div>
