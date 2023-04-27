@@ -7,13 +7,13 @@
     <link href="{{ site.url }}/feed.xml" rel="self" type="application/atom+xml" />
     <link href="{{ site.url }}" rel="alternate" type="text/html" />
     <generator uri="https://github.com/zineland/zine" version="{{ generator_version }}">zine</generator>
-    <author>
+    <author class="dark_mode_text">
         <name>{{ site.name }}</name>
         <uri>{{ site.url }}</uri>
     </author>
 
     {% for entry in entries -%}
-    <entry>
+    <entry class="dark_mode_text">
         <title>{{ entry.title }}</title>
         <link rel="alternate" href="{{ entry.url }}" type="text/html" title="{{ entry.title }}" />
         <published>{{ entry.date }}T00:00:00+00:00</published>
@@ -23,7 +23,7 @@
             <![CDATA[{{ markdown_to_rss(markdown = entry.content) }}]]>
         </content>
 
-        <author>
+        <author class="dark_mode_text">
             {% if entry.author is iterable -%}
             <name>{{ entry.author | join(sep=", ")}}</name>
             {% else -%}

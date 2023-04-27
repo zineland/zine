@@ -128,8 +128,6 @@ impl Theme {
     }
 
     fn change_defaults(&mut self) {
-        println!("dark_mode: {:?}", self.dark_mode); // <-- Testing
-        println!("primary_color: {:?}", self.primary_color);
         if self.dark_mode.unwrap_or(false) {
             if self.page_color == Self::default_page_color() {
                 self.page_color = Self::default_page_color_dark(); // Changing page colour, if dark theme is enabled

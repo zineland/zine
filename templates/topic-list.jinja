@@ -1,7 +1,7 @@
 {% extends "base.jinja" -%}
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
-    <div class="max-w-prose mx-auto">
+    <div class="max-w-prose mx-auto dark_mode_text">
         <div class="text-4xl text-center font-extrabold my-8">{{ fluent(key="topic-list") }}</div>
         <div class="flex flex-col justify-center">
             {% for topic in topics -%}

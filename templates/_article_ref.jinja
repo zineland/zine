@@ -1,7 +1,7 @@
-<div>
+<div class="dark_mode_text">
     {% for item in articles -%}
     {% set article = item.article -%}
-    <div class="py-6 sm:px-8 hover:bg-gray-100 dark_mode_text">
+    <div class="py-6 sm:px-8 hover:bg-gray-100">
         {% if article.path -%}
         <a class="dark_mode_text" href="{{ article.path }}">
         {% else -%}
