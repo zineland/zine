@@ -1,7 +1,7 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use zine::build::watch_build;
-use zine::new::{new_zine_issue, new_zine_project};
+use zine::new::{new_article, new_zine_issue, new_zine_project};
 use zine::serve::run_serve;
 use zine::{lint, Mode};
 
@@ -43,6 +43,9 @@ enum Commands {
         /// New issue.
         #[arg(short, long)]
         issue: bool,
+        /// New article.
+        #[arg(short, long)]
+        article: bool,
     },
     /// Lint Zine project.
     Lint {
@@ -73,9 +76,19 @@ async fn main() -> Result<()> {
             zine::set_current_mode(Mode::Serve);
             run_serve(source.as_deref().unwrap_or("."), port, open).await?;
         }
-        Commands::New { name, issue } => {
+        Commands::New {
+            name,
+            issue,
+            article,
+        } => {
+            if issue && article {
+                bail!("Can't create both issue and article at the same time.")
+            }
+
             if issue {
                 new_zine_issue()?;
+            } else if article {
+                new_article()?;
             } else {
                 new_zine_project(name)?
             }

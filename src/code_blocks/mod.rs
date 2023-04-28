@@ -6,12 +6,12 @@ mod author;
 mod callout;
 mod inline_link;
 mod quote;
-mod url_preview;
+pub mod url_preview;
 
 pub use author::AuthorCode;
 pub use inline_link::InlineLink;
 
-use self::{callout::CalloutBlock, quote::QuoteBlock};
+pub use self::{callout::CalloutBlock, quote::QuoteBlock};
 
 pub trait CodeBlock {
     fn render(&self) -> Result<String>;
@@ -37,28 +37,6 @@ impl<'a> Fenced<'a> {
 
     pub fn is_custom_code_block(&self) -> bool {
         ALL_CODE_BLOCKS.contains(&self.name)
-    }
-
-    /// Render code block. Return rendered HTML string if success,
-    /// otherwise return URL preview error HTML string to remind user we have error.
-    ///
-    /// If the fenced is unsupported, we simply return `None`.
-    pub fn render_code_block(self, block: &'a str) -> Option<String> {
-        match self.name {
-            URL_PREVIEW => {
-                let url = block.trim();
-                url_preview::render(url, self.options)
-            }
-            CALLOUT => {
-                let html = CalloutBlock::new(self.options, block).render().unwrap();
-                Some(html)
-            }
-            QUOTE => {
-                let html = QuoteBlock::parse(block).unwrap().render().unwrap();
-                Some(html)
-            }
-            _ => None,
-        }
     }
 
     pub fn parse(input: &'a str) -> Result<Self> {

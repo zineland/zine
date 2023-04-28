@@ -4,10 +4,10 @@ use std::{
 };
 
 use anyhow::Result;
+use minijinja::Environment;
 use serde::{Deserialize, Serialize};
-use tera::Context;
 
-use crate::{engine, html::Meta, markdown};
+use crate::{context::Context, engine, html::Meta, markdown};
 
 use super::Entity;
 
@@ -40,7 +40,7 @@ impl Page {
 }
 
 impl Entity for Page {
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         context.insert(
             "meta",
             &Meta {
@@ -51,7 +51,7 @@ impl Entity for Page {
             },
         );
         context.insert("page", &self);
-        engine::render("page.jinja", &context, dest.join(self.slug()))?;
+        engine::render(env, "page.jinja", context, dest.join(self.slug()))?;
         Ok(())
     }
 }

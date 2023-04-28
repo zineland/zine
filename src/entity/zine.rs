@@ -1,4 +1,5 @@
 use anyhow::{Context as _, Result};
+use minijinja::{context, Environment};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
     prelude::IntoParallelRefMutIterator,
@@ -7,14 +8,20 @@ use rayon::{
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
-    collections::{BTreeMap, HashMap},
+    collections::BTreeMap,
     fs,
     path::{Component, Path},
 };
-use tera::Context;
 use walkdir::WalkDir;
 
-use crate::{data, engine, error::ZineError, feed::FeedEntry, helpers::capitalize, Entity};
+use crate::{
+    context::Context,
+    data, engine,
+    error::ZineError,
+    feed::FeedEntry,
+    helpers::{self, capitalize},
+    Entity,
+};
 
 use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
 
@@ -122,6 +129,10 @@ impl Zine {
         }
 
         Ok(())
+    }
+
+    pub fn get_issue_by_number(&self, number: u32) -> Option<&Issue> {
+        self.issues.iter().find(|issue| issue.number == number)
     }
 
     // Get the article metadata list by author id, sorted by descending order of publishing date.
@@ -383,16 +394,7 @@ impl Entity for Zine {
         Ok(())
     }
 
-    fn render(&self, mut context: Context, dest: &Path) -> Result<()> {
-        context.insert(
-            "live_reload",
-            &matches!(crate::current_mode(), crate::Mode::Serve),
-        );
-        context.insert(
-            "zine_version",
-            option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
-        );
-        context.insert("theme", &self.theme);
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
         context.insert("site", &self.site);
 
         // Render all authors pages.
@@ -404,12 +406,16 @@ impl Entity for Zine {
 
             let mut context = context.clone();
             context.insert("articles", &articles);
-            author.render(context, dest)?;
+            author
+                .render(env, context, dest)
+                .expect("Failed to render author page");
 
             anyhow::Ok(())
         })?;
         // Render author list page.
-        author_list.render(context.clone(), dest)?;
+        author_list
+            .render(env, context.clone(), dest)
+            .expect("Failed to render author list page");
 
         {
             let mut zine_data = data::write();
@@ -419,38 +425,50 @@ impl Entity for Zine {
         }
 
         // Render all issues pages.
-        self.issues.render(context.clone(), dest)?;
+        self.issues
+            .render(env, context.clone(), dest)
+            .expect("Failed to render issues");
 
         // Render all topic pages
         let topic_dest = dest.join("topic");
         let mut topic_list = List::topic_list();
-        self.topics.values().try_for_each(|topic| {
-            let mut context = context.clone();
-            let articles = self.get_articles_by_topic(&topic.id);
-            topic_list.push_topic(topic, articles.len());
-            context.insert("articles", &articles);
-            topic.render(context, &topic_dest)
-        })?;
+        self.topics
+            .values()
+            .try_for_each(|topic| {
+                let mut context = context.clone();
+                let articles = self.get_articles_by_topic(&topic.id);
+                topic_list.push_topic(topic, articles.len());
+                context.insert("articles", &articles);
+                topic.render(env, context, &topic_dest)
+            })
+            .expect("Failed to render topic pages");
         // Render topic list page
-        topic_list.render(context.clone(), dest)?;
+        topic_list
+            .render(env, context.clone(), dest)
+            .expect("Failed to render topic list page");
 
         // Render other pages.
-        self.pages.render(context.clone(), dest)?;
+        self.pages
+            .render(env, context.clone(), dest)
+            .expect("Failed to render pages");
 
         // Render home page.
         let issues = self
             .issues
             .par_iter()
             .filter(|issue| issue.need_publish())
+            .map(|issue| {
+                context! {
+                    slug => issue.slug,
+                    title => issue.title,
+                    number => issue.number,
+                    pub_date => issue.pub_date.as_ref().map(helpers::format_date),
+                    articles => issue.featured_articles(),
+                }
+            })
             .collect::<Vec<_>>();
         context.insert("issues", &issues);
-        // `article_map` is the issue number and issue's featured articles map.
-        let article_map = issues
-            .par_iter()
-            .map(|issue| (issue.number, issue.featured_articles()))
-            .collect::<HashMap<u32, Vec<_>>>();
-        context.insert("article_map", &article_map);
-        engine::render("index.jinja", &context, dest)?;
+        engine::render(env, "index.jinja", context, dest).expect("Failed to render home page");
         Ok(())
     }
 }

@@ -1,10 +1,10 @@
 use anyhow::Result;
+use minijinja::Environment;
 use rayon::{
     iter::{IntoParallelRefMutIterator, ParallelIterator},
     prelude::IntoParallelRefIterator,
 };
 use std::path::Path;
-use tera::Context;
 
 mod article;
 mod author;
@@ -16,6 +16,8 @@ mod site;
 mod theme;
 mod topic;
 mod zine;
+
+use crate::context::Context;
 
 pub use self::zine::Zine;
 pub use article::{Article, MetaArticle};
@@ -41,7 +43,7 @@ pub trait Entity {
         Ok(())
     }
 
-    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         Ok(())
     }
 }
@@ -54,9 +56,9 @@ impl<T: Entity> Entity for Option<T> {
         Ok(())
     }
 
-    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         if let Some(entity) = self {
-            entity.render(context, dest)?;
+            entity.render(env, context, dest)?;
         }
         Ok(())
     }
@@ -68,10 +70,10 @@ impl<T: Entity + Sync + Send + Clone + 'static> Entity for Vec<T> {
             .try_for_each(|entity| entity.parse(source))
     }
 
-    fn render(&self, context: Context, dest: &Path) -> Result<()> {
+    fn render(&self, env: &Environment, context: Context, dest: &Path) -> Result<()> {
         self.par_iter().try_for_each(|entity| {
             let context = context.clone();
-            entity.render(context, dest)
+            entity.render(env, context, dest)
         })
     }
 }

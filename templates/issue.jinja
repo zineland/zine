@@ -3,7 +3,7 @@
 {% block content -%}
 <div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
     <div class="text-center my-16">
-    {{ macros::issue_diamond(title=issue.title, date=issue.pub_date) }}
+    {{ macros.issue_diamond(title=issue.title, date=issue.pub_date) }}
     </div>
     <div class="max-w-prose mx-auto">
         {% if intro -%}
@@ -13,7 +13,7 @@
             <img src="/static/edit.svg" alt="edit">
         </a>
         {% endif -%}
-        <div class="prose my-8 md:mx-8">{{ markdown_to_html(markdown = intro) | safe }}</div>
+        <div class="prose my-8 md:mx-8">{{ markdown_to_html(intro) | safe }}</div>
         {% endif -%}
         {% for article in articles -%}
         <div class="relative pt-6 pb-4 sm:px-8 transition ease-in-out sm:hover:scale-110 duration-500 border-gray-200">
@@ -39,7 +39,7 @@
             </a>
             <div class="flex items-center justify-between text-base text-gray-500 dark_mode_text">
                 <span class="zine-card-date">{{ article.pub_date }}</span>
-                {{ macros::author_link(author = article.author) }}
+                {{ macros.author_link(article.author) }}
             </div>
         </div>
         {% if not loop.last -%}

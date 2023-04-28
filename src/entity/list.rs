@@ -1,10 +1,9 @@
 use std::{borrow::Cow, path::Path};
 
-use anyhow::Result;
+use crate::{context::Context, engine, html::Meta, Entity};
+use minijinja::context;
+use minijinja::Environment;
 use serde::Serialize;
-use tera::Context;
-
-use crate::{engine, html::Meta, Entity};
 
 use super::{Author, Topic};
 
@@ -23,15 +22,6 @@ pub(super) struct EntityExt<'a, E> {
     entity: &'a E,
     // How many articles this entity has.
     article_count: usize,
-}
-
-impl<'a, E> List<'a, E> {
-    fn render_title(&self) -> Result<String> {
-        engine::render_str(
-            &format!(r#"{{{{ fluent(key="{}") }}}}"#, self.fluent_key),
-            &Context::new(),
-        )
-    }
 }
 
 impl<'a> List<'a, Author> {
@@ -71,23 +61,27 @@ impl<'a> List<'a, Topic> {
 }
 
 impl<'a, E: Serialize> Entity for List<'a, E> {
-    fn render(&self, mut context: Context, dest: &Path) -> anyhow::Result<()> {
+    fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> anyhow::Result<()> {
         if self.entities.is_empty() {
             // Do nothing if the entities is empty.
             return Ok(());
         }
 
+        let title = env.render_str(
+            &format!(r#"{{{{ fluent("{}") }}}}"#, self.fluent_key),
+            context! {},
+        )?;
         context.insert(
             "meta",
             &Meta {
-                title: Cow::Owned(self.render_title()?),
+                title: Cow::Owned(title),
                 description: Cow::Owned(String::new()),
                 url: Some(self.name.into()),
                 image: None,
             },
         );
         context.insert(self.name, &self.entities);
-        engine::render(self.template, &context, dest.join(self.name))?;
+        engine::render(env, self.template, context, dest.join(self.name))?;
         Ok(())
     }
 }

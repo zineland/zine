@@ -8,7 +8,7 @@
     </a>
     {% endif -%}
     <article class="zine-page prose mx-auto py-8">
-        {{ markdown_to_html(markdown = page.markdown) | safe }}
+        {{ markdown_to_html(page.markdown) | safe }}
     </article>
 </div>
 {% endblock content -%}

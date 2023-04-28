@@ -20,9 +20,8 @@ pub async fn watch_build<P: AsRef<Path>>(
 
     data::load(&source);
 
+    let mut engine: ZineEngine = ZineEngine::new(&source, dest, zine)?;
     let source_path = source.clone();
-
-    let mut engine = ZineEngine::new(source, dest, zine)?;
     // Spawn the build process as a blocking task, avoid starving other tasks.
     let build_result = tokio::task::spawn_blocking(move || {
         engine.build(false)?;
@@ -36,7 +35,7 @@ pub async fn watch_build<P: AsRef<Path>>(
             tokio::spawn(async move {
                 tokio::signal::ctrl_c().await.unwrap();
                 // Save zine data only when the process gonna exist
-                data::export(source_path).unwrap();
+                data::export(&source_path).unwrap();
                 std::process::exit(0);
             });
 
@@ -44,7 +43,7 @@ pub async fn watch_build<P: AsRef<Path>>(
             let (tx, rx) = mpsc::channel();
             let mut debouncer = new_debouncer(Duration::from_millis(500), None, tx)?;
             let watcher = debouncer.watcher();
-            watcher.watch(&engine.source, RecursiveMode::Recursive)?;
+            watcher.watch(&source, RecursiveMode::Recursive)?;
 
             // Watch zine's templates and static directory in debug mode to support reload.
             #[cfg(debug_assertions)]
@@ -67,6 +66,8 @@ pub async fn watch_build<P: AsRef<Path>>(
                                         if let Some(sender) = sender.as_ref() {
                                             sender.send(())?;
                                         }
+                                        // Export zine data to file after build
+                                        data::export(&source).unwrap();
                                     }
                                     Err(err) => {
                                         println!("build error: {:?}", &err);
@@ -82,7 +83,7 @@ pub async fn watch_build<P: AsRef<Path>>(
                 }
             }
         } else {
-            data::export(source_path).unwrap();
+            data::export(&source).unwrap();
         }
         anyhow::Ok(())
     })

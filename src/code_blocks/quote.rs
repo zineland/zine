@@ -1,10 +1,5 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use tera::Context;
-
-use crate::engine;
-
-use super::CodeBlock;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QuoteBlock {
@@ -28,14 +23,5 @@ impl QuoteBlock {
             // Parse failed if the block has invalid toml syntax.
             Err(error) => Err(anyhow!("Parse quote block error: {}", error)),
         }
-    }
-}
-
-impl CodeBlock for QuoteBlock {
-    fn render(&self) -> Result<String> {
-        let mut context = Context::new();
-        context.insert("quote", &self);
-        let html = engine::get_tera().render("blocks/quote.jinja", &context)?;
-        Ok(html)
     }
 }

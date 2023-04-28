@@ -1,12 +1,12 @@
 {% macro author_link(author) -%}
-{% if author is iterable -%}
+{% if author is sequence -%}
 {% set author_ids = author -%}
 {% else -%}
 {% set author_ids = [author] -%}
 {% endif -%}
 <div class="flex items-center dark_mode_text">
     {% for author_id in author_ids -%}
-    {% set author = get_author(id = author_id) -%}
+    {% set author = get_author(author_id) -%}
     {% if author -%}
     <a class="inline-flex items-center px-2 py-1 !text-gray-500 rounded hover:bg-gray-200 hover:!no-underline dark_mode_text"
         href="/@{{ author.id | lower }}">

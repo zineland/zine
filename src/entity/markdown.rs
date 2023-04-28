@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct MarkdownConfig {
     #[serde(default = "MarkdownConfig::default_highlight_code")]
