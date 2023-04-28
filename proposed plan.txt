@@ -1,6 +1,0 @@
-Adjust theme.rs so that
-adding boolean for dark mode,
-and then also a page colour picker for dark mode,
-Doing this by changing root colours
-
-Add to base.jinja and all others to inherit it file so that the html actually changes

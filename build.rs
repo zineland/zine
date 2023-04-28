@@ -11,7 +11,8 @@ fn main() {
 
 fn run(args: &[&str]) -> Result<String, std::io::Error> {
     let out = Command::new(args[0]).args(&args[1..]).output()?; // Output() executes command as child process
-    match out.status.success() { // Collecting status (child process) and checking for success
+    match out.status.success() {
+        // Collecting status (child process) and checking for success
         true => Ok(String::from_utf8(out.stdout).unwrap().trim().to_string()),
         false => Err(Error::new(ErrorKind::Other, "Command not successful.")),
     }
