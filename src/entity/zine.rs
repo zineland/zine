@@ -70,8 +70,9 @@ impl Zine {
     /// Parse Zine instance from the root zine.toml file.
     pub fn parse_from_toml<P: AsRef<Path>>(source: P) -> Result<Zine> {
         let source = source.as_ref().join(crate::ZINE_FILE);
-        let content = fs::read_to_string(&source)
-            .with_context(|| format!("Failed to read `{}`", source.display()))?;
+        let content =
+            fs::read_to_string(&source) // Content holds information of toml file
+                .with_context(|| format!("Failed to read `{}`", source.display()))?;
 
         Ok(toml::from_str::<Zine>(&content).map_err(|err| {
             let value = toml::from_str::<toml::Value>(&content)

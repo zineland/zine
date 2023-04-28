@@ -1,11 +1,11 @@
 {% extends "base.jinja" -%}
 {% block content -%}
-<div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
-    <div class="max-w-prose mx-auto">
+<div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
+    <div class="max-w-prose mx-auto dark_mode_text">
         <div class="text-4xl text-center font-extrabold my-8">{{ fluent("topic-list") }}</div>
         <div class="flex flex-col justify-center">
             {% for topic in topics -%}
-            <a href="/topic/{{ topic.id | lower }}">
+            <a class="dark_mode_text" href="/topic/{{ topic.id | lower }}">
                 <div class="flex p-6 hover:bg-gray-100">
                     <div class="flex-none bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl">#</div>
                     <div class="flex-1 pl-4 sm:pl-8">
@@ -17,11 +17,11 @@
                                 {{ topic.id | capitalize }}
                                 {% endif -%}
                             </div>
-                            <div class="sm:pl-4 text-sm text-gray-500">
+                            <div class="sm:pl-4 text-sm text-gray-500 dark_mode_text">
                                 {{ fluent("article-count", topic.article_count) }}
                             </div>
                         </div>
-                        <div class="py-3 text-sm text-gray-500">
+                        <div class="py-3 text-sm text-gray-500 dark_mode_text">
                             {% if topic.description -%}
                             {{ markdown_to_html(topic.description ) }}
                             {% endif -%}

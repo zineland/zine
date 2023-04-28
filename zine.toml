@@ -1,0 +1,17 @@
+
+[site]
+url = "http://localhost"
+name = "My Zine Site"
+description = ""
+
+#  The menu tabs (optional)
+menu = [
+   { name = "About", url="/about" },
+   { name = "Blog", url = "/blog" },
+]
+
+[authors]
+josh_thompson = { name = "Josh_Thompson" }
+
+[theme]
+dark_mode = true

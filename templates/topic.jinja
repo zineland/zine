@@ -1,32 +1,32 @@
 {% extends "base.jinja" -%}
 {% block content -%}
-<div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="p-4 pb-10 sm:p-8 sm:pb-16 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
     <div class="zine-breadcrumb relative mx-2">
-        <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
+        <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500 dark_mode_text"
             href="/topics">
             <div class="relative text-main px-4">Topics</div>
         </a>
-        <span class="ml-2 text-gray-700 leading-loose">/ {{ topic.name }}</span>
+        <span class="ml-2 text-gray-700 leading-loose dark_mode_text dark_mode_text">/ {{ topic.name }}</span>
     </div>
     <div class="mt-4 mb-8 w-full border-dashed border-t border-slate-300"></div>
-    <div class="max-w-prose mx-auto">
+    <div class="max-w-prose mx-auto dark_mode_text">
         <div class="py-6">
             <div class="flex justify-center items-center m-4 sm:m-8 text-center">
-                <div class="bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl">#</div>
-                <div class="zine-topic-name text-center text-2xl sm:text-4xl font-bold pl-4 sm:pl-8 text-center">
+                <div class="bg-primary text-center rounded w-16 h-16 py-3 leading-10 text-2xl dark_mode_text">#</div>
+                <div class="zine-topic-name text-center text-2xl sm:text-4xl font-bold pl-4 sm:pl-8 text-center dark_mode_text">
                     {{ topic.name }}
                 </div>
             </div>
             {% if topic.description -%}
-            <div class="zine-topic-bio prose text-center my-2 sm:m-8 grow">
+            <div class="zine-topic-bio prose text-center my-2 sm:m-8 grow dark_mode_text">
                 {{ markdown_to_html(topic.description) | safe }}
             </div>
             {% endif -%}
         </div>
         {% set article_count = articles | length -%}
         {% if article_count > 0 %}
-        <div class="my-4 sm:my-6 text-2xl font-bold">
-            <span class="w-4 h-4 border-4 border-primary"></span>
+        <div class="my-4 sm:my-6 text-2xl font-bold dark_mode_text">
+            <span class="w-4 h-4 border-4 border-primary dark_mode_text"></span>
             <span class="px-2">{{ fluent("topic-article-title", article_count) }}</span>
         </div>
         {% include "_article_ref.jinja" -%}

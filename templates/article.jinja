@@ -1,16 +1,16 @@
 {% extends "base.jinja" -%}
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
-<div class="px-4 pb-10 md:px-8 md:pb-14 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="px-4 pb-10 md:px-8 md:pb-14 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
     <div
-        class="sticky z-10 py-4 top-32 lg:top-36 xl:top-44 2xl:top-56 bg-white border-dashed border-b border-slate-300">
+        class="sticky z-10 py-4 top-32 lg:top-36 xl:top-44 2xl:top-56 bg-page border-dashed border-b border-slate-300 dark_mode_text">
         <div class="ml-1 md:ml-2 flex justify-between items-center">
             <div class="zine-breadcrumb">
-                <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500"
+                <a class="zine-diamond before:block before:absolute before:-inset-1 before:-skew-x-6 before:bg-primary relative inline-block transition sm:hover:scale-110 duration-500 dark_mode_text"
                     href="/{{ issue.slug }}">
-                    <div class="relative text-main px-4">{{ issue.title }}</div>
+                    <div class="relative text-main px-4 dark_mode_text">{{ issue.title }}</div>
                 </a>
-                <span class="ml-2 text-gray-700">/ {{ fluent("article-number", number) }}</span>
+                <span class="ml-2 text-gray-700 dark_mode_text">/ {{ fluent("article-number", number) }}</span>
             </div>
             <div>
                 {% set common_style = "py-1 my-1 rounded hover:bg-gray-100" -%}
@@ -21,13 +21,13 @@
                     </div>
                     {% endif -%}
                     {% if site.edit_url -%}
-                    <a class="ml-1 md:ml-2 p-2 rounded hover:bg-gray-200"
+                    <a class="ml-1 md:ml-2 p-2 rounded hover:bg-gray-200 dark_mode_text"
                        href="{{ site.edit_url }}/content/{{ issue.dir }}/{{ article.file }}">
                         <img src="/static/edit.svg" alt="edit">
                     </a>
                     {% endif -%}
                     {% if toc -%}
-                    <div id="toc-menu" class="ml-1 md:ml-2 p-2 cursor-pointer rounded hover:bg-gray-200">
+                    <div id="toc-menu" class="ml-1 md:ml-2 p-2 cursor-pointer rounded hover:bg-gray-200 ">
                        <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
                             data-view-component="true">
                             <path fill-rule="evenodd"
@@ -39,12 +39,12 @@
                 </div>
                 {% if i18n -%}
                 <div id="i18n-list"
-                    class="absolute hidden right-5 px-2 flex flex-col py-2 my-4 border bg-white rounded z-[99999] shadow-xl">
+                    class="absolute hidden right-5 px-2 flex flex-col py-2 my-4 border bg-page rounded z-[99999] shadow-xl">
                     {% for translation in i18n -%}
                     {% if translation.path -%}
-                    <a class="{{ common_style }} px-8" href="{{ translation.path }}">
+                    <a class="{{ common_style }} px-8 dark_mode_text" href="{{ translation.path }}">
                         {% else -%}
-                        <a class="{{ common_style }} px-8" href="/{{ issue.slug }}/{{ translation.slug }}">
+                        <a class="{{ common_style }} px-8 dark_mode_text" href="/{{ issue.slug }}/{{ translation.slug }}">
                             {% endif -%}
                             {{ translation.name }}
                         </a>
@@ -53,10 +53,10 @@
                 {% endif -%}
                 {% if toc -%}
                 <div id="toc-list"
-                    class="absolute hidden right-0 flex flex-col max-w-screen-sm max-h-96 w-60 py-2 my-4 border bg-white rounded z-[99999] shadow-xl">
+                    class="absolute hidden right-0 flex flex-col max-w-screen-sm max-h-96 w-60 py-2 my-4 border bg-page rounded z-[99999] shadow-xl">
                     <div class="px-2 overflow-y-auto">
                         {% for item in toc -%}
-                        <a href="#{{ item.id }}">
+                        <a href="#{{ item.id }} dark_mode_text">
                             {% if item.depth == 1 -%}
                             {% set variant_style = "pl-2 text-gray-800 font-bold text-sm" -%}
                             {% elif item.depth == 2 -%}
@@ -75,12 +75,12 @@
             </div>
         </div>
     </div>
-    <div class="pt-10">
+    <div class="pt-10 dark_mode_text">
         <div class="prose mx-auto">
             <div class="zine-article-title text-2xl md:text-4xl font-extrabold leading-tight mb-8 text-center">
                 {{ article.title }}
             </div>
-            <div class="flex items-center justify-between text-gray-500">
+            <div class="flex items-center justify-between text-gray-500 dark_mode_text">
                 <span>{{ article.pub_date }}</span>
                 {{ macros.author_link(article.author) }}
             </div>
@@ -106,7 +106,7 @@
             {% else -%}
             {% set href = "/" ~ issue.slug ~ "/" ~ article.slug -%}
             {% endif -%}
-            <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline" href="{{ href }}">
+            <a class="inline my-1 py-2 px-4 font-bold text-slate-700 hover:underline dark_mode_text" href="{{ href }}">
                 {% if loop.index0 == 0 -%}
                 {{ fluent("previous") }}
                 {% else -%}
@@ -121,7 +121,7 @@
     </div>
 </div>
 <div
-    class="inline-link-card absolute hidden border rounded bg-white shadow-xl mx-2 w-96 transition ease-in-out sm:hover:scale-105 duration-500">
+    class="inline-link-card absolute hidden border rounded bg-page shadow-xl mx-2 w-96 transition ease-in-out sm:hover:scale-105 duration-500 dark_mode_text">
     <a class="inline-link-url">
         <div class="">
             <img class="inline-link-image w-full h-52 object-cover rounded-t">

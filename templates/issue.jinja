@@ -1,7 +1,7 @@
 {% extends "base.jinja" -%}
 {% import "_macros.jinja" as macros -%}
 {% block content -%}
-<div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
     <div class="text-center my-16">
     {{ macros.issue_diamond(title=issue.title, date=issue.pub_date) }}
     </div>
@@ -22,8 +22,8 @@
             {% else -%}
             <a class="group" href="/{{ issue.slug }}/{{ article.slug }}">
             {% endif -%}
-                <div class="zine-cover relative">
-                    <span class="absolute top-4 right-4 text-white text-2xl font-bold"
+                <div class="zine-cover relative dark_mode_text">
+                    <span class="absolute top-4 right-4 text-white text-2xl font-bold dark_mode_text"
                         style="color: #eee; text-shadow: 1px 1px 2px #000">
                         No. {{ loop.index }}
                     </span>
@@ -37,7 +37,7 @@
                     </div>
                 </div>
             </a>
-            <div class="flex items-center justify-between text-base text-gray-500">
+            <div class="flex items-center justify-between text-base text-gray-500 dark_mode_text">
                 <span class="zine-card-date">{{ article.pub_date }}</span>
                 {{ macros.author_link(article.author) }}
             </div>

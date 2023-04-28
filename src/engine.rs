@@ -237,7 +237,7 @@ impl ZineEngine {
         let instant = std::time::Instant::now();
 
         if reload {
-            self.zine = Zine::parse_from_toml(&self.source)?;
+            self.zine = Zine::parse_from_toml(&self.source)?; // Converting toml file into text
         }
 
         self.zine.parse(&self.source)?;

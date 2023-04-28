@@ -58,7 +58,7 @@ enum Commands {
     /// Prints the app version.
     Version,
 }
-
+// 'match' is used to distinguish what type of action 'Commands' is to do
 #[tokio::main]
 async fn main() -> Result<()> {
     match Cli::parse().command {

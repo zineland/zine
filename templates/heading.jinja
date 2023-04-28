@@ -1,10 +1,10 @@
 {% set htag = "h" ~ level -%}
-<{{ htag }} id="{{ id | lower }}" class="toc-item group scroll-mt-20">
+<{{ htag }} id="{{ id | lower }}" class="toc-item group scroll-mt-20 dark_mode_text">
     {{ heading }}
-    <a href="#{{ id | lower }}" class="ml-2 inline-block opacity-0 border-0 group-hover:opacity-100"
+    <a href="#{{ id | lower }}" class="ml-2 inline-block opacity-0 border-0 group-hover:opacity-100 dark_mode_text"
         aria-label="Anchor">
         <div
-            class="w-6 h-6 text-slate-400 ring-1 ring-slate-900/5 rounded-md shadow-sm flex items-center justify-center hover:ring-slate-900/10 hover:shadow hover:text-slate-700">
+            class="w-6 h-6 text-slate-400 ring-1 ring-slate-900/5 rounded-md shadow-sm flex items-center justify-center hover:ring-slate-900/10 hover:shadow hover:text-slate-700 dark_mode_text">
             <svg width="12" height="12" fill="none" aria-hidden="true">
                 <path d="M3.75 1v10M8.25 1v10M1 3.75h10M1 8.25h10" stroke="currentColor" stroke-width="1.5"
                     stroke-linecap="round">

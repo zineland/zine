@@ -1,6 +1,6 @@
 {% extends "base.jinja" -%}
 {% block content -%}
-<div class="p-4 md:p-8 mx-4 my-6 bg-white shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5">
+<div class="p-4 md:p-8 mx-4 my-6 bg-page shadow-xl shadow-slate-700/10 ring-1 ring-gray-900/5 dark_mode_text">
     <div class="max-w-prose mx-auto">
         <div class="text-4xl text-center font-extrabold my-8">{{ fluent("author-list") }}</div>
         <div class="flex flex-wrap flex-col sm:flex-row justify-center">
@@ -16,7 +16,7 @@
                         {{ author.id | capitalize }}
                         {% endif -%}
                     </div>
-                    <div class="p-2 text-sm text-gray-500">
+                    <div class="p-2 text-sm text-gray-500 dark_mode_text">
                         {{ fluent("article-count", author.article_count) }}
                     </div>
                     {% if author.editor -%}
@@ -61,7 +61,7 @@
                         {{ team.id | capitalize }}
                         {% endif -%}
                     </div>
-                    <div class="p-2 text-sm text-gray-500">
+                    <div class="p-2 text-sm text-gray-500 dark_mode_text">
                         {{ fluent("article-count", team.article_count) }}
                     </div>
                 </div>

@@ -8,6 +8,8 @@ use super::Entity;
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "snake_case"))]
 pub struct Theme {
+    //whether dark mode is enabled (boolean)
+    pub dark_mode: Option<bool>,
     // The primary color.
     #[serde(default = "Theme::default_primary_color")]
     pub primary_color: String,
@@ -20,6 +22,9 @@ pub struct Theme {
     // The background color.
     #[serde(default = "Theme::default_secondary_color")]
     pub secondary_color: String,
+    // The page color.
+    #[serde(default = "Theme::default_page_color")]
+    pub page_color: String,
     // The background image url.
     #[serde(default)]
     pub background_image: Option<String>,
@@ -39,10 +44,12 @@ pub struct Theme {
 impl Default for Theme {
     fn default() -> Self {
         Self {
+            dark_mode: Some(false),
             primary_color: Self::default_primary_color(),
             main_color: Self::default_main_color(),
             link_color: Self::default_link_color(),
             secondary_color: Self::default_secondary_color(),
+            page_color: Self::default_page_color(),
             background_image: None,
             head_template: None,
             footer_template: None,
@@ -56,10 +63,12 @@ impl Default for Theme {
 impl std::fmt::Debug for Theme {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Theme")
+            .field("dark_mode", &self.dark_mode)
             .field("primary_color", &self.primary_color)
             .field("main_color", &self.main_color)
             .field("link_color", &self.link_color)
             .field("secondary_color", &self.secondary_color)
+            .field("page_color", &self.page_color)
             .field("background_image", &self.background_image)
             .field("head_template", &self.head_template.is_some())
             .field("footer_template", &self.footer_template.is_some())
@@ -74,30 +83,69 @@ impl std::fmt::Debug for Theme {
 }
 
 impl Theme {
-    const DEFAULT_PRIMARY_COLOR: &'static str = "#2563eb";
-    const DEFAULT_MAIN_COLOR: &'static str = "#ffffff";
-    const DEFAULT_LINK_COLOR: &'static str = "#2563eb";
-    const DEFAULT_SECONDARY_COLOR: &'static str = "#eff3f7";
+    const DEFAULT_PRIMARY_COLOR_LIGHT: &'static str = "#2563eb";
+    const DEFAULT_MAIN_COLOR_LIGHT: &'static str = "#ffffff";
+    const DEFAULT_LINK_COLOR_LIGHT: &'static str = "#2563eb";
+    const DEFAULT_SECONDARY_COLOR_LIGHT: &'static str = "#eff3f7";
+    const DEFAULT_PAGE_COLOR_LIGHT: &'static str = "#ffffff";
+
+    const DEFAULT_PRIMARY_COLOR_DARK: &'static str = "#0d0d0d";
+    // const DEFAULT_MAIN_COLOR_DARK: &'static str = "#ffffff";
+    // const DEFAULT_LINK_COLOR_DARK: &'static str = "#2563eb";
+    const DEFAULT_SECONDARY_COLOR_DARK: &'static str = "#303030";
+    const DEFAULT_PAGE_COLOR_DARK: &'static str = "#505050";
 
     fn default_primary_color() -> String {
-        Self::DEFAULT_PRIMARY_COLOR.to_string()
+        Self::DEFAULT_PRIMARY_COLOR_LIGHT.to_string()
     }
 
     fn default_main_color() -> String {
-        Self::DEFAULT_MAIN_COLOR.to_string()
+        Self::DEFAULT_MAIN_COLOR_LIGHT.to_string()
     }
 
     fn default_link_color() -> String {
-        Self::DEFAULT_LINK_COLOR.to_string()
+        Self::DEFAULT_LINK_COLOR_LIGHT.to_string()
     }
 
     fn default_secondary_color() -> String {
-        Self::DEFAULT_SECONDARY_COLOR.to_string()
+        Self::DEFAULT_SECONDARY_COLOR_LIGHT.to_string()
+    }
+
+    fn default_page_color() -> String {
+        Self::DEFAULT_PAGE_COLOR_LIGHT.to_string()
+    }
+
+    fn default_page_color_dark() -> String {
+        Self::DEFAULT_PAGE_COLOR_DARK.to_string()
+    }
+
+    fn default_primary_color_dark() -> String {
+        Self::DEFAULT_PRIMARY_COLOR_DARK.to_string()
+    }
+
+    fn default_secondary_color_dark() -> String {
+        Self::DEFAULT_SECONDARY_COLOR_DARK.to_string()
+    }
+
+    fn change_defaults(&mut self) {
+        if self.dark_mode.unwrap_or(false) {
+            if self.page_color == Self::default_page_color() {
+                self.page_color = Self::default_page_color_dark(); // Changing page colour, if dark theme is enabled
+            }
+            if self.primary_color == Self::default_primary_color() {
+                self.primary_color = Self::default_primary_color_dark(); // Changing primary colour, if dark theme is enabled
+            }
+            if self.secondary_color == Self::default_secondary_color() {
+                self.secondary_color = Self::default_secondary_color_dark(); // Changing secondary colour, if dark theme is enabled
+            }
+        }
     }
 }
 
 impl Entity for Theme {
     fn parse(&mut self, source: &Path) -> Result<()> {
+        self.change_defaults(); // Change default colors if dark mode is enabled.
+
         if self.default_cover.is_none() {
             self.default_cover = Some(String::from("/static/zine-placeholder.svg"));
         }
