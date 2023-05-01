@@ -1,8 +1,8 @@
 use std::fmt::Write;
 
-use crate::entity::Author;
+use genkit::code_blocks::CodeBlock;
 
-use super::CodeBlock;
+use crate::entity::Author;
 
 /// The author code is designed to render the avatar-name link on the markdown page.
 ///

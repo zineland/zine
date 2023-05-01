@@ -4,9 +4,10 @@ use anyhow::Result;
 use minijinja::Environment;
 use serde::{Deserialize, Serialize};
 
-use crate::{context::Context, engine, helpers::capitalize, html::Meta};
+use crate::engine;
 
 use super::Entity;
+use genkit::{html::Meta, Context};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Topic {
@@ -20,7 +21,7 @@ impl Entity for Topic {
     fn parse(&mut self, _source: &Path) -> Result<()> {
         // Fallback to capitalized id if missing.
         if self.name.is_none() {
-            self.name = Some(capitalize(&self.id));
+            self.name = Some(genkit::helpers::capitalize(&self.id));
         }
         Ok(())
     }

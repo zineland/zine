@@ -1,19 +1,13 @@
 use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
 use anyhow::{ensure, Context as _, Result};
+use genkit::{html::Meta, markdown, Context};
 use minijinja::Environment;
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::{
-    context::Context,
-    current_mode, data, engine,
-    html::Meta,
-    i18n,
-    markdown::{self, MarkdownRender},
-    Mode,
-};
+use crate::{current_mode, data, engine, i18n, Mode};
 
 use super::{AuthorId, Entity};
 
@@ -34,7 +28,7 @@ pub struct MetaArticle {
     pub author: Option<AuthorId>,
     pub cover: Option<String>,
     /// The publish date. Format like YYYY-MM-DD.
-    #[serde(with = "crate::helpers::serde_date")]
+    #[serde(with = "genkit::helpers::serde_date")]
     #[serde(default = "MetaArticle::default_pub_date")]
     pub pub_date: Date,
 }
@@ -198,14 +192,9 @@ impl Article {
         context.insert("article", &self);
         context.insert("canonical_url", &self.canonical);
 
-        let zine_data = data::read();
-        let markdown_config = zine_data.get_markdown_config();
-        let mut markdown_render = MarkdownRender::new(markdown_config);
-        let html = markdown_render.render_html(&self.markdown);
-        markdown_render.rebuild_toc_depth();
+        let (html, toc) = markdown::render_html_with_toc(&self.markdown);
         context.insert("html", &html);
-        context.insert("toc", &markdown_render.toc);
-        drop(zine_data);
+        context.insert("toc", &toc);
 
         if let Some(path) = self.meta.path.as_ref() {
             let mut dest = dest.to_path_buf();

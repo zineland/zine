@@ -1,15 +1,12 @@
 use std::{borrow::Cow, env, fs, io::Write, path::PathBuf};
 
 use anyhow::{Context as _, Ok, Result};
+use genkit::helpers;
 use minijinja::render;
 use promptly::prompt_default;
 use time::OffsetDateTime;
 
-use crate::{
-    entity::Zine,
-    helpers::{self, run_command},
-    ZINE_FILE,
-};
+use crate::{entity::Zine, ZINE_FILE};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -203,7 +200,7 @@ pub fn new_article() -> Result<()> {
 }
 
 fn git_user_name() -> String {
-    run_command("git", &["config", "user.name"])
+    helpers::run_command("git", &["config", "user.name"])
         .ok()
         .unwrap_or_default()
         .replace(' ', "_")

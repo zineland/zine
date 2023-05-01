@@ -21,6 +21,8 @@ clap = { version = "4", features = ["derive"] }
 dashmap = { version = "5.4", features = ["serde"] }
 fluent = "0.16"
 futures = { version = "0.3", default-features = false }
+# genkit = { path = "../genkit" }
+genkit = { git = "https://github.com/zineland/genkit", branch = "main" }
 html5ever = "0.26"
 hyper = { version = "0.14", features = ["client", "server", "tcp", "http1"] }
 hyper-tls = "0.5"

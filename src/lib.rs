@@ -6,26 +6,20 @@ use error::ZineError;
 use parking_lot::RwLock;
 use walkdir::WalkDir;
 
-pub mod build;
 mod code_blocks;
-mod context;
 mod data;
 mod engine;
 mod entity;
 mod error;
 mod feed;
-pub mod helpers;
-mod html;
+// mod generator;
 mod i18n;
-pub mod lint;
+// pub mod lint;
 mod locales;
-mod markdown;
 pub mod new;
-pub mod serve;
 
-pub use self::context::Context;
-pub use self::engine::ZineEngine;
 pub use self::entity::Entity;
+pub use engine::ZineGenerator;
 
 /// The convention name of zine config file.
 pub static ZINE_FILE: &str = "zine.toml";
