@@ -17,6 +17,7 @@ mod i18n;
 mod locales;
 
 pub use self::entity::Entity;
+pub use code_blocks::ZineMarkdownVisitor;
 pub use engine::ZineGenerator;
 
 /// The convention name of zine config file.
