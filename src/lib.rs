@@ -6,17 +6,15 @@ use error::ZineError;
 use parking_lot::RwLock;
 use walkdir::WalkDir;
 
+pub mod cmd;
 mod code_blocks;
 mod data;
 mod engine;
 mod entity;
 mod error;
 mod feed;
-// mod generator;
 mod i18n;
-// pub mod lint;
 mod locales;
-pub mod new;
 
 pub use self::entity::Entity;
 pub use engine::ZineGenerator;

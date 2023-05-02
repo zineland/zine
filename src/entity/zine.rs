@@ -391,7 +391,6 @@ impl Entity for Zine {
     }
 
     fn render(&self, env: &Environment, mut context: Context, dest: &Path) -> Result<()> {
-        
         context.insert("site", &self.site);
 
         // Render all authors pages.
