@@ -1,4 +1,10 @@
+use crate::{data, engine, error::ZineError, feed::FeedEntry};
 use anyhow::{Context as _, Result};
+use genkit::{
+    entity::MarkdownConfig,
+    helpers::{self, capitalize},
+    Context, Entity,
+};
 use minijinja::{context, Environment};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelBridge, ParallelExtend, ParallelIterator},
@@ -14,16 +20,7 @@ use std::{
 };
 use walkdir::WalkDir;
 
-use crate::{
-    context::Context,
-    data, engine,
-    error::ZineError,
-    feed::FeedEntry,
-    helpers::{self, capitalize},
-    Entity,
-};
-
-use super::{Author, Issue, List, MarkdownConfig, MetaArticle, Page, Site, Theme, Topic};
+use super::{Author, Issue, List, MetaArticle, Page, Site, Theme, Topic};
 
 /// The root zine entity config.
 ///
@@ -332,7 +329,6 @@ impl Entity for Zine {
             let mut zine_data = data::write();
             zine_data
                 .set_theme(self.theme.clone())
-                .set_markdown_config(self.markdown_config.clone())
                 .set_site(self.site.clone())
                 .set_topics(self.topics.keys().cloned().collect());
         }

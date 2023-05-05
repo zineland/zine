@@ -1,15 +1,13 @@
 use std::{borrow::Cow, env, fs, io::Write, path::PathBuf};
 
 use anyhow::{Context as _, Ok, Result};
+use clap::{Arg, ArgAction, Command};
+use genkit::{helpers, Cmd};
 use minijinja::render;
 use promptly::prompt_default;
 use time::OffsetDateTime;
 
-use crate::{
-    entity::Zine,
-    helpers::{self, run_command},
-    ZINE_FILE,
-};
+use crate::{entity::Zine, ZINE_FILE};
 
 static TEMPLATE_PROJECT_FILE: &str = r#"
 [site]
@@ -49,6 +47,44 @@ pub_date = "{{ pub_date }}"
 publish = true
 featured = true
 "#;
+
+pub struct NewCmd;
+
+#[async_trait::async_trait]
+impl Cmd for NewCmd {
+    fn on_init(&self) -> clap::Command {
+        Command::new("new")
+            .args([
+                Arg::new("name").help("Name of the project").required(false),
+                Arg::new("issue")
+                    .long("issue")
+                    .short('i')
+                    .action(ArgAction::SetTrue)
+                    .help("New issue."),
+                Arg::new("article")
+                    .long("article")
+                    .short('a')
+                    .action(ArgAction::SetTrue)
+                    .conflicts_with("issue")
+                    .help("New article."),
+            ])
+            .about("New a Zine project, issue or article")
+    }
+
+    async fn on_execute(&self, arg_matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let issue = arg_matches.get_flag("issue");
+        let article = arg_matches.get_flag("article");
+        if issue {
+            new_zine_issue()?;
+        } else if article {
+            new_article()?;
+        } else {
+            new_zine_project(arg_matches.get_one("name").cloned())?
+        }
+
+        Ok(())
+    }
+}
 
 struct ZineScaffold {
     source: PathBuf,
@@ -203,7 +239,7 @@ pub fn new_article() -> Result<()> {
 }
 
 fn git_user_name() -> String {
-    run_command("git", &["config", "user.name"])
+    helpers::run_command("git", &["config", "user.name"])
         .ok()
         .unwrap_or_default()
         .replace(' ', "_")

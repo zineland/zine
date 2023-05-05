@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fs, path::Path};
 
 use anyhow::{Context as _, Result};
+use genkit::{html::Meta, markdown, Context};
 use minijinja::Environment;
 use rayon::{
     prelude::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator},
@@ -9,7 +10,9 @@ use rayon::{
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::{context::Context, current_mode, engine, html::Meta, markdown, Mode};
+use genkit::{current_mode, Mode};
+
+use crate::engine;
 
 use super::{article::Article, Entity};
 
@@ -33,7 +36,7 @@ pub struct Issue {
     default_cover: Option<String>,
     /// The publish date. Format like YYYY-MM-DD.
     #[serde(default)]
-    #[serde(with = "crate::helpers::serde_date::options")]
+    #[serde(with = "genkit::helpers::serde_date::options")]
     pub pub_date: Option<Date>,
     /// Whether to publish the whole issue.
     #[serde(default)]

@@ -1,10 +1,11 @@
 use std::{borrow::Cow, path::Path};
 
 use anyhow::Result;
+use genkit::{html::Meta, markdown, Context, Entity};
 use minijinja::Environment;
 use serde::{de, ser::SerializeSeq, Deserialize, Serialize};
 
-use crate::{context::Context, engine, html::Meta, markdown, Entity};
+use crate::engine;
 
 /// AuthorId represents a single author or multiple co-authors.
 /// Declared in `[[article]]` table.

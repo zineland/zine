@@ -1,11 +1,13 @@
 use std::{borrow::Cow, path::Path};
 
-use crate::{context::Context, engine, html::Meta, Entity};
+use crate::engine;
+
+use super::{Author, Topic};
+use genkit::Entity;
+use genkit::{html::Meta, Context};
 use minijinja::context;
 use minijinja::Environment;
 use serde::Serialize;
-
-use super::{Author, Topic};
 
 #[derive(Serialize)]
 pub struct List<'a, E> {

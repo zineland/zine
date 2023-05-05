@@ -1,113 +1,89 @@
-use anyhow::{bail, Result};
-use clap::{Parser, Subcommand};
-use zine::build::watch_build;
-use zine::new::{new_article, new_zine_issue, new_zine_project};
-use zine::serve::run_serve;
-use zine::{lint, Mode};
+use anyhow::{anyhow, Result};
+use clap::Command;
+use engine::ZineGenerator;
+use genkit::Genkit;
+use markdown::ZineMarkdownVisitor;
+use std::path::{Path, PathBuf};
 
-#[derive(Debug, Parser)]
-#[command(name = "zine")]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
+use entity::Zine;
+use error::ZineError;
+use walkdir::WalkDir;
+
+mod cmd;
+mod code_blocks;
+mod data;
+mod engine;
+mod entity;
+mod error;
+mod feed;
+mod html;
+mod i18n;
+mod locales;
+mod markdown;
+
+// The convention name of zine config file.
+static ZINE_FILE: &str = "zine.toml";
+// The convention name of zine markdown directory.
+static ZINE_CONTENT_DIR: &str = "content";
+// The convention name of introduction file for zine issue.
+static ZINE_INTRO_FILE: &str = "intro.md";
+pub static ZINE_BANNER: &str = r"
+
+███████╗██╗███╗   ██╗███████╗
+╚══███╔╝██║████╗  ██║██╔════╝
+  ███╔╝ ██║██╔██╗ ██║█████╗  
+ ███╔╝  ██║██║╚██╗██║██╔══╝  
+███████╗██║██║ ╚████║███████╗
+╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
+                             
+";
+
+// Find the root zine file in current dir and try to parse it
+fn parse_root_zine_file<P: AsRef<Path>>(path: P) -> Result<Option<Zine>> {
+    // Find the name in current dir
+    if WalkDir::new(&path).max_depth(1).into_iter().any(|entry| {
+        let entry = entry.as_ref().unwrap();
+        entry.file_name() == crate::ZINE_FILE
+    }) {
+        // Try to parse the root zine.toml as Zine instance
+        return Ok(Some(Zine::parse_from_toml(path)?));
+    }
+
+    Ok(None)
 }
 
-#[derive(Debug, Subcommand)]
-enum Commands {
-    /// Build Zine site.
-    Build {
-        /// The source directory of zine site.
-        source: Option<String>,
-        /// The destination directory. Default dest dir is `build`.
-        dest: Option<String>,
-        /// Enable watching.
-        #[arg(short, long)]
-        watch: bool,
-    },
-    /// Serve the Zine site.
-    Serve {
-        /// The source directory of zine site.
-        source: Option<String>,
-        /// The listen port.
-        #[arg(short, default_value_t = 3000)]
-        port: u16,
-        /// Auto open magazine in browser.
-        #[arg(short, long)]
-        open: bool,
-    },
-    /// New a Zine project.
-    New {
-        /// The project name.
-        name: Option<String>,
-        /// New issue.
-        #[arg(short, long)]
-        issue: bool,
-        /// New article.
-        #[arg(short, long)]
-        article: bool,
-    },
-    /// Lint Zine project.
-    Lint {
-        /// The source directory of zine site.
-        source: Option<String>,
-        /// Enable CI mode. If lint failed will reture a non-zero code.
-        #[arg(long)]
-        ci: bool,
-    },
-    /// Prints the app version.
-    Version,
+/// Locate folder contains the root `zine.toml`, and return path info and Zine instance.
+pub fn locate_root_zine_folder<P: AsRef<Path>>(path: P) -> Result<Option<(PathBuf, Zine)>> {
+    match parse_root_zine_file(&path) {
+        Ok(Some(zine)) => return Ok(Some((path.as_ref().to_path_buf(), zine))),
+        Err(err) => match err.downcast::<ZineError>() {
+            // Found a root zine.toml, but it has invalid format
+            Ok(inner_err @ ZineError::InvalidRootTomlFile(_)) => return Err(anyhow!(inner_err)),
+            // Found a zine.toml, but it isn't a root zine.toml
+            Ok(ZineError::NotRootTomlFile) => {}
+            // No zine.toml file found
+            _ => {}
+        },
+        _ => {}
+    }
+
+    match path.as_ref().parent() {
+        Some(parent_path) => locate_root_zine_folder(parent_path),
+        None => Ok(None),
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    match Cli::parse().command {
-        Commands::Build {
-            source,
-            dest,
-            watch,
-        } => {
-            zine::set_current_mode(Mode::Build);
-            let dest = dest.unwrap_or_else(|| "build".into());
-            watch_build(&source.unwrap_or_else(|| ".".into()), &dest, watch, None).await?;
-            println!("Build success! The build directory is `{}`.", dest);
-        }
-        Commands::Serve { source, port, open } => {
-            zine::set_current_mode(Mode::Serve);
-            run_serve(source.as_deref().unwrap_or("."), port, open).await?;
-        }
-        Commands::New {
-            name,
-            issue,
-            article,
-        } => {
-            if issue && article {
-                bail!("Can't create both issue and article at the same time.")
-            }
-
-            if issue {
-                new_zine_issue()?;
-            } else if article {
-                new_article()?;
-            } else {
-                new_zine_project(name)?
-            }
-        }
-        Commands::Lint { source, ci } => {
-            let success = lint::lint_zine_project(source.unwrap_or_else(|| ".".into())).await?;
-            if ci && !success {
-                std::process::exit(1);
-            }
-        }
-        Commands::Version => {
-            let version =
-                option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)");
-            let date = option_env!("LAST_COMMIT_DATE").unwrap_or("");
-            let build_info = env!("BUILD_INFO");
-            println!("{}", zine::ZINE_BANNER);
-            println!("Zine version {} {}", version, date);
-            println!("({})", build_info);
-        }
-    }
+    let command = Command::new(clap::crate_name!())
+        .about(clap::crate_description!())
+        .version(clap::crate_version!());
+    Genkit::with_command(command, ZineGenerator)
+        .markdown_visitor(ZineMarkdownVisitor)
+        .data_filename("zine-data.json")
+        .banner(ZINE_BANNER)
+        .add_command(cmd::NewCmd)
+        .run()
+        .await?;
     Ok(())
 }

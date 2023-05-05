@@ -1,124 +1,13 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
-use crate::{
-    context::Context,
-    current_mode, data,
-    entity::{Entity, MarkdownConfig, Zine},
-    helpers::copy_dir,
-    html::rewrite_html_base_url,
-    locales::FluentLoader,
-    markdown::MarkdownRender,
-    Mode,
-};
+use crate::{data, html::rewrite_html_base_url, locales::FluentLoader, Zine};
+use genkit::{current_mode, helpers::copy_dir, Context, Entity, Generator, Mode};
 
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use hyper::Uri;
 use minijinja::{context, value::Value as JinjaValue, Environment};
 use serde::Serialize;
 use serde_json::Value;
-
-// The `Environment` only includes the fundamental functions and filters.
-// It is used for rendering html in some code blocks, such as `QuoteBlock`.
-pub fn init_lite_jinja_environment<'a>() -> Environment<'a> {
-    let mut env = Environment::new();
-    env.add_function("markdown_to_html", markdown_to_html_function);
-    env.add_function("get_author", get_author_function);
-
-    let templates = [
-        ("heading.jinja", include_str!("../templates/heading.jinja")),
-        (
-            "blocks/quote.jinja",
-            include_str!("../templates/blocks/quote.jinja"),
-        ),
-    ];
-    for (name, template) in templates {
-        env.add_template(name, template).unwrap();
-    }
-    env
-}
-
-// The `Environment` includes all the templates and functions.
-fn init_jinja_environment<'a>(source: &Path, zine: &'a Zine) -> Environment<'a> {
-    let mut env = init_lite_jinja_environment();
-    #[cfg(debug_assertions)]
-    env.set_source(minijinja::Source::from_path("templates"));
-
-    env.add_global("site", JinjaValue::from_serializable(&zine.site));
-    env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
-    env.add_global(
-        "zine_version",
-        option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
-    );
-    env.add_global(
-        "live_reload",
-        matches!(crate::current_mode(), crate::Mode::Serve),
-    );
-
-    #[cfg(not(debug_assertions))]
-    {
-        let templates = [
-            (
-                "_article_ref.jinja",
-                include_str!("../templates/_article_ref.jinja"),
-            ),
-            ("_macros.jinja", include_str!("../templates/_macros.jinja")),
-            ("_meta.jinja", include_str!("../templates/_meta.jinja")),
-            ("base.jinja", include_str!("../templates/base.jinja")),
-            ("index.jinja", include_str!("../templates/index.jinja")),
-            ("issue.jinja", include_str!("../templates/issue.jinja")),
-            ("article.jinja", include_str!("../templates/article.jinja")),
-            ("author.jinja", include_str!("../templates/author.jinja")),
-            (
-                "author-list.jinja",
-                include_str!("../templates/author-list.jinja"),
-            ),
-            ("topic.jinja", include_str!("../templates/topic.jinja")),
-            (
-                "topic-list.jinja",
-                include_str!("../templates/topic-list.jinja"),
-            ),
-            ("page.jinja", include_str!("../templates/page.jinja")),
-            ("feed.jinja", include_str!("../templates/feed.jinja")),
-            ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
-        ];
-        for (name, template) in templates {
-            env.add_template(name, template).unwrap();
-        }
-    }
-
-    // Dynamically add templates.
-    if let Some(head_template) = &zine.theme.head_template {
-        env.add_template("head_template.jinja", head_template)
-            .expect("Cannot add head_template");
-    }
-    if let Some(footer_template) = &zine.theme.footer_template {
-        env.add_template("footer_template.jinja", footer_template)
-            .expect("Cannot add footer_template");
-    }
-    if let Some(article_extend_template) = &zine.theme.article_extend_template {
-        env.add_template("article_extend_template.jinja", article_extend_template)
-            .expect("Cannot add article_extend_template");
-    }
-    env.add_function("now", now_function);
-    env.add_filter("trim_start_matches", trim_start_matches_filter);
-    env.add_function("markdown_to_rss", markdown_to_rss_function);
-
-    let fluent_loader = FluentLoader::new(source, &zine.site.locale);
-    env.add_function("fluent", move |key: &str, number: Option<i64>| -> String {
-        fluent_loader.format(key, number)
-    });
-    env
-}
-
-#[derive(Debug)]
-pub struct ZineEngine {
-    source: PathBuf,
-    dest: PathBuf,
-    zine: Zine,
-}
 
 pub fn render(
     env: &Environment,
@@ -200,110 +89,154 @@ fn render_sitemap(
     Ok(())
 }
 
-impl ZineEngine {
-    pub fn new(source: impl AsRef<Path>, dest: impl AsRef<Path>, zine: Zine) -> Result<Self> {
-        let dest = dest.as_ref().to_path_buf();
-        if !dest.exists() {
-            fs::create_dir_all(&dest)?;
-        }
-        Ok(ZineEngine {
-            source: source.as_ref().to_path_buf(),
-            dest,
-            zine,
-        })
+pub struct ZineGenerator;
+
+impl Generator for ZineGenerator {
+    type Entity = Zine;
+
+    fn on_load(&self, source: &std::path::Path) -> Result<Self::Entity> {
+        data::load();
+        let (_source, zine) = crate::locate_root_zine_folder(std::fs::canonicalize(source)?)?
+            .with_context(|| "Failed to find the root zine.toml file".to_string())?;
+        Ok(zine)
     }
 
-    fn copy_static_assets(&self) -> Result<()> {
-        let static_dir = self.source.join("static");
-        if static_dir.exists() {
-            copy_dir(&static_dir, &self.dest)?;
-        }
+    fn on_reload(&self, source: &std::path::Path) -> Result<Self::Entity> {
+        Zine::parse_from_toml(source)
+    }
 
-        // Copy builtin static files into dest static dir.
-        let dest_static_dir = self.dest.join("static");
-        #[allow(clippy::needless_borrow)]
-        fs::create_dir_all(&dest_static_dir)?;
+    fn get_markdown_config(&self, zine: &Self::Entity) -> Option<genkit::entity::MarkdownConfig> {
+        Some(zine.markdown_config.clone())
+    }
+
+    fn on_extend_environment<'a>(
+        &self,
+        source: &std::path::Path,
+        mut env: minijinja::Environment<'a>,
+        zine: &'a Self::Entity,
+    ) -> minijinja::Environment<'a> {
+        #[cfg(debug_assertions)]
+        env.set_source(minijinja::Source::from_path("templates"));
+
+        env.add_global("site", JinjaValue::from_serializable(&zine.site));
+        env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
+        env.add_global(
+            "zine_version",
+            option_env!("CARGO_PKG_VERSION").unwrap_or("(Unknown Cargo package version)"),
+        );
+        env.add_global(
+            "live_reload",
+            matches!(genkit::current_mode(), genkit::Mode::Serve),
+        );
 
         #[cfg(not(debug_assertions))]
-        include_dir::include_dir!("static").extract(dest_static_dir)?;
-        // Alwasy copy static directory in debug mode.
-        #[cfg(debug_assertions)]
-        copy_dir(Path::new("./static"), &self.dest)?;
-
-        Ok(())
-    }
-
-    pub fn build(&mut self, reload: bool) -> Result<()> {
-        let instant = std::time::Instant::now();
-
-        if reload {
-            self.zine = Zine::parse_from_toml(&self.source)?;
+        {
+            let templates = [
+                (
+                    "_article_ref.jinja",
+                    include_str!("../templates/_article_ref.jinja"),
+                ),
+                ("_macros.jinja", include_str!("../templates/_macros.jinja")),
+                ("_meta.jinja", include_str!("../templates/_meta.jinja")),
+                ("base.jinja", include_str!("../templates/base.jinja")),
+                ("index.jinja", include_str!("../templates/index.jinja")),
+                ("issue.jinja", include_str!("../templates/issue.jinja")),
+                ("article.jinja", include_str!("../templates/article.jinja")),
+                ("author.jinja", include_str!("../templates/author.jinja")),
+                (
+                    "author-list.jinja",
+                    include_str!("../templates/author-list.jinja"),
+                ),
+                ("topic.jinja", include_str!("../templates/topic.jinja")),
+                (
+                    "topic-list.jinja",
+                    include_str!("../templates/topic-list.jinja"),
+                ),
+                ("page.jinja", include_str!("../templates/page.jinja")),
+                ("feed.jinja", include_str!("../templates/feed.jinja")),
+                ("sitemap.jinja", include_str!("../templates/sitemap.jinja")),
+            ];
+            for (name, template) in templates {
+                env.add_template(name, template).unwrap();
+            }
         }
 
-        self.zine.parse(&self.source)?;
+        // Dynamically add templates.
+        if let Some(head_template) = &zine.theme.head_template {
+            env.add_template("head_template.jinja", head_template)
+                .expect("Cannot add head_template");
+        }
+        if let Some(footer_template) = &zine.theme.footer_template {
+            env.add_template("footer_template.jinja", footer_template)
+                .expect("Cannot add footer_template");
+        }
+        if let Some(article_extend_template) = &zine.theme.article_extend_template {
+            env.add_template("article_extend_template.jinja", article_extend_template)
+                .expect("Cannot add article_extend_template");
+        }
 
-        let env = init_jinja_environment(&self.source, &self.zine);
+        env.add_function("get_author", get_author_function);
+        let fluent_loader = FluentLoader::new(source, &zine.site.locale);
+        env.add_function("fluent", move |key: &str, number: Option<i64>| -> String {
+            fluent_loader.format(key, number)
+        });
+        env
+    }
 
-        self.zine
-            .render(&env, Context::new(), &self.dest)
-            .expect("Render zine failed.");
-        #[cfg(debug_assertions)]
-        println!("Zine engine: {:?}", self.zine);
-
+    fn on_render(
+        &self,
+        env: &Environment,
+        context: Context,
+        zine: &Self::Entity,
+        source: &Path,
+        dest: &Path,
+    ) -> Result<()> {
+        zine.render(env, context, dest)?;
         render_atom_feed(
-            &env,
+            env,
             context! {
-                site => &self.zine.site,
-                entries => &self.zine.latest_feed_entries(20),
+                site => &zine.site,
+                entries => &zine.latest_feed_entries(20),
                 generator_version => env!("CARGO_PKG_VERSION"),
             },
-            &self.dest,
+            dest,
         )?;
-
         render_sitemap(
-            &env,
+            env,
             context! {
-                site => &self.zine.site,
-                entries => &self.zine.sitemap_entries(),
+                site => &zine.site,
+                entries => &zine.sitemap_entries(),
             },
-            &self.dest,
+            dest,
         )?;
 
-        self.copy_static_assets()?;
-
-        println!("Build cost: {}ms", instant.elapsed().as_millis());
+        copy_static_assets(source, dest)?;
         Ok(())
     }
-}
-
-fn now_function() -> String {
-    time::OffsetDateTime::now_utc()
-        .format(&time::format_description::well_known::Rfc3339)
-        .expect("Failed to format now time.")
-}
-
-fn trim_start_matches_filter(s: &str, prefix: &str) -> String {
-    s.trim_start_matches(prefix).to_string()
-}
-
-fn markdown_to_html_function(markdown: &str) -> String {
-    let zine_data = data::read();
-    let markdown_config = zine_data.get_markdown_config();
-    MarkdownRender::new(markdown_config).render_html(markdown)
-}
-
-fn markdown_to_rss_function(markdown: &str) -> String {
-    let markdown_config = MarkdownConfig {
-        highlight_code: false,
-        ..Default::default()
-    };
-    MarkdownRender::new(&markdown_config)
-        .enable_rss_mode()
-        .render_html(markdown)
 }
 
 fn get_author_function(id: &str) -> JinjaValue {
     let data = data::read();
     let author = data.get_author_by_id(id);
     JinjaValue::from_serializable(&author)
+}
+
+fn copy_static_assets(source: &Path, dest: &Path) -> Result<()> {
+    let static_dir = source.join("static");
+    if static_dir.exists() {
+        copy_dir(&static_dir, dest)?;
+    }
+
+    // Copy builtin static files into dest static dir.
+    let dest_static_dir = dest.join("static");
+    #[allow(clippy::needless_borrow)]
+    fs::create_dir_all(&dest_static_dir)?;
+
+    #[cfg(not(debug_assertions))]
+    include_dir::include_dir!("static").extract(dest_static_dir)?;
+    // Alwasy copy static directory in debug mode.
+    #[cfg(debug_assertions)]
+    copy_dir(Path::new("static"), dest)?;
+
+    Ok(())
 }

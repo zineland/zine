@@ -7,7 +7,8 @@ use anyhow::Result;
 use minijinja::Environment;
 use serde::{Deserialize, Serialize};
 
-use crate::{context::Context, engine, html::Meta, markdown};
+use crate::engine;
+use genkit::{html::Meta, markdown, Context};
 
 use super::Entity;
 
