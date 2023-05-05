@@ -89,7 +89,7 @@ fn render_sitemap(
     Ok(())
 }
 
-pub struct ZineGenerator {}
+pub struct ZineGenerator;
 
 impl Generator for ZineGenerator {
     type Entity = Zine;

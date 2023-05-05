@@ -13,7 +13,7 @@ readme = "README.md"
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1.68"
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", features = ["cargo"] }
 fluent = "0.16"
 # genkit = { path = "../genkit" }
 genkit = { git = "https://github.com/zineland/genkit", branch = "main" }
