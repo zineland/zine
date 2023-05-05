@@ -1,13 +1,14 @@
 use std::{borrow::Cow, collections::HashMap, fs, path::Path};
 
 use anyhow::{ensure, Context as _, Result};
+use genkit::{current_mode, Mode};
 use genkit::{html::Meta, markdown, Context};
 use minijinja::Environment;
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::{current_mode, data, engine, i18n, Mode};
+use crate::{data, engine, i18n};
 
 use super::{AuthorId, Entity};
 

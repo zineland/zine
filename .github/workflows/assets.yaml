@@ -41,7 +41,6 @@ jobs:
           target: ${{ matrix.target }}
           tar: all
           zip: windows
-          features: openssl-vendored
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           CARGO_PROFILE_RELEASE_LTO: true

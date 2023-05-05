@@ -6,7 +6,7 @@ use crate::entity::{Author, MetaArticle, Site, Theme};
 static ZINE_DATA: OnceCell<RwLock<ZineData>> = OnceCell::new();
 
 pub fn load() {
-    ZINE_DATA.get_or_init(|| RwLock::new(ZineData::new()));
+    ZINE_DATA.get_or_init(|| RwLock::new(ZineData::default()));
 }
 
 pub fn read() -> RwLockReadGuard<'static, ZineData> {
@@ -17,7 +17,7 @@ pub fn write() -> RwLockWriteGuard<'static, ZineData> {
     ZINE_DATA.get().unwrap().write()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ZineData {
     authors: Vec<Author>,
     // Issue slug and article pair list.
@@ -29,16 +29,6 @@ pub struct ZineData {
 }
 
 impl ZineData {
-    pub fn new() -> Self {
-        ZineData {
-            authors: Vec::default(),
-            articles: Vec::default(),
-            topics: Vec::default(),
-            site: Site::default(),
-            theme: Theme::default(),
-        }
-    }
-
     pub fn set_authors(&mut self, authors: Vec<Author>) -> &mut Self {
         self.authors = authors;
         self

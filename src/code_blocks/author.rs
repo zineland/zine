@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use genkit::code_blocks::CodeBlock;
+use genkit::CodeBlock;
 
 use crate::entity::Author;
 

@@ -10,7 +10,9 @@ use rayon::{
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::{current_mode, engine, Mode};
+use genkit::{current_mode, Mode};
+
+use crate::engine;
 
 use super::{article::Article, Entity};
 

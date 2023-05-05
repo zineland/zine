@@ -244,9 +244,3 @@ fn git_user_name() -> String {
         .unwrap_or_default()
         .replace(' ', "_")
 }
-
-pub fn command() -> Command {
-    Command::new("new")
-        .args([Arg::new("name").help("The name of the project")])
-        .about("New a Zine project.")
-}

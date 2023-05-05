@@ -1,7 +1,7 @@
 use std::{fs, path::Path};
 
-use crate::{current_mode, data, locales::FluentLoader, Mode, Zine};
-use genkit::{helpers::copy_dir, html::rewrite_html_base_url, Context, Entity, Generator};
+use crate::{data, html::rewrite_html_base_url, locales::FluentLoader, Zine};
+use genkit::{current_mode, helpers::copy_dir, Context, Entity, Generator, Mode};
 
 use anyhow::{Context as _, Result};
 use hyper::Uri;
@@ -126,7 +126,7 @@ impl Generator for ZineGenerator {
         );
         env.add_global(
             "live_reload",
-            matches!(crate::current_mode(), crate::Mode::Serve),
+            matches!(genkit::current_mode(), genkit::Mode::Serve),
         );
 
         #[cfg(not(debug_assertions))]
