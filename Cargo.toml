@@ -10,6 +10,11 @@ edition = "2021"
 exclude = ["tailwind.config.js", "tailwindcss.html", "zine-entry.css"]
 readme = "README.md"
 
+[features]
+# Enable vendored openssl to help building in cross-rs environment.
+# See https://github.com/cross-rs/cross/pull/322
+openssl-vendored = ["genkit/openssl-vendored"]
+
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1.68"
