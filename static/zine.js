@@ -44,9 +44,9 @@
                 if (isLineWrapped || isSmallViewport) {
                     inlineCard.style.left = (inlineCard.parentElement.offsetWidth - inlineCard.offsetWidth) / 2 + 'px';
                 } else {
-                    inlineCard.style.left = Math.max(0, target.offsetLeft + target.offsetWidth / 2 - 190) + 'px';
+                    inlineCard.style.left = Math.max(0, calculateOffsetLeftToMain(target) + target.offsetWidth / 2 - 190) + 'px';
                 }
-                inlineCard.style.top = (target.offsetTop - inlineCard.offsetHeight - 15) + 'px';
+                inlineCard.style.top = (calculateOffsetTopToMain(target) - inlineCard.offsetHeight - 15) + 'px';
             };
             link.onmouseleave = () => {
                 cardTimeoutId = dismissInTimeout(inlineCard);
@@ -56,6 +56,31 @@
         setupMenuList('i18n-menu', 'i18n-list');
         setupMenuList('toc-menu', 'toc-list');
         highlightToc();
+    }
+
+    // Calculate the offset top of the element to the main element.
+    // Some element may have offsetParent which is `relative` position but not the main element.
+    // So we need to calculate the offset recursively.
+    // See: https://javascript.info/size-and-scroll#offsetparent-offsetleft-top
+    function calculateOffsetTopToMain(element) {
+        if (!element) return 0;
+
+        if (element.offsetParent && element.offsetParent.tagName === "MAIN") {
+            return element.offsetTop;
+        } else {
+            return element.offsetTop + calculateOffsetTopToMain(element.offsetParent);
+        }
+    }
+
+    // See above.
+    function calculateOffsetLeftToMain(element) {
+        if (!element) return 0;
+
+        if (element.offsetParent && element.offsetParent.tagName === "MAIN") {
+            return element.offsetLeft;
+        } else {
+            return element.offsetLeft + calculateOffsetLeftToMain(element.offsetParent);
+        }
     }
 
     function dismissInTimeout(element) {
