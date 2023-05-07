@@ -4,7 +4,7 @@ use crate::{data, html::rewrite_html_base_url, locales::FluentLoader, Zine};
 use genkit::{current_mode, helpers::copy_dir, Context, Entity, Generator, Mode};
 
 use anyhow::{Context as _, Result};
-use hyper::Uri;
+use http::Uri;
 use minijinja::{context, value::Value as JinjaValue, Environment};
 use serde::Serialize;
 use serde_json::Value;
