@@ -73,6 +73,10 @@ struct Translations<'a> {
 }
 
 impl MetaArticle {
+    pub(super) fn has_empty_cover(&self) -> bool {
+        self.cover.is_none() || matches!(self.cover.as_ref(), Some(cover) if cover.is_empty())
+    }
+
     fn default_pub_date() -> Date {
         Date::MIN
     }
@@ -150,8 +154,7 @@ impl Article {
             self.meta.slug = self.meta.file.replace(".md", "")
         }
         // Fallback to the default placeholder image if the cover is missing.
-        if self.meta.cover.is_none() || matches!(&self.meta.cover, Some(cover) if cover.is_empty())
-        {
+        if self.meta.has_empty_cover() {
             let data = data::read();
             self.meta.cover = data.get_theme().default_cover.clone();
         }
@@ -238,7 +241,7 @@ impl Entity for Article {
             if article.meta.author.is_none() {
                 article.meta.author = self.meta.author.clone();
             }
-            if article.meta.cover.is_none() {
+            if article.meta.has_empty_cover() {
                 article.meta.cover = self.meta.cover.clone();
             }
             // Fallback to original article date if the `pub_date` is missing

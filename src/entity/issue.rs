@@ -141,7 +141,7 @@ impl Entity for Issue {
             // Set default cover for articles in this issue if article has no `cover`.
             self.articles
                 .iter_mut()
-                .filter(|article| article.meta.cover.is_none())
+                .filter(|article| article.meta.has_empty_cover())
                 .for_each(|article| article.meta.cover = Some(default_cover.to_owned()))
         }
 
