@@ -1,11 +1,15 @@
-use std::{fs, path::Path};
+use std::{collections::HashMap, env, fs, path::Path};
 
 use crate::{data, html::rewrite_html_base_url, locales::FluentLoader, Zine};
 use genkit::{current_mode, helpers::copy_dir, Context, Entity, Generator, Mode};
 
 use anyhow::{Context as _, Result};
 use http::Uri;
-use minijinja::{context, path_loader, value::Value as JinjaValue, Environment};
+use minijinja::{
+    context, path_loader, value::Value as JinjaValue, Environment, Error as JinjaError, ErrorKind,
+};
+use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -175,6 +179,7 @@ impl Generator for ZineGenerator {
                 .expect("Cannot add article_extend_template");
         }
 
+        env.add_function("load_json", load_json);
         env.add_function("get_author", get_author_function);
         let fluent_loader = FluentLoader::new(source, &zine.site.locale);
         env.add_function("fluent", move |key: &str, number: Option<i64>| -> String {
@@ -219,6 +224,34 @@ fn get_author_function(id: &str) -> JinjaValue {
     let data = data::read();
     let author = data.get_author_by_id(id);
     JinjaValue::from_serializable(&author)
+}
+
+static DATA_JSON: OnceCell<RwLock<HashMap<String, JinjaValue>>> = OnceCell::new();
+
+fn load_json(filename: &str) -> Result<JinjaValue, JinjaError> {
+    let data = DATA_JSON.get_or_init(|| RwLock::new(HashMap::new()));
+    if let Some(value) = { data.read().get(filename).cloned() } {
+        return Ok(value);
+    }
+
+    let mut path = env::current_dir().unwrap();
+    for segment in filename.split('/') {
+        if segment.starts_with('.') || segment.contains('\\') {
+            return Err(JinjaError::new(ErrorKind::InvalidOperation, "bad filename"));
+        }
+        path.push(segment);
+    }
+    println!("Loading json data from {}", path.display());
+
+    let contents = fs::read(&path).map_err(|err| {
+        JinjaError::new(ErrorKind::InvalidOperation, "could not read JSON file").with_source(err)
+    })?;
+    let parsed: serde_json::Value = serde_json::from_slice(&contents[..]).map_err(|err| {
+        JinjaError::new(ErrorKind::InvalidOperation, "invalid JSON").with_source(err)
+    })?;
+    let value = JinjaValue::from_serializable(&parsed);
+    data.write().insert(filename.to_owned(), value.clone());
+    Ok(value)
 }
 
 fn copy_static_assets(source: &Path, dest: &Path) -> Result<()> {
