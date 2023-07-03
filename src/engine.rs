@@ -180,6 +180,7 @@ impl Generator for ZineGenerator {
         }
 
         env.add_function("load_json", load_json);
+        env.add_function("get_entity", get_entity);
         env.add_function("get_author", get_author_function);
         let fluent_loader = FluentLoader::new(source, &zine.site.locale);
         env.add_function("fluent", move |key: &str, number: Option<i64>| -> String {
@@ -224,6 +225,19 @@ fn get_author_function(id: &str) -> JinjaValue {
     let data = data::read();
     let author = data.get_author_by_id(id);
     JinjaValue::from_serializable(&author)
+}
+
+fn get_entity(name: &str) -> Result<JinjaValue, JinjaError> {
+    match name {
+        "authors" => {
+            let data = data::read();
+            Ok(JinjaValue::from_serializable(&data.get_authors()))
+        }
+        _ => Err(JinjaError::new(
+            ErrorKind::NonKey,
+            format!("invalid entity name `{name}` for `get_entity` function."),
+        )),
+    }
 }
 
 static DATA_JSON: OnceCell<RwLock<HashMap<String, JinjaValue>>> = OnceCell::new();
