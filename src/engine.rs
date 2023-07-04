@@ -5,9 +5,7 @@ use genkit::{current_mode, helpers::copy_dir, Context, Entity, Generator, Mode};
 
 use anyhow::{Context as _, Result};
 use http::Uri;
-use minijinja::{
-    context, path_loader, value::Value as JinjaValue, Environment, Error as JinjaError, ErrorKind,
-};
+use minijinja::{context, value::Value as JinjaValue, Environment, Error as JinjaError, ErrorKind};
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use serde::Serialize;
@@ -120,7 +118,7 @@ impl Generator for ZineGenerator {
         zine: &'a Self::Entity,
     ) -> minijinja::Environment<'a> {
         #[cfg(debug_assertions)]
-        env.set_loader(path_loader("templates"));
+        env.set_loader(minijinja::path_loader("templates"));
 
         env.add_global("site", JinjaValue::from_serializable(&zine.site));
         env.add_global("theme", JinjaValue::from_serializable(&zine.theme));
