@@ -137,6 +137,12 @@ impl Entity for Issue {
         self.articles
             .par_sort_unstable_by_key(|article| article.meta.pub_date);
 
+        if self.default_cover.is_none()
+            || matches!(self.default_cover.as_ref(), Some(cover) if cover.is_empty())
+        {
+            self.default_cover = self.cover.clone();
+        }
+
         if let Some(default_cover) = self.default_cover.as_deref() {
             // Set default cover for articles in this issue if article has no `cover`.
             self.articles
